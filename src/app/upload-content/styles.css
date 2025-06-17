@@ -1,0 +1,35 @@
+.button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.active{
+    width: 120px;
+    height: 40px;
+    background-color: #4CAF50; /* Green */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.disabled {
+    width: 120px;
+    height: 40px;
+    background-color: #ccc; /* Grey */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: not-allowed;
+    font-size: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

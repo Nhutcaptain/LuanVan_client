@@ -1,0 +1,164 @@
+.background_image {
+    position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw; /* full width */
+  height: 100vh; /* full height */
+  background-image: url('/bg/bg1.jpg');
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+}
+
+.background_image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensures the image covers the entire area */
+}
+
+.snap-y {
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
+  height: 100vh;
+}
+
+.snap-start {
+  scroll-snap-align: start;
+}
+
+/* Tối ưu hiệu ứng scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Ngăn chặn scroll jerk */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+/* Ẩn scrollbar nhưng vẫn cho phép scroll */
+::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+.section_container {
+    width: 100%;
+    scroll-snap-type: y mandatory;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.section_container > section {
+    width: 100%;
+    scroll-snap-align: start;
+    position: relative;
+    padding: 0 30px;
+}
+
+.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.fade-in-hidden {
+  opacity: 0;
+  transform: translateY(40px);
+}
+
+.features {
+  display: flex;
+  gap: 20px;
+}
+
+.features {
+  opacity: 0;
+  animation: fadeScaleIn 0.5s ease forwards;
+}
+
+@keyframes fadeScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeScaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+.open-block {
+  animation: fadeIn 0.8s ease forwards;
+}
+
+.animate-fadeScaleIn {
+  animation: fadeScaleIn 0.8s ease forwards;
+}
+.animate-fadeScaleOut {
+  animation: fadeScaleOut 0.8s ease forwards;
+}
+
+.button_group:hover {
+  transform: scale(1.05);
+  transition: transform 0.3s ease;
+  background-color: rgba(106, 193, 230, 0.422);
+  border-radius: 15px;
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) rotate(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(180deg);
+  }
+}
+
+.arrow-icon {
+  transition: transform 0.3s ease;
+}
+.arrow-up {
+  transform: rotate(180deg);
+  animation: popIn 0.3s ease;
+}
+.arrow-down {
+  transform: rotate(0deg);
+  animation: popIn 0.3s ease;
+}
+.section4{
+  max-width: 1800px;
+}
+.top-news{
+  max-height: 1000px;
+  height: 700px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.side-news{
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+}
+
+.main-news{
+  height: 100%;
+}

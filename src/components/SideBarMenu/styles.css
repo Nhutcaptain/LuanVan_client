@@ -1,0 +1,32 @@
+/* Add smooth transitions and animations */
+.side-bar-container {
+    transition: all 0.3s ease;
+}
+
+/* Active state styling */
+.active {
+    background-color: white;
+    color: #1e40af;
+    font-weight: 500;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.active svg {
+    color: #2563eb;
+}
+
+/* Hover effects */
+.side-bar-link:hover {
+    transform: translateX(5px);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Scrollbar styling (if content overflows) */
+.side-bar-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.side-bar-container::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
