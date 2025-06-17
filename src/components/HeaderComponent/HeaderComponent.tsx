@@ -3,11 +3,13 @@ import React, { useEffect, useState } from 'react'
 import './styles.css'
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { useRouter } from 'next/navigation';
 
 const HeaderComponent = () => {
     const [isScrolledPastFirst, setIsScrolledPastFirst] = useState(false);
     const [user, setUser] = useState<{ fullName?: string, role?: string } | null>(null);
 
+    const router = useRouter()
     useEffect(() => {
         const onScroll = () => {
             const scrollPos = window.scrollY;
@@ -45,8 +47,10 @@ const HeaderComponent = () => {
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('fullName');
+        localStorage.removeItem('role');
         setUser(null);
-        window.location.reload();
+        window.dispatchEvent(new Event('userChanged'));
+        router.push('/');
     }
 
     return (
