@@ -17,9 +17,11 @@ const LoginGoogleSuccessPage = () => {
         .then((response) => {
           const fullName = response.data.fullName;
           const role = response.data.role;
+          const userId = response.data._id;
           if(fullName) {
             localStorage.setItem('fullName', fullName);
             localStorage.setItem('role',role);
+            localStorage.setItem('userId',userId);
             window.dispatchEvent(new Event('userChange')); // Cập nhật user trên toàn ứng dụng
           }
         })

@@ -1,6 +1,8 @@
+import { IUser } from "./usermodel";
+
 export interface IPatient {
   _id?: string;
-  userId: string;
+  userId: IUser;
   medicalHistory?: string;
   allergies?: string;
   medications?: string;

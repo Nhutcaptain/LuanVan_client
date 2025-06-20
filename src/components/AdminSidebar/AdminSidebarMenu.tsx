@@ -7,14 +7,15 @@ import { FaRegRectangleList } from "react-icons/fa6";
 import { LiaHistorySolid } from "react-icons/lia";
 import { FaRegCalendarPlus } from "react-icons/fa";
 import { usePathname } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 const AdminSidebarMenu = () => {
     const pathname = usePathname();
     const sidebarData = [
         {
             icon: <MdAccountCircle className='text-2xl' />,
-            label: 'Quản lý bác sĩ',
-            link: '/bac-si/thong-tin'
+            label: 'Quản lý tài khoản',
+            link: '/admin/account'
         },
         {
             icon: <RiHeartPulseLine className='text-2xl' />,
@@ -61,6 +62,7 @@ const AdminSidebarMenu = () => {
     const handleLogout = () => {
         // Add your logout logic here
         console.log('Logging out...');
+        Cookies.remove('token');
     };
 
     return (

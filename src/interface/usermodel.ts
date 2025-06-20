@@ -1,7 +1,7 @@
 import { AddressForm } from "./AddressForm";
 
 export interface IUser {
-  _id: string;
+  _id?: string;
   email: string;
   password: string;
   fullName: string;
@@ -11,7 +11,10 @@ export interface IUser {
   dateOfBirth: Date | string;
   gender: string;
   isActive: boolean;
-  avatar: string;
+  avatar: {
+    publicId: string,
+    url: string,
+  };
   createdAt?: Date | string;
   updatedAt?: Date | string;
 }

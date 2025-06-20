@@ -18,7 +18,10 @@ const DoctorDetailPage = () => {
     phone: '',
     dateOfBirth: '',
     address: '',
-    avatar: ''
+    avatar: {
+      publicId: '',
+      url: '',
+    }
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -90,13 +93,13 @@ const DoctorDetailPage = () => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({
-          ...prev,
-          avatar: reader.result as string
-        }));
-      };
-      reader.readAsDataURL(file);
+      // reader.onloadend = () => {
+      //   setFormData(prev => ({
+      //     ...prev,
+      //     avatar: reader.result as string
+      //   }));
+      // };
+      // reader.readAsDataURL(file);
     }
   };
 
@@ -148,7 +151,7 @@ const DoctorDetailPage = () => {
           {isEditing ? (
             <>
               <img 
-                src={formData.avatar || '/default-avatar.png'} 
+                src={formData.avatar.url || '/default-avatar.png'} 
                 alt={formData.fullName || 'Doctor'} 
                 className="doctor-avatar"
                 onClick={() => fileInputRef.current?.click()}
@@ -171,7 +174,7 @@ const DoctorDetailPage = () => {
             </>
           ) : (
             <img 
-              src={doctor.userId?.avatar || '/default-avatar.png'} 
+              src={doctor.userId?.avatar.url || '/default-avatar.png'} 
               alt={doctor.userId?.fullName || 'Doctor'} 
               className="doctor-avatar"
               style={{ width: '200px', height: '200px' }}

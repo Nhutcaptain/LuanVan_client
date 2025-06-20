@@ -1,0 +1,38 @@
+.avatar-upload {
+    display: inline-block;
+    margin: 10px 0;
+}
+
+.avatar-preview {
+    display: block;
+    border: 2px solid #e0e0e0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.avatar-preview:hover {
+    border-color: #3498db;
+    transform: scale(1.02);
+}
+
+.avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5f5f5;
+    border: 2px dashed #ccc;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 24px;
+    color: #666;
+}
+
+.avatar-placeholder:hover {
+    border-color: #3498db;
+    background-color: #f0f8ff;
+}
+
+.avatar-placeholder span {
+    font-size: 48px;
+    font-weight: lighter;
+}

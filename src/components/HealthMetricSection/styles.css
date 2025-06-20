@@ -1,0 +1,146 @@
+/* src/app/components/HealthMetricSection/styles.css */
+.health-section {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+}
+
+.health-section-title {
+  color: #2c3e50;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.health-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.health-metric-item {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.health-metric-item:hover {
+  background-color: #e9f7fe;
+  transform: translateY(-2px);
+}
+
+.health-metric-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.health-metric-name {
+  font-weight: 600;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.health-metric-date {
+  color: #7f8c8d;
+  font-size: 0.75rem;
+}
+
+.health-metric-value {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #2c3e50;
+  text-align: right;
+}
+
+.health-metric-unit {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  margin-left: 5px;
+  font-weight: normal;
+}
+
+@media (max-width: 600px) {
+  .health-metrics-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .health-metric-value {
+    font-size: 1.2rem;
+  }
+}
+
+.custom-tooltip{
+  max-width: 320px;
+  padding: 12px;
+  font-size: 16px;
+  background-color: #1f2937; /* gray-800 */
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+  text-align: left;
+  z-index: 9999;
+}
+
+.health-metric-item {
+  position: relative;
+  transition: all 0.3s ease;
+}
+.health-metric-item.normal {
+  background-color: #f0fdf4; /* green-50 */
+  border-left: 4px solid #4ade80; /* green-400 */
+}
+
+.health-metric-item.warning {
+  background-color: #fffbeb; /* amber-50 */
+  border-left: 4px solid #fbbf24; /* amber-400 */
+}
+
+.health-metric-item.danger {
+  background-color: #fef2f2; /* red-50 */
+  border-left: 4px solid #f87171; /* red-400 */
+}
+
+.status-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.status-indicator.warning {
+  background-color: #fbbf24; /* amber-400 */
+}
+
+.status-indicator.danger {
+  background-color: #f87171; /* red-400 */
+}
+
+.custom-tooltip {
+  max-width: 300px;
+  padding: 12px;
+  border-radius: 8px;
+  z-index: 100;
+}
+
+.custom-tooltip .recommendation {
+  padding: 8px;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.custom-tooltip .recommendation.warning {
+  background-color: #fffbeb;
+  border-left: 3px solid #fbbf24;
+}
+
+.custom-tooltip .recommendation.danger {
+  background-color: #fef2f2;
+  border-left: 3px solid #f87171;
+}

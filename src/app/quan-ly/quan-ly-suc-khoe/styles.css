@@ -1,0 +1,74 @@
+/* src/app/quan-ly-suc-khoe/styles.css */
+.health-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.health-title {
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 30px;
+  font-weight: 600;
+}
+
+.health-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.health-detailed-sections {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 25px;
+}
+
+.loading, .error, .health-no-data {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #666;
+}
+
+.loading {
+  color: #3498db;
+}
+
+.error {
+  color: #e74c3c;
+}
+
+.health-notes {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 30px;
+  border-left: 4px solid #3498db;
+}
+
+.health-notes h3 {
+  margin-top: 0;
+  color: #2c3e50;
+}
+
+.health-last-updated {
+  text-align: right;
+  margin-top: 20px;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .health-overview {
+    grid-template-columns: 1fr;
+  }
+  
+  .health-container {
+    padding: 15px;
+  }
+}

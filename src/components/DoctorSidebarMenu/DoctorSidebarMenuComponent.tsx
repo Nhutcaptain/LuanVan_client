@@ -22,6 +22,11 @@ const DoctorSidebarComponent = () => {
             label: 'Xem lịch làm việc',
             link: '/bac-si/lich-lam-viec'
         },
+         {
+            icon: <RiHeartPulseLine className='text-2xl' />,
+            label: 'Ghi nhận kết quả khám',
+            link: '/bac-si/kham-benh'
+        },
         {
             icon: <FaRegRectangleList className='text-2xl' />,
             label: 'Lịch đặt khám',

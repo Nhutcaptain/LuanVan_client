@@ -28,7 +28,6 @@ export default function AdminLogin() {
         }
 
         Cookies.set('token', token, {
-            expires: 30,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'Strict',
         });

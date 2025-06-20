@@ -6,11 +6,15 @@ import AddressSelector from '@/components/AddressSelectorComponent/AddressSelect
 import { AddressForm } from '@/interface/AddressForm';
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
+import UploadImageComponent from '@/components/UploadImage/UploadImageComponent';
+import { deleteImageFromCloudinary, uploadImageToCloudinary } from '@/services/uploadAvatarService';
+
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -31,6 +35,10 @@ const ProfilePage = () => {
         name: '',
         code: 0
       }
+    },
+    avatar: {
+      publicId:'',
+      url:'',
     }
   });
   const MySwal = withReactContent(Swal)
@@ -57,6 +65,10 @@ const ProfilePage = () => {
             ward: userData.address?.ward || '',
             district: userData.address?.district || '',
             province: userData.address?.province || ''
+          },
+          avatar: {
+            publicId: userData.avatar.publicId,
+            url: userData.avatar.url,
           }
         });
       } catch (error) {
@@ -89,7 +101,9 @@ const ProfilePage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     try {
+      
       const token = localStorage.getItem('token');
       if (!token) return;
       const res = await api.put('/users/update', formData, {
@@ -111,21 +125,42 @@ const ProfilePage = () => {
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
+   if (e.target.files && e.target.files[0]) {
+      const uploadData = {...formData}
+      MySwal.fire({
+        title: <strong className="text-2xl">Đang xử lý...</strong>,
+        html: <i className="text-xl">Vui lòng chờ trong giây lát</i>,
+        icon: 'info',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+          MySwal.showLoading();
+        }
+      });
+      
       try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        
-        const formData = new FormData();
-        formData.append('avatar', e.target.files[0]);
-        
-        const res = await api.put('/auth/avatar', formData, {
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-        setProfile(res.data.user || res.data);
+        if(uploadData.avatar.publicId) {
+          await deleteImageFromCloudinary(uploadData.avatar.publicId)
+        }
+        const {publicId, url} = await uploadImageToCloudinary(e.target.files[0]);
+        uploadData.avatar.publicId = publicId;
+        uploadData.avatar.url = url;
+       const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await api.put('/users/update', uploadData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+       MySwal.close();
+      if(res.status == 200) {
+          MySwal.fire({
+            title: <strong className="text-2xl">Cập nhật hình ảnh</strong>,
+            html: <i className="text-xl">Đã cập nhật ảnh đại diện thành công</i>,
+            icon: 'success',
+            showConfirmButton: true
+          });
+        }
+      setProfile(res.data.user || res.data);
+      setIsEditing(false);
       } catch (error) {
         console.error('Error uploading avatar:', error);
       }
@@ -195,8 +230,8 @@ const ProfilePage = () => {
               {/* Avatar Section */}
               <div className="flex-shrink-0 flex flex-col items-center">
                 <div className="relative group">
-                  <img
-                    src={profile.avatar || '/default-avatar.png'}
+                 <img
+                    src={profile.avatar.url || '/default-avatar.png'}
                     alt="Avatar"
                     className="h-40 w-40 rounded-full object-cover border-4 border-white shadow-lg"
                   />
