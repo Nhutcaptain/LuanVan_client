@@ -13,10 +13,11 @@ interface Centre {
   icon: IconType;
   name: string;
   link?: string; // Optional link property
+  id?: string;
 }
 
 export const centre: Centre[] = [
-  { icon: GiHeartOrgan, name: "Tim mạch" },
+  { icon: GiHeartOrgan, name: "Tim mạch", id: '68562cf93299eeee8435f20a', link: `/dich-vu-chuyen-khoa/${'68562cf93299eeee8435f20a'}` },
   { icon: GiLungs, name: "Hô hấp" },
   { icon: GiBrain, name: "Thần kinh" },
   { icon: GiKidneys, name: "Thận - Tiết niệu" },

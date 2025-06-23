@@ -3,6 +3,7 @@ import { IUser } from "./usermodel";
  export interface DoctorInterface {
   _id?: string;
   userId: IUser;
+  departmentId?: string;
   specialization: string;
   certificate: string[];
   experience: string[];
