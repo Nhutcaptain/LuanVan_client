@@ -1,0 +1,196 @@
+/* styles.css */
+.examination-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.page-title {
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 30px;
+  font-size: 2rem;
+}
+
+.search-bar {
+  margin-bottom: 20px;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.record-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.record-card {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.record-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.card-header h3 {
+  margin: 0;
+  color: #3498db;
+  font-size: 1.1rem;
+}
+
+.doctor-tag {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+
+.diagnosis-summary {
+  margin: 10px 0;
+  color: #333;
+  line-height: 1.5;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+.prescription-count {
+  background: #e8f5e9;
+  color: #388e3c;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+}
+
+.no-results {
+  text-align: center;
+  color: #666;
+  padding: 30px;
+  grid-column: 1 / -1;
+}
+
+/* Chi tiết bệnh án */
+.record-detail {
+  background: white;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.back-button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+
+.back-button:hover {
+  background: #2980b9;
+}
+
+.detail-header {
+  margin-bottom: 25px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.detail-header h2 {
+  margin: 0 0 5px 0;
+  color: #2c3e50;
+}
+
+.doctor-info {
+  color: #666;
+  margin: 0;
+}
+
+.detail-section {
+  margin-bottom: 25px;
+}
+
+.detail-section h3 {
+  color: #3498db;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.detail-content {
+  margin: 0;
+  line-height: 1.6;
+  color: #333;
+}
+
+.diagnosis {
+  font-weight: bold;
+  color: #e53935;
+}
+
+.prescription-list {
+  display: grid;
+  gap: 15px;
+}
+
+.prescription-item {
+  background: #f5f5f5;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #3498db;
+}
+
+.prescription-item p {
+  margin: 5px 0;
+}
+
+.loading-indicator {
+  text-align: center;
+  padding: 20px;
+  color: #3498db;
+  font-weight: bold;
+}
+
+.error-message {
+  text-align: center;
+  padding: 20px;
+  color: #e53935;
+  background: #ffebee;
+  border-radius: 5px;
+  margin: 10px 0;
+}
+
+/* Disabled state */
+button:disabled, input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

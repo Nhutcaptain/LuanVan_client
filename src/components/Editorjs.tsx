@@ -6,6 +6,7 @@ import List from '@editorjs/list';
 import ImageTool from '@editorjs/image';
 import Table from '@editorjs/table';
 import Paragraph from '@editorjs/paragraph';
+import TextColorPlugin from 'editorjs-text-color-plugin';
 
 interface EditorProps {
   onChange?: (data: OutputData) => void;
@@ -47,6 +48,13 @@ const Editorjs = (props: EditorProps) => {
                 defaultLevel: 1,
             },
         },
+        Marker: {
+          class: TextColorPlugin,
+          config: {
+            type: 'marker', // or 'textColor'
+            icon: '<svg>...</svg>', // optional custom icon
+          },
+        },
         list: List,
         table: {
             class: Table as any,
@@ -62,27 +70,17 @@ const Editorjs = (props: EditorProps) => {
         image: {
           class: ImageTool as any,
           config: {
-            uploader: {
-              async uploadByFile(file: File) {
-                const formData = new FormData();
-                formData.append("file", file);
-                formData.append("upload_preset", "editor_upload");
-
-                const res = await fetch(
-                  "https://api.cloudinary.com/v1_1/dmdfi6nq7/image/upload",
-                  {
-                    method: "POST",
-                    body: formData,
-                  }
-                );
-                const data = await res.json();
-                return {
-                  success: 1,
-                  file: { url: data.secure_url, public_id: data.public_id },
-
-                };
+            uploadByFile(file: File) {
+            const tempUrl = URL.createObjectURL(file);
+            return Promise.resolve({
+              success: 1,
+              file: {
+                url: tempUrl, 
+                name: file.name,
+                _originalFile: file, 
               },
-            },
+            });
+          }
           },
         },
       },

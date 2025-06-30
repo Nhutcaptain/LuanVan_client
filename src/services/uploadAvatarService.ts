@@ -28,3 +28,38 @@ export const deleteImageFromCloudinary = async (publicId: string) => {
 
   return res.data;
 };
+
+export const processImagesAndUpload = async (content: string) => {
+  const div = document.createElement('div');
+  div.innerHTML = content;
+
+  const images = div.querySelectorAll('img');
+
+  for (const img of images) {
+    const src = img.getAttribute('src');
+    if (src && src.startsWith('data:image/')) {
+      try {
+        const file = dataURLtoFile(src, 'image.png');
+        const { url, publicId } = await uploadImageToCloudinary(file);
+        
+        // Cập nhật ảnh với URL mới và thêm publicId để dùng sau
+        img.setAttribute('src', url);
+        img.setAttribute('data-public-id', publicId);
+      } catch (error) {
+        console.error('Upload ảnh thất bại:', error);
+      }
+    }
+  }
+
+  return div.innerHTML;
+};
+
+function dataURLtoFile(dataurl: string, filename: string): File {
+  const arr = dataurl.split(',');
+  const mime = arr[0].match(/:(.*?);/)?.[1] || '';
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) u8arr[n] = bstr.charCodeAt(n);
+  return new File([u8arr], filename, { type: mime });
+}

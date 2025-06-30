@@ -16,3 +16,15 @@ export interface ExaminationFormData {
   prescriptions: PrescriptionItem[];
   notes: string;
 }
+
+export interface ExaminationDetail {
+  doctorId?: string;
+  doctorName?: string;
+  date: string;
+  subjective: string;
+  objective: string;
+  assessment: string;
+  plan: string;
+  prescriptions: PrescriptionItem[];
+  notes: string;
+}

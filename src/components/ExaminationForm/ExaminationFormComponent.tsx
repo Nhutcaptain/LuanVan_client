@@ -110,7 +110,7 @@ export default function ExaminationForm({
     if(patient) {
       setFormData(prev => ({
       ...prev,
-      patientId: patient._id,
+      patientId: patient.userId,
     }));
     }
   };

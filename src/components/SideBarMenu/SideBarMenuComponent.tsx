@@ -25,7 +25,7 @@ const SideBarMenuComponent = () => {
         {
             icon: <FaRegRectangleList className='text-2xl' />,
             label: 'Quản lý đơn thuốc',
-            link: '/quan-ly/quan-ly-don-thuoc'
+            link: '/quan-ly/xem-benh-an'
         },
         {
             icon: <LiaHistorySolid className='text-2xl' />,
