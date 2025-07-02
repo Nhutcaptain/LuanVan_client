@@ -114,7 +114,7 @@ export default function CKEditorComponent({ onChange, initialData }: CKEditorCom
         toolbar: [
           'toggleImageCaption', 'imageTextAlternative', '|',
           'imageStyle:inline', 'imageStyle:wrapText', 'imageStyle:breakText', '|',
-          'resizeImage'
+          'resizeImage', 'imageStyle:side'
         ]
       },
       initialData: initialData || '<h2>Welcome to CKEditor 5</h2><p>Start editing here...</p>',

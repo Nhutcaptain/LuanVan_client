@@ -1,0 +1,99 @@
+/* Style cho nội dung từ CKEditor */
+.ck-content {
+  @apply prose max-w-none;
+}
+
+.ck-content h2 {
+  @apply text-2xl font-bold mt-8 mb-4;
+}
+
+.ck-content h3 {
+  @apply text-xl font-bold mt-6 mb-3;
+}
+
+.ck-content p {
+  @apply my-4 leading-relaxed;
+}
+
+.ck-content ul, .ck-content ol {
+  @apply pl-5 my-4;
+}
+
+.ck-content ul {
+  @apply list-disc;
+}
+
+.ck-content ol {
+  @apply list-decimal;
+}
+
+.ck-content a {
+  @apply text-blue-600 hover:underline;
+}
+
+.ck-content img {
+  @apply my-4 mx-auto rounded-lg shadow-md;
+  max-height: 500px;
+}
+
+.ck-content blockquote {
+  @apply border-l-4 border-gray-300 pl-4 italic text-gray-600 my-4;
+}
+
+.ck-content table {
+  @apply w-full my-4 border-collapse;
+}
+
+.ck-content table th, .ck-content table td {
+  @apply border p-2;
+}
+
+.ck-content table th {
+  @apply bg-gray-100;
+}
+
+.ck-content {
+  overflow: hidden; /* Quan trọng để chứa các float */
+}
+
+/* Style cho hình ảnh căn phải */
+.ck-content figure.image.image-style-align-right {
+  float: right;
+  margin-left: 20px;
+  margin-bottom: 20px;
+  max-width: 36%; /* Tương ứng với width:35.97% trong HTML */
+}
+
+/* Style cho hình ảnh căn trái */
+.ck-content figure.image.image-style-align-left {
+  float: left;
+  margin-right: 20px;
+  margin-bottom: 20px;
+}
+
+/* Clearfix để tránh layout bị phá vỡ */
+.ck-content::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Responsive cho mobile */
+@media (max-width: 768px) {
+  .ck-content figure.image {
+    float: none !important;
+    margin: 1em auto !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
+
+/* Style cho danh sách */
+.ck-content ul {
+  padding-left: 20px;
+  margin: 1em 0;
+}
+
+.ck-content li {
+  margin-bottom: 0.5em;
+}

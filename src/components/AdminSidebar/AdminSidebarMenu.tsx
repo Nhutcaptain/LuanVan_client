@@ -30,7 +30,7 @@ const AdminSidebarMenu = () => {
         {
             icon: <FaRegRectangleList className='text-2xl' />,
             label: 'Phân công / xếp lịch',
-            link: '/bac-si/ho-so-benh-nhan'
+            link: '/admin/schedules'
         },
         {
             icon: <LiaHistorySolid className='text-2xl' />,
