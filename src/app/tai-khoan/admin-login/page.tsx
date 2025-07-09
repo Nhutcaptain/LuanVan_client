@@ -32,7 +32,7 @@ export default function AdminLogin() {
             sameSite: 'Strict',
         });
 
-        router.push('/admin');
+        router.push('/admin/account');
     }catch(error) {
         alert(error);
     }

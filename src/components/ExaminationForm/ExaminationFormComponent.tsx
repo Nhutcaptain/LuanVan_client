@@ -6,6 +6,8 @@ import PrescriptionForm from '../PrescriptionForm/PrescriptionForm';
 import './styles.css'
 import PatientInfoLookup from '../PatientInfoLookup/PatientInfoLookup';
 import {jwtDecode} from 'jwt-decode';
+import InputComponent from '../InputComponent/InputComponent';
+import { PDFExportDialog } from '@/modals/PDFExportModal';
 
 interface DecodedToken {
   userId?: string;
@@ -44,10 +46,14 @@ export default function ExaminationForm({
     plan: '',
     notes: '',
     patientId: '',
+    followUp: new Date(),
     doctorId: getDoctorIdFromToken(),
   });
 
   const [prescriptions, setPrescriptions] = useState<PrescriptionItem[]>([]);
+  const [patientInfo, setPatientInfo] = useState<any>(null);
+  const [showPDFExportDialog, setShowPDFExportDialog] = useState(false);
+  const [pdfData, setPdfData] = useState<ExaminationFormData>();
   const [newPrescription, setNewPrescription] = useState<PrescriptionItem>({
     medication: '',
     dosage: '',
@@ -103,6 +109,8 @@ export default function ExaminationForm({
         duration: ''
     });
     setPrescriptions([]);
+    setPdfData({...formData, prescriptions})
+    setShowPDFExportDialog(true);
   };
 
   const handlePatientSelect = (patient: any) => {
@@ -112,6 +120,7 @@ export default function ExaminationForm({
       ...prev,
       patientId: patient.userId,
     }));
+    setPatientInfo(patient);
     }
   };
 
@@ -247,6 +256,18 @@ export default function ExaminationForm({
       </div>
 
       <div className="form-group">
+          <label htmlFor="date">Ngày Tái Khám</label>
+          <input
+            type="date"
+            id="date"
+            name="followUp"
+            value={formData.followUp instanceof Date ? formData.followUp.toISOString().split('T')[0] : formData.followUp || ''}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+      <div className="form-group">
         <label htmlFor="notes">Ghi Chú Thêm</label>
         <textarea
           id="notes"
@@ -257,7 +278,7 @@ export default function ExaminationForm({
           placeholder="Ghi chú khác..."
         />
       </div>
-
+        
       <button 
         type="submit" 
         disabled={isSubmitting}
@@ -265,6 +286,14 @@ export default function ExaminationForm({
       >
         {isSubmitting ? 'Đang Lưu...' : 'Lưu Hồ Sơ Khám Bệnh'}
       </button>
+      {pdfData && (
+        <PDFExportDialog
+          open={showPDFExportDialog}
+          onClose={() => setShowPDFExportDialog(false)}
+          examinationData={pdfData}
+          patientInfo={patientInfo}
+        />
+      )}
     </form>
   );
 }

@@ -2,9 +2,11 @@
 import { useState, useEffect } from 'react';
 import './styles.css';
 import api from '@/lib/axios';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { Convergence } from 'next/font/google';
 
 interface Doctor {
+    _id: string;
     fullName: string;
     avatar: {
         publicId: string;
@@ -12,8 +14,14 @@ interface Doctor {
     };
     certificate: string[];
     experience: string[];
-    department: string;
-    specialization: string;
+    departmentId: {
+        _id: string;
+        name: string;
+    };
+    specialtyId: {
+        _id: string;
+        name: string;
+    };
     dateOfBirth: Date;
     gender?: string;
 }
@@ -29,12 +37,14 @@ const DoctorProfile = () => {
     const [age, setAge] = useState<number | null>(null);
     const [doctorData, setDoctorData] = useState<Doctor | null>(null);
     const [loading, setLoading] = useState(true);
+    const router = useRouter();
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const res = await api.get(`/doctors/getDoctorBySlug?nameSlug=${nameSlug}`);
                 setDoctorData(res.data);
+                console.log(res.data);
             } catch (error) {
                 console.error(error);
             } finally {
@@ -75,6 +85,14 @@ const DoctorProfile = () => {
         return <div className="error">Không tìm thấy thông tin bác sĩ</div>;
     }
 
+    const covertGender = (gender: string) => {
+        return gender === 'male' ? 'Name' : 'Nữ';
+    }
+
+    const handleBooking = () => {
+        router.push(`/quan-ly/dat-lich-kham?doctorId=${doctorData._id}&specialtyId=${doctorData.specialtyId._id}&departmentId=${doctorData.departmentId._id}`);
+    }
+
     return (
         <div className="doctor-profile-container">
             <div className="profile-header">
@@ -92,11 +110,11 @@ const DoctorProfile = () => {
                             </div>
                             <div className="info-item">
                                 <span className="info-label">Giới tính:</span>
-                                <span className="info-value">{doctorData.gender || 'N/A'}</span>
+                                <span className="info-value">{covertGender(doctorData.gender ?? '') || 'N/A'}</span>
                             </div>
                             <div className="info-item">
                                 <span className="info-label">Chuyên khoa:</span>
-                                <span className="info-value">{doctorData.specialization}</span>
+                                <span className="info-value">{doctorData.specialtyId.name}</span>
                             </div>
                             <div className="info-item">
                                 <span className="info-label">Kinh nghiệm:</span>
@@ -172,6 +190,11 @@ const DoctorProfile = () => {
                                 (e.target as HTMLImageElement).src = '/default-avatar.jpg';
                             }}
                         />
+                    </div>
+                    <div className="set-appointment-btn" onClick={handleBooking}>
+                        <button className="appointment-button" >
+                            Đặt lịch hẹn
+                        </button>
                     </div>
                 </div>
             </div>

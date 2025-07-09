@@ -6,6 +6,12 @@ import './styles.css';
 import { DoctorInterface } from '@/interface/DoctorInterface';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/axios';
+import UploadImageComponent from '@/components/UploadImage/UploadImageComponent';
+import Swal from 'sweetalert2';
+import { deleteImageFromCloudinary, uploadImageToCloudinary } from '@/services/uploadAvatarService';
+import { a } from 'framer-motion/client';
+import AddressSelector from '@/components/AddressSelectorComponent/AddressSelector';
+import { AddressForm } from '@/interface/AddressForm';
 
 const DoctorDetailPage = () => {
   const router = useRouter();
@@ -13,11 +19,26 @@ const DoctorDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
     dateOfBirth: '',
-    address: '',
+    address: {
+      houseNumber: '',
+      ward: {
+        name: '',
+        code: 0
+      },
+      district: {
+        name: '',
+        code: 0
+      },
+      province: {
+        name: '',
+        code: 0
+      }
+    },
     avatar: {
       publicId: '',
       url: '',
@@ -34,12 +55,13 @@ const DoctorDetailPage = () => {
         const res = await api.get(`/doctors/get`, {
           headers: {Authorization: `Bearer ${token}`}
         });
+        console.log(res.data);
         setDoctor(res.data);
         setFormData({
           fullName: res.data.userId.fullName,
           phone: res.data.userId.phone,
           dateOfBirth: res.data.userId.dateOfBirth ? new Date(res.data.userId.dateOfBirth).toISOString().split('T')[0] : '',
-          address: `${res.data.userId.address?.houseNumber || ''}, ${res.data.userId.address?.ward?.name || ''}, ${res.data.userId.address?.district?.name || ''}, ${res.data.userId.address?.province?.name || ''}`,
+          address: res.data.userId.address,
           avatar: res.data.userId.avatar || ''
         });
       } catch (err) {
@@ -75,7 +97,7 @@ const DoctorDetailPage = () => {
         fullName: doctor.userId.fullName,
         phone: doctor.userId.phone,
         dateOfBirth: doctor.userId.dateOfBirth ? new Date(doctor.userId.dateOfBirth).toISOString().split('T')[0] : '',
-        address: `${doctor.userId.address?.houseNumber || ''}, ${doctor.userId.address?.ward?.name || ''}, ${doctor.userId.address?.district?.name || ''}, ${doctor.userId.address?.province?.name || ''}`,
+        address: doctor.userId.address,
         avatar: doctor.userId.avatar || ''
       });
     }
@@ -113,35 +135,65 @@ const DoctorDetailPage = () => {
         phone: formData.phone,
         dateOfBirth: formData.dateOfBirth,
         address: formData.address,
-        avatar: formData.avatar
+        avatar: formData.avatar,
       };
 
-      const res = await api.put(`/doctors/update`, updatedData, {
+      Swal.fire({
+        title: 'Đang cập nhật bác sĩ',
+        text: 'Vui lòng chờ trong giây lát',
+        icon: 'info',
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      if(avatarFile) {
+        if(doctor.userId.avatar.url) {
+          await deleteImageFromCloudinary(updatedData.avatar.publicId);
+        }
+        const {publicId, url} = await uploadImageToCloudinary(avatarFile);
+        updatedData.avatar.publicId = publicId;
+        updatedData.avatar.url = url;
+      }
+
+      const res = await api.put('/users/update', updatedData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
+      if(res.status === 200) {
+        Swal.close();
+        Swal.fire({
+          title: "Đã cập nhật thông tin bác sĩ thành công",
+          icon: "success",
+          timer: 1000
+        });
+      }
+
       setDoctor(res.data);
       setIsEditing(false);
-      alert('Cập nhật thông tin thành công!');
     } catch (err) {
       console.error('Error updating doctor:', err);
       alert('Có lỗi xảy ra khi cập nhật thông tin');
     }
   };
 
+  const setAddressWrapper: React.Dispatch<React.SetStateAction<AddressForm>> = (value) => {
+        setFormData((prev) => ({
+          ...prev,
+          address: typeof value === 'function' ? value(prev.address) : value,
+        }));
+      };
+
   if (loading) {
-    return <div className="loading" style={{ fontSize: '1.5rem' }}>Loading...</div>;
+    return <div className="loading" style={{ fontSize: '1.5rem', textAlign: 'center', marginTop: '2rem' }}>Đang tải thông tin bác sĩ...</div>;
   }
 
   if (error) {
-    return <div className="error" style={{ fontSize: '1.5rem' }}>{error}</div>;
+    return <div className="error" style={{ fontSize: '1.5rem', textAlign: 'center', marginTop: '2rem' }}>{error}</div>;
   }
 
   if (!doctor || !doctor.userId) {
-    return <div style={{ fontSize: '1.5rem' }}>
-      Không tìm thấy bác sĩ<br />
-      <pre>{JSON.stringify(doctor, null, 2)}</pre>
-    </div>;
+    return <div className="loading" style={{ fontSize: '1.5rem', textAlign: 'center', marginTop: '2rem' }}>Đang tải thông tin bác sĩ...</div>;
   }
 
   return (
@@ -150,20 +202,11 @@ const DoctorDetailPage = () => {
         <div className="avatar-container">
           {isEditing ? (
             <>
-              <img 
-                src={formData.avatar.url || '/default-avatar.png'} 
-                alt={formData.fullName || 'Doctor'} 
-                className="doctor-avatar"
-                onClick={() => fileInputRef.current?.click()}
-                style={{ cursor: 'pointer', width: '200px', height: '200px' }}
-              />
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleAvatarChange}
-                accept="image/*"
-                style={{ display: 'none' }}
-              />
+              <UploadImageComponent 
+                onFileSelect={(file) => setAvatarFile(file)}
+                initialAvatar={formData.avatar.url}
+                size={250}
+              ></UploadImageComponent>
               <button 
                 onClick={() => fileInputRef.current?.click()}
                 className="change-avatar-btn"
@@ -278,18 +321,11 @@ const DoctorDetailPage = () => {
             <div style={{ fontSize: '1.3rem' }}>
               <p><strong>Địa chỉ:</strong></p>
               {isEditing ? (
-                <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  className="edit-textarea"
-                  rows={4}
-                  style={{ fontSize: '1.3rem', padding: '0.8rem', marginTop: '0.5rem' }}
-                />
+                <AddressSelector form={formData.address} setForm={setAddressWrapper}></AddressSelector>
               ) : (
                 <p style={{ marginTop: '0.5rem' }}>
                   {doctor.userId.address?.houseNumber && `${doctor.userId.address.houseNumber}, `}
-                  {doctor.userId.address?.ward?.name && `${doctor.userId.address.ward}, `}
+                  {doctor.userId.address?.ward?.name && `${doctor.userId.address.ward.name}, `}
                   {doctor.userId.address?.district?.name && `${doctor.userId.address.district.name}, `}
                   {doctor.userId.address?.province?.name && doctor.userId.address.province.name}
                 </p>

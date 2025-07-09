@@ -8,8 +8,11 @@ import SelectComponent from '@/components/SelectComponent/SelectComponent';
 import './styles.css'
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import api from '@/lib/axios';
-import { uploadImageToCloudinary } from '@/services/uploadAvatarService';
+import { deleteImageFromCloudinary, uploadImageToCloudinary } from '@/services/uploadAvatarService';
 import UploadImageComponent from '@/components/UploadImage/UploadImageComponent';
+import { Department, Specialty } from '@/interface/Department';
+import { label } from 'framer-motion/client';
+import Swal from 'sweetalert2';
 
 const AccountManagementPage: React.FC = () => {
   const initialPatients: IPatient[] = [
@@ -63,6 +66,8 @@ const AccountManagementPage: React.FC = () => {
   const [showCertificates, setShowCertificates] = useState(false);
   const [showExperience, setShowExperience] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [specialties, setSpecialties] = useState<Specialty[]>([])
 
   const [doctorForm, setDoctorForm] = useState<Omit<DoctorInterface, '_id' | 'userId'> & { 
     userId: Omit<IUser, '_id' | 'createdAt' | 'updatedAt'> 
@@ -97,6 +102,8 @@ const AccountManagementPage: React.FC = () => {
         url: '',
       }
     },
+    departmentId: '',
+    specialtyId: '',
     specialization: '',
     certificate: [],
     experience: [],
@@ -125,7 +132,39 @@ const AccountManagementPage: React.FC = () => {
     }
 
     fectchDoctor();
+  },[]);
+
+  useEffect(() => {
+    const fetchDepartments = async() => {
+      try{
+        const res = await api.get('/department/getAllDepartment');
+        if(res.status === 200) {
+          setDepartments(res.data);
+        }
+      }catch(error) {
+        console.error(error);
+      }
+    }
+
+    fetchDepartments();
   },[])
+
+  useEffect(() => {
+    if(!doctorForm.departmentId) return;
+    const fetchSpecialties = async() => {
+      try{
+        const res = await api.get(`/department/getAllSpecialtyByDepartmentId/${doctorForm.departmentId}`);
+        if(res.status === 200) {
+          console.log(res.data);
+          setSpecialties(res.data);
+        }
+      }catch(error) {
+        console.error(error);
+      }
+    }
+
+    fetchSpecialties();
+  },[doctorForm.departmentId])
 
   const statusOptions = [
     { label: 'Hoạt động', value: 'true' },
@@ -177,11 +216,11 @@ const AccountManagementPage: React.FC = () => {
     }
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (activeTab !== 'doctor') return;
-    
     setIsCreating(true);
     setEditingId(null);
+    
     setDoctorForm({
       userId: {
         email: '',
@@ -213,6 +252,8 @@ const AccountManagementPage: React.FC = () => {
           url: '',
         }
       },
+      departmentId: '',
+      specialtyId: '',
       specialization: '',
       certificate: [],
       experience: [],
@@ -243,6 +284,8 @@ const AccountManagementPage: React.FC = () => {
             isActive: doctor.userId.isActive,
             avatar: doctor.userId.avatar
           },
+          departmentId: doctor.departmentId,
+          specialtyId: doctor.specialtyId,
           specialization: doctor.specialization,
           certificate: doctor.certificate,
           experience: doctor.experience,
@@ -264,36 +307,58 @@ const AccountManagementPage: React.FC = () => {
 
     try {
       const uploadData = {...doctorForm}
+      Swal.fire({
+          title: isCreating ? 'Đang tạo mới bác sĩ' : 'Đang cập nhật bác sĩ',
+          text: 'Vui lòng chờ trong giây lát',
+          icon: 'info',
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
       if(avatarFile) {
+        await deleteImageFromCloudinary(uploadData.userId.avatar.publicId);
         const {publicId, url} = await uploadImageToCloudinary(avatarFile);
         uploadData.userId.avatar.publicId = publicId;
         uploadData.userId.avatar.url = url;
       }
 
+        
+
       if (isCreating) {
-        const newDoctor: DoctorInterface = {
-          _id: Date.now().toString(),
-          userId: {
-            _id: `user_${Date.now()}`,
-            ...doctorForm.userId,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          },
-          specialization: doctorForm.specialization,
-          certificate: doctorForm.certificate,
-          experience: doctorForm.experience,
-          schedule: doctorForm.schedule
-        };
-        setDoctors([...doctors, newDoctor]);
-        setIsCreating(false);
+        console.log(doctorForm);
+         
+        const res = await api.post('/doctors/create',uploadData);
+        if(res.status === 201) {
+          Swal.close();
+          Swal.fire({
+            title: "Đã tạo bác sĩ mới thành công",
+            icon: "success",
+            timer: 1000
+          });
+
+          setDoctors([...doctors, res.data]);
+          setIsCreating(false);
+        }
       } else if (editingId) {
-        console.log(uploadData)
         const res = await api.put(`/doctors/update/${editingId}`,uploadData);
+        if(res.status === 200) {
+          Swal.close();
+          Swal.fire({
+            title: "Đã cập nhật thông tin bác sĩ thành công",
+            icon: "success",
+            timer: 1000
+          });
+        }
         setDoctors(doctors.map(doctor => doctor._id === editingId ? res.data : doctor));
         setEditingId(null);
       }
     }catch(error) {
-      alert(error)
+      Swal.close();
+      Swal.fire({
+        title: 'Email đã tồn tại',
+        icon: 'error',
+        showCloseButton: true
+      })
     }
   };
 
@@ -352,6 +417,16 @@ const AccountManagementPage: React.FC = () => {
       experience: prev.experience.filter((_, i) => i !== index)
     }));
   };
+
+  const departmentOptions = departments.map(dep => ({
+    label: dep.name,
+    value: dep._id
+  }))
+
+  const specialtyOptions = specialties.map(spe => ({
+    label: spe.name,
+    value: spe._id
+  }))
 
   return (
     <div className="account-management-container">
@@ -454,13 +529,21 @@ const AccountManagementPage: React.FC = () => {
               name="user.gender"
               required
             />
+            <SelectComponent
+              label="Khoa"
+              value={doctorForm.departmentId ?? ''}
+              onChange={handleUserInputChange}
+              options={departmentOptions}
+              name="departmentId"
+              required
+            />
             
             <SelectComponent
               label="Chuyên khoa"
-              value={doctorForm.specialization}
+              value={doctorForm.specialtyId ?? ''}
               onChange={handleUserInputChange}
-              options={specializationOptions}
-              name="specialization"
+              options={specialtyOptions}
+              name="specialtyId"
               required
             />
             

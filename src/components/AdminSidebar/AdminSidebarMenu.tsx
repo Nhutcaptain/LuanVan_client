@@ -40,7 +40,7 @@ const AdminSidebarMenu = () => {
         {
             icon: <FaRegCalendarPlus className='text-2xl' />,
             label: 'Quản lý khoa, phòng ban',
-            link: '/bac-si/tai-lieu'
+            link: '/admin/department'
         },
         {
             icon: <FaRegCalendarPlus className='text-2xl' />,

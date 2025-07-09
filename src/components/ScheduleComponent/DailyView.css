@@ -1,0 +1,60 @@
+/* styles/DailyView.css */
+.daily-view {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.daily-view h3 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.daily-schedule {
+  margin-top: 20px;
+}
+
+.special-day {
+  padding: 15px;
+  background-color: #fff8e1;
+  border-left: 4px solid #ffc107;
+  border-radius: 4px;
+}
+
+.shifts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.shift-item {
+  padding: 12px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  border-left: 4px solid #4caf50;
+}
+
+.shift-time {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.shift-location {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.no-shift {
+  color: #999;
+  font-style: italic;
+  padding: 15px;
+  text-align: center;
+}
+
+.daily-view .today-header {
+  color: #1890ff;
+  font-weight: bold;
+}

@@ -68,6 +68,16 @@ const LoginPage = () => {
           >
             {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
           </button>
+          <button
+            type="button"
+            className="w-full mt-2 py-2 px-4 flex items-center justify-center gap-2 border border-gray-300 rounded hover:bg-gray-100 transition"
+            onClick={() => {
+              window.location.href = 'http://localhost:5000/api/auth/google';
+            }}
+          >
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="w-5 h-5" />
+            Đăng nhập với Google
+          </button>
         </form>
       </div>
     </div>

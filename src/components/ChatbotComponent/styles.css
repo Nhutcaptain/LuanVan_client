@@ -10,8 +10,8 @@
 
 /* Nút mở chat */
 .chatbot-toggle-btn {
-  width: 56px;
-  height: 56px;
+  width: 66px;
+  height: 66px;
   border-radius: 50%;
   background: linear-gradient(135deg, #0A84FF 0%, #0066CC 100%);
   color: white;
@@ -183,7 +183,7 @@
   padding: 12px 16px;
   border-radius: 18px;
   line-height: 1.5;
-  font-size: 18px;
+  font-size: 22px;
   word-wrap: break-word;
 }
 
@@ -220,7 +220,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   outline: none;
-  font-size: 14px;
+  font-size: 16px;
   transition: border 0.2s;
 }
 
@@ -281,4 +281,302 @@
     height: 100vh;
     border-radius: 0;
   }
+}
+
+chatbot-logo svg {
+  flex-shrink: 0;
+}
+
+/* Tin nhắn */
+.chat-message {
+  position: relative;
+  padding-right: 40px;
+}
+
+.message-content {
+  padding: 12px 16px;
+  border-radius: 18px;
+  line-height: 1.5;
+  font-size: 18px;
+  word-wrap: break-word;
+}
+
+.chat-message.user .message-content {
+  background: #0A84FF;
+  color: white;
+  margin-left: auto;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-message.bot .message-content {
+  background: #f3f4f6;
+  color: #111827;
+  margin-right: auto;
+  border-bottom-left-radius: 4px;
+}
+
+/* Nút copy */
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.chat-message:hover .copy-btn {
+  opacity: 1;
+}
+
+.copy-icon {
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.chat-message.user .copy-icon {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.chat-message.user .copy-btn {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Hiệu ứng khi copy */
+.copy-icon {
+  transition: all 0.2s;
+}
+
+.copy-btn:hover .copy-icon {
+  transform: scale(1.1);
+}
+
+.ai-icon {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
+  object-fit: contain;
+}
+
+
+.chatbot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: white;
+  border-bottom: 1px solid #f3f4f6;
+  position: relative;
+}
+
+.chatbot-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Nút tạo chat mới */
+.new-chat-btn {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.new-chat-btn:hover {
+  background: #f3f4f6;
+  color: #0A84FF;
+}
+
+.new-chat-icon {
+  font-size: 18px;
+}
+
+.welcome-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  margin: auto;
+  height: calc(100% - 40px);
+}
+
+.welcome-avatar {
+  margin-bottom: 20px;
+}
+
+.ai-avatar-img {
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-text {
+  max-width: 80%;
+}
+
+.welcome-text p {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #4b5563;
+  margin-bottom: 8px;
+}
+
+.welcome-text p:first-child {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.doctors-list {
+  padding: 15px;
+  display: grid;
+  gap: 15px;
+}
+
+/* Doctor Card */
+.doctor-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+  width: 300px;
+  height: 450px;
+}
+
+.avatar-container{
+  width: 100%;
+  height: 70%;
+}
+
+.doctor-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  border-color: #cbd5e0;
+}
+
+.doctor-avatar {
+  width: 100%;
+  height: 100%;
+  border: 3px solid #ebf8ff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.doctor-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+
+.buttom-card-group{
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 15px;
+  width: 100%;
+  height: 30%;
+}
+
+.doctor-name {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #025cf6;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doctor-specialty {
+  margin: 5px 0 0;
+  font-size: 0.9rem;
+  color: #4a5568;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.select-doctor-btn {
+  background-color: #3182ce;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: 15px;
+  min-width: 80px;
+}
+
+.select-doctor-btn:hover {
+  background-color: #2c5282;
+  transform: translateY(-1px);
+}
+
+.select-doctor-btn:active {
+  transform: translateY(0);
+}
+
+/* Loading và Empty State */
+.loading-doctors {
+  display: flex;
+  justify-content: center;
+  padding: 30px;
+}
+
+.thinking-dots {
+  display: flex;
+  font-size: 2rem;
+  color: #3182ce;
+}
+
+.thinking-dots span {
+  animation: bounce 1.5s infinite ease-in-out;
+}
+
+.thinking-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.thinking-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.no-doctors {
+  text-align: center;
+  padding: 30px;
+  color: #718096;
+}
+
+.no-doctors p {
+  margin: 0;
+  font-size: 1rem;
 }

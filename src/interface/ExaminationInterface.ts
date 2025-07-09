@@ -13,6 +13,7 @@ export interface ExaminationFormData {
   objective: string;
   assessment: string;
   plan: string;
+  followUp?: Date;
   prescriptions: PrescriptionItem[];
   notes: string;
 }

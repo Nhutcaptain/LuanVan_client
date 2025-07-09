@@ -5,8 +5,11 @@ import SelectComponent from '@/components/SelectComponent/SelectComponent';
 import { IUser } from '@/interface/usermodel';
 import api from '@/lib/axios';
 import { toast } from 'react-toastify';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import InputComponent from '@/components/InputComponent/InputComponent';
+import { OvertimeSchedule, OvertimeSlot } from '@/interface/Shifts';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 interface Department {
   _id: string;
@@ -41,6 +44,10 @@ const AppointmentPage = () => {
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [availableDates, setAvailableDates] = useState<AvailableDate[]>([]);
+  const searchParams = useSearchParams();
+  const [overtimeSchedule, setOvertimeSchedule] = useState<OvertimeSchedule | null>(null);
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<OvertimeSlot[]>([]);
+  const [userId, setUserId] = useState('')
   
   const [formData, setFormData] = useState({
     departmentId: '',
@@ -60,6 +67,32 @@ const AppointmentPage = () => {
     dates: false,
     submitting: false,
   });
+
+  useEffect(() => {
+    const doctorId = searchParams.get('doctorId');
+    const departmentId = searchParams.get('departmentId');
+    const specialtyId = searchParams.get('specialtyId');
+    const fetchUserId = async() => {
+      if(!doctorId) return;
+      try{
+        const res = await api.get(`/users/getUserId/${doctorId}`);
+        if(res.status === 200) {
+          setUserId(res.data.userId);
+        }
+      }catch(error) {
+        console.error(error);
+        toast.error('Không tìm thấy thông tin người dùng này');
+      }
+    }
+    fetchUserId();
+    
+    setFormData(prev => ({
+      ...prev,
+      departmentId: departmentId || '',
+      specialtyId: specialtyId || '',
+      doctorId: doctorId || '',
+    }))
+  },[])
 
   // Fetch patient data from backend
   useEffect(() => {
@@ -108,8 +141,8 @@ const AppointmentPage = () => {
   // Fetch specialties when department is selected
   useEffect(() => {
     if (!formData.departmentId) {
-      setSpecialties([]);
-      setFormData(prev => ({ ...prev, specialtyId: '', doctorId: '' }));
+      // setSpecialties([]);
+      // setFormData(prev => ({ ...prev, specialtyId: '', doctorId: '' }));
       return;
     }
 
@@ -137,8 +170,8 @@ const AppointmentPage = () => {
   // Fetch doctors when either department or specialty is selected
   useEffect(() => {
     if (!formData.specialtyId) {
-      setDoctors([]);
-      setFormData(prev => ({ ...prev, doctorId: '' }));
+      // setDoctors([]);
+      // setFormData(prev => ({ ...prev, doctorId: '' }));
       return;
     }
 
@@ -163,34 +196,74 @@ const AppointmentPage = () => {
     fetchDoctors();
   }, [formData.departmentId, formData.specialtyId]);
 
-  // Fetch available dates when doctor is selected
   useEffect(() => {
     if (!formData.doctorId) {
-      setAvailableDates([]);
+      setOvertimeSchedule(null);
+      setAvailableTimeSlots([]);
       setFormData(prev => ({ ...prev, appointmentDate: '', session: '' }));
       return;
     }
 
-    const fetchAvailableDates = async () => {
+    const fetchOvertimeSchedule = async () => {
       try {
+        if(!userId) return;
         setLoading(prev => ({ ...prev, dates: true }));
-        const res = await api.get(`/appointment/availability?doctorId=${formData.doctorId}`);
+        const res = await api.get(`/schedule/getOvertimeSchedule/${userId}`);
         
         if (res.status === 200) {
-          setAvailableDates(res.data);
+          console.log(res.data);
+          setOvertimeSchedule(res.data);
         } else {
-          throw new Error('Failed to fetch available dates');
+          throw new Error('Failed to fetch overtime schedule');
         }
       } catch (err) {
-        console.error('Failed to fetch available dates:', err);
-        toast.error('Không thể tải ngày khám khả dụng');
+        console.error('Failed to fetch overtime schedule:', err);
+        toast.error('Không thể tải lịch khám ngoài giờ của bác sĩ');
       } finally {
         setLoading(prev => ({ ...prev, dates: false }));
       }
     };
 
-    fetchAvailableDates();
-  }, [formData.doctorId]);
+    fetchOvertimeSchedule();
+  }, [userId, formData.appointmentDate]);
+
+   useEffect(() => {
+    if (!formData.appointmentDate || !overtimeSchedule) {
+      setAvailableTimeSlots([]);
+      setFormData(prev => ({ ...prev, session: '' }));
+      return;
+    }
+
+    const selectedDate = new Date(formData.appointmentDate);
+    const dayOfWeek = selectedDate.getDay(); // 0 (Sunday) to 6 (Saturday)
+    
+    const weeklySlot = overtimeSchedule.weeklySchedule.find(
+      slot => slot.dayOfWeek === dayOfWeek && slot.isActive
+    );
+
+    if (weeklySlot) {
+      setAvailableTimeSlots(weeklySlot.slots);
+    } else {
+      setAvailableTimeSlots([]);
+      toast.warning('Bác sĩ không có lịch khám ngoài giờ vào ngày này');
+    }
+  }, [ overtimeSchedule]);
+
+    const isDateDisabled = (date: Date) => {
+    if (!overtimeSchedule) return true;
+    
+    const dayOfWeek = date.getDay();
+    return !overtimeSchedule.weeklySchedule.some(
+      slot => slot.dayOfWeek === dayOfWeek && slot.isActive
+    );
+  };
+
+  const handleTimeSlotChange = (slot: OvertimeSlot) => {
+    setFormData(prev => ({
+      ...prev,
+      session: `${slot.startTime}-${slot.endTime}`
+    }));
+  };
 
   const handleChange = (
   e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -265,6 +338,8 @@ const AppointmentPage = () => {
   const selectedDateAvailability = availableDates.find(
     d => d.date === formData.appointmentDate
   );
+
+  const allowDayOfWeek = overtimeSchedule?.weeklySchedule.map(item => item.dayOfWeek);
 
   return (
     <div className="container">
@@ -347,48 +422,44 @@ const AppointmentPage = () => {
           </div>
         </div>
 
-        <div className="date-session-container">
-          <div className="date-picker">
-            <InputComponent
-                onChange={handleChange}
-                value={formData.appointmentDate}
-                type='date'
-                name='appointmentDate'
-            ></InputComponent>
+         <div className="date-session-container">
+          <div className="form-group">
+            <label htmlFor="appointmentDate" className="form-label">
+              Ngày khám*
+            </label>
+            <DatePicker
+              id="appointmentDate"
+              selected={formData.appointmentDate ? new Date(formData.appointmentDate) : null}
+              onChange={(date: Date | null) => {
+                setFormData(prev => ({
+                  ...prev,
+                  appointmentDate: date ? date.toISOString().split('T')[0] : ''
+                }));
+              }}
+              minDate={new Date()}
+              placeholderText="Chọn ngày khám"
+              filterDate={(date: Date) => (allowDayOfWeek ?? []).includes(date.getDay())}
+              dateFormat="yyyy-MM-dd"
+              className="form-input"
+            />
           </div>
 
-          {formData.appointmentDate && (
-            <div className="session-picker">
-              <label className="session-label">Buổi khám*</label>
-              <div className="session-options">
-                <label className={`session-option `}>
-                  <input
-                    type="radio"
-                    name="session"
-                    value="morning"
-                    checked={formData.session === 'morning'}
-                    onChange={handleChange}
-                    className="session-radio"
-                    
-                    required
-                  />
-                  <span className="session-text">Buổi sáng (8:00 - 12:00)</span>
-                 
-                </label>
-                <label className={`session-option `}>
-                  <input
-                    type="radio"
-                    name="session"
-                    value="afternoon"
-                    checked={formData.session === 'afternoon'}
-                    onChange={handleChange}
-                    className="session-radio"
-                    
-                    required
-                  />
-                  <span className="session-text">Buổi chiều (13:00 - 17:00)</span>
-                  
-                </label>
+          {availableTimeSlots.length > 0 && (
+            <div className="time-slot-picker">
+              <label className="time-slot-label">Chọn khung giờ*</label>
+              <div className="time-slot-options">
+                {availableTimeSlots.map((slot, index) => (
+                  <button
+                    type="button"
+                    key={index}
+                    className={`time-slot-option ${
+                      formData.session === `${slot.startTime}-${slot.endTime}` ? 'selected' : ''
+                    }`}
+                    onClick={() => handleTimeSlotChange(slot)}
+                  >
+                    {`${slot.startTime} - ${slot.endTime}`}
+                  </button>
+                ))}
               </div>
             </div>
           )}
