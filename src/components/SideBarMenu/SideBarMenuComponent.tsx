@@ -33,9 +33,20 @@ const SideBarMenuComponent = () => {
             link: '/quan-ly/lich-su-kham-chua-benh'
         },
         {
+            icon: <LiaHistorySolid className='text-2xl' />,
+            label: 'AI hỗ trợ',
+            link: '/quan-ly/chat'
+        },
+        
+        {
             icon: <FaRegCalendarPlus className='text-2xl' />,
             label: 'Đặt lịch khám',
             link: '/quan-ly/dat-lich-kham'
+        },
+        {
+            icon: <FaRegRectangleList className='text-2xl' />,
+            label: 'Danh sách lịch khám',
+            link: '/quan-ly/danh-sach-lich-kham'
         },
     ];
 

@@ -3,7 +3,7 @@ export interface Appointment {
   patientId: string;
   doctorId: string;
   appointmentDate: string; // ISO date string
-  session: "morning" | "afternoon";
+  session: string;
   departmentId?: string;
   specialtyId?: string;
   status?: "scheduled" | "completed" | "cancelled";

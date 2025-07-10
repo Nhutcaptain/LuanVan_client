@@ -88,8 +88,9 @@
 /* Date and Session Picker */
 .date-session-container {
   display: grid;
-  grid-template-columns: 1fr 2fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 2rem;
+  align-items: start;
   margin-bottom: 2rem;
 }
 
@@ -154,11 +155,17 @@
 }
 
 /* Form Elements */
-.form-group {
-  margin-bottom: 2rem;
-}
+
 
 .form-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+  color: #444;
+}
+
+.location-label{
   display: block;
   font-weight: 600;
   margin-bottom: 0.75rem;
@@ -296,13 +303,9 @@
   }
 }
 
-.time-slot-picker {
-  margin-top: 20px;
-}
-
 .time-slot-label {
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   font-weight: bold;
 }
 

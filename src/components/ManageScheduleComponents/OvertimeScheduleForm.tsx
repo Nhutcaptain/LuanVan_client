@@ -142,6 +142,7 @@ const OvertimeScheduleForm = ({
 
       if (scheduleId) {
         // Update existing schedule
+        console.log("Is update overtime schedule:", scheduleData);
         response = await api.put(`/schedule/updateOvertimeSchedule/${scheduleId}`, scheduleData);
       } else {
         // Create new schedule
@@ -160,11 +161,10 @@ const OvertimeScheduleForm = ({
         onScheduleAdded();
         if (onCancelEdit) onCancelEdit();
       }
-    } catch (error) {
-      console.error("Lỗi khi lưu lịch khám ngoài giờ:", error);
+    } catch (error: any) {
       Swal.fire({
         title: 'Lỗi',
-        text: error instanceof Error ? error.message : 'Đã xảy ra lỗi khi lưu lịch',
+        text: error.response.data.message,
         icon: 'error'
       });
     } finally {

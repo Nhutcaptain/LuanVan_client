@@ -66,12 +66,11 @@ const DoctorSchedulePage = () => {
     try {
       const updatedSchedule = {
         ...weeklySchedule,
-        scheduleId,
         isActive: !weeklySchedule.isActive,
       };
 
       const response = await api.put(
-        `/schedule/updateOvertimeSchedule`,
+        `/schedule/updateOvertimeSchedule/${scheduleId}`,
         updatedSchedule
       );
 

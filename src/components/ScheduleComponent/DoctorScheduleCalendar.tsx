@@ -51,7 +51,7 @@ export default function DoctorScheduleCalendar({
 
     return weekDays.map(date => {
       const isToday = date.toDateString() === today.toDateString();
-      const dayOfWeek = date.getDay() === 0 ? 6 : date.getDay() - 1; // Convert to 0-6 (Monday-Sunday)
+      const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay(); // Convert to 0-6 (Monday-Sunday)
 
       const specialSchedule = Array.isArray(specialSchedules)
         ? specialSchedules.find(ss => new Date(ss.date).toDateString() === date.toDateString())

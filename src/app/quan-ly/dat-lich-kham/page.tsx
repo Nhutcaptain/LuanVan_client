@@ -10,6 +10,7 @@ import InputComponent from '@/components/InputComponent/InputComponent';
 import { OvertimeSchedule, OvertimeSlot } from '@/interface/Shifts';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { get } from 'http';
 
 interface Department {
   _id: string;
@@ -29,21 +30,12 @@ interface Doctor {
   departmentId: string;
 }
 
-interface AvailableDate {
-  date: string;
-  availableSlots: {
-    morning: boolean;
-    afternoon: boolean;
-  };
-}
-
 const AppointmentPage = () => {
   const router = useRouter();
   const [patient, setPatient] = useState<IUser | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [availableDates, setAvailableDates] = useState<AvailableDate[]>([]);
   const searchParams = useSearchParams();
   const [overtimeSchedule, setOvertimeSchedule] = useState<OvertimeSchedule | null>(null);
   const [availableTimeSlots, setAvailableTimeSlots] = useState<OvertimeSlot[]>([]);
@@ -57,6 +49,7 @@ const AppointmentPage = () => {
     session: '',
     reason: '',
     agreeTerms: false,
+    locationId: '',
   });
 
   const [loading, setLoading] = useState({
@@ -258,10 +251,21 @@ const AppointmentPage = () => {
     );
   };
 
+  const getSelectedLocationId = () => {
+     const selectedDayOfWeek = formData.appointmentDate
+      ? new Date(formData.appointmentDate).getDay()
+      : null;
+    const selectedSchedule = overtimeSchedule?.weeklySchedule.find(
+      item => item.dayOfWeek === selectedDayOfWeek
+    );
+    return selectedSchedule ? (selectedSchedule.locationId): '';
+  }
+
   const handleTimeSlotChange = (slot: OvertimeSlot) => {
     setFormData(prev => ({
       ...prev,
-      session: `${slot.startTime}-${slot.endTime}`
+      session: `${slot.startTime}-${slot.endTime}`,
+      locationId: getSelectedLocationId(),
     }));
   };
 
@@ -304,6 +308,7 @@ const AppointmentPage = () => {
         appointmentDate: formData.appointmentDate,
         session: formData.session,
         reason: formData.reason,
+        locationId: formData.locationId,
       });
 
       if (res.status === 201) {
@@ -334,12 +339,17 @@ const AppointmentPage = () => {
       </div>
     );
   }
-
-  const selectedDateAvailability = availableDates.find(
-    d => d.date === formData.appointmentDate
-  );
-
+  
   const allowDayOfWeek = overtimeSchedule?.weeklySchedule.map(item => item.dayOfWeek);
+  const getSelectedLocation = () => {
+     const selectedDayOfWeek = formData.appointmentDate
+      ? new Date(formData.appointmentDate).getDay()
+      : null;
+    const selectedSchedule = overtimeSchedule?.weeklySchedule.find(
+      item => item.dayOfWeek === selectedDayOfWeek
+    );
+    return selectedSchedule ? (selectedSchedule.locationId as any).name : '';
+  }
 
   return (
     <div className="container">
@@ -461,6 +471,15 @@ const AppointmentPage = () => {
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {formData.session && (
+            <div className="location">
+              <label className='location-label'>Địa điểm*</label>
+              <p className="location-value">
+                {getSelectedLocation() || 'Chưa chọn ngày khám'}
+              </p>
             </div>
           )}
         </div>
