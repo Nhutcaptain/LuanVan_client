@@ -7,14 +7,12 @@ import api from '@/lib/axios';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
-
 interface Doctors {
   fullName: string;
-   avatar: {
-      publicId: string;
-      url: string;
-    };
-  
+  avatar: {
+    publicId: string;
+    url: string;
+  };
   department: string;
   specialization: string;
   nameSlug: string;
@@ -24,53 +22,69 @@ const DoctorList = () => {
   const params = useParams();
   const departmentId = params.departmentId;
 
-    const [doctorsInfo, setDoctorsInfo] = useState<Doctors[]>([]);
+  const [doctorsInfo, setDoctorsInfo] = useState<Doctors[]>([]);
 
-    useEffect(() => {
-        const fetchDoctorInfo = async() => {
-            try {
-              const res = await api.get(`/department/getAll/${departmentId}`);
-              if(res.status === 200) {
-                setDoctorsInfo(res.data)
-                console.log(res.data)
-              }
-            }catch(error) {
-              console.error(error);
-            }
+  useEffect(() => {
+    const fetchDoctorInfo = async() => {
+      try {
+        const res = await api.get(`/department/getAll/${departmentId}`);
+        if(res.status === 200) {
+          setDoctorsInfo(res.data)
+          console.log(res.data)
         }
+      } catch(error) {
+        console.error(error);
+      }
+    }
 
-        fetchDoctorInfo();
-    },[])
+    fetchDoctorInfo();
+  }, [])
+
   return (
     <div className="doctor-list-container">
-      <h1>Danh sách Bác sĩ theo Chuyên khoa</h1>
+      <div className="header-section">
+        <h1 className="page-title">DANH SÁCH BÁC SĨ</h1>
+        <p className="page-subtitle">Khoa {doctorsInfo[0]?.department || ''}</p>
+      </div>
       
-      {doctorsInfo.map((doctor, index) => (
-        <Link  className="specialty-section" key={index} href={`/tim-bac-si/${doctor.nameSlug}`}>
-          <h2 className="specialty-title">{doctor.specialization}</h2>
-          
-          <div className="doctors-grid">
-            <div className="doctor-card">
-              <div className="doctor-avatar-container">
-                <img
-                  src={doctor.avatar.url || '/default-doctor.jpg'}
-                  alt={`${doctor.fullName}'s avatar`}
-                  className="doctor-avatar"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/default-doctor.jpg';
-                  }}
-                />
-              </div>
-              
-              <div className="doctor-info">
-                <h3 className="doctor-name">{doctor.fullName}</h3>
-                <p className="doctor-department">Khoa: {doctor.department || 'N/A'}</p>
-                <p className="doctor-specialty">Chuyên khoa: {doctor.specialization}</p>
+      <div className="doctors-list">
+        {doctorsInfo.map((doctor, index) => (
+          <Link 
+            className="doctor-item" 
+            key={index} 
+            href={`/tim-bac-si/${doctor.nameSlug}`}
+          >
+            <div className="doctor-avatar-container">
+              <img
+                src={doctor.avatar.url || '/default-doctor.jpg'}
+                alt={`${doctor.fullName}'s avatar`}
+                className="doctor-avatar"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/default-doctor.jpg';
+                }}
+              />
+            </div>
+            
+            <div className="doctor-info">
+              <h3 className="doctor-name">{doctor.fullName}</h3>
+              <div className="doctor-meta">
+                <div className="meta-item">
+                  <span className="meta-label">KHOA:</span>
+                  <span className="meta-value">{doctor.department || 'N/A'}</span>
+                </div>
+                <div className="meta-item">
+                  <span className="meta-label">CHUYÊN KHOA:</span>
+                  <span className="meta-value">{doctor.specialization}</span>
+                </div>
               </div>
             </div>
-          </div>
-        </Link>
-      ))}
+            
+            <div className="view-profile">
+              <span>XEM HỒ SƠ →</span>
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 };

@@ -50,7 +50,7 @@ const AdminSidebarMenu = () => {
         {
             icon: <FaRegCalendarPlus className='text-2xl' />,
             label: 'Quản lý dịch vụ',
-            link: '/bac-si/tai-lieu'
+            link: '/admin/service'
         },
         {
             icon: <FaRegCalendarPlus className='text-2xl' />,

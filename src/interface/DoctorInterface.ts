@@ -10,6 +10,7 @@ import { IUser } from "./usermodel";
   specialization: string;
   certificate: string[];
   experience: string[];
+  examinationPrice?: number;
   schedule: {
     date: string;
     time: string;

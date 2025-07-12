@@ -259,7 +259,7 @@
     background-color: #e9ecef;
 }
 
-.section-title {
+.section-titles {
     margin: 0;
     font-size: 1.3rem;
     color: #2c3e50;
@@ -313,4 +313,52 @@
     font-style: italic;
     padding: 1rem 0;
     font-size: 1.1rem;
+}
+
+.schedule-container {
+    margin-top: 10px;
+}
+
+.day-schedule {
+    margin-bottom: 15px;
+}
+
+.day-title {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.shift-list {
+    list-style: none;
+    padding-left: 20px;
+}
+
+.shift-list li {
+    margin-bottom: 5px;
+}
+
+.shift-name {
+    font-weight: 500;
+}
+
+.no-shift {
+    color: #888;
+    font-style: italic;
+    margin-left: 20px;
+}
+
+.schedule-status {
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+.schedule-status .active {
+    color: #28a745;
+    margin-left: 5px;
+}
+
+.schedule-status .inactive {
+    color: #dc3545;
+    margin-left: 5px;
 }

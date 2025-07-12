@@ -1,50 +1,60 @@
 import { Department } from "@/interface/Department";
-
+import React from "react";
 
 interface DepartmentListProps {
   departments: Department[];
-  onSelect: (department: Department) => void;
   onEdit: (department: Department) => void;
   onDelete: (id: string) => void;
-  selectedId?: string;
+  onSelected: (id: string) => void;
 }
 
-const DepartmentList = ({ departments, onSelect, onEdit, onDelete, selectedId }: DepartmentListProps) => {
+const DepartmentList: React.FC<DepartmentListProps> = ({
+  departments,
+  onEdit,
+  onDelete,
+  onSelected,
+}) => {
   return (
-    <ul className="list">
-      {departments.map((department) => (
-        <li 
-          key={department._id} 
-          className={`list-item ${selectedId === department._id ? 'active' : ''}`}
-          onClick={() => onSelect(department)}
-        >
-          <div>
-            <strong>{department.name}</strong>
-            <div style={{ fontSize: '14px', marginTop: '5px' }}>{department.description}</div>
-          </div>
-          <div>
-            <button 
-              className="button button-secondary button-small"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(department);
-              }}
-            >
-              Edit
-            </button>
-            <button 
-              className="button button-danger button-small"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(department._id);
-              }}
-            >
-              Delete
-            </button>
-          </div>
-        </li>
-      ))}
-    </ul>
+    <div className="list-container">
+      <table className="data-table">
+        <thead>
+          <tr>
+            <th>Tên khoa</th>
+            <th>Mô tả</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+      </table>
+      <div className="table-body">
+        <table className="data-table">
+          <tbody>
+            {departments.map((dept) => (
+              <tr key={dept._id} onClick={() => onSelected(dept._id)}>
+                <td>{dept.name}</td>
+                <td>{dept.description}</td>
+                <td>
+                  <button
+                    className="btn btn-sm btn-secondary"
+                    onClick={() => onEdit(dept)}
+                  >
+                    Sửa
+                  </button>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => onDelete(dept._id)}
+                  >
+                    Xóa
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {departments.length === 0 && (
+        <div className="empty-state">Không có khoa nào được tìm thấy</div>
+      )}
+    </div>
   );
 };
 

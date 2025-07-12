@@ -21,7 +21,7 @@ export const centre: Centre[] = [
   { icon: GiLungs, name: "Hô hấp" },
   { icon: GiBrain, name: "Thần kinh" },
   { icon: GiKidneys, name: "Thận - Tiết niệu" },
-  { icon: GiStomach, name: "Tiêu hóa" },
+  { icon: GiStomach, name: "Tiêu hóa", id: '68562d213299eeee8435f216', link: `/dich-vu-chuyen-khoa/${'68562d213299eeee8435f216'}`},
   { icon: GiBoneKnife, name: "Chấn thương chỉnh hình" },
   { icon: GiEyeShield, name: "Mắt" },
   { icon: GiTooth, name: "Răng hàm mặt" },

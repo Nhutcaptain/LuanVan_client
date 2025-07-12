@@ -355,7 +355,7 @@ const DoctorDetailPage = () => {
           </div>
         </section>
 
-        <section className="schedule-section" style={{ padding: '1.8rem', marginTop: '1.5rem' }}>
+        {/* <section className="schedule-section" style={{ padding: '1.8rem', marginTop: '1.5rem' }}>
           <h2 style={{ fontSize: '1.8rem', marginBottom: '1.5rem' }}>Lịch làm việc</h2>
           {doctor.schedule && (
             <div style={{ fontSize: '1.3rem' }}>
@@ -371,7 +371,7 @@ const DoctorDetailPage = () => {
               </div>
             </div>
           )}
-        </section>
+        </section> */}
       </div>
     </div>
   );

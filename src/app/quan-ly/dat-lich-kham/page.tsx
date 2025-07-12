@@ -11,6 +11,7 @@ import { OvertimeSchedule, OvertimeSlot } from '@/interface/Shifts';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { get } from 'http';
+import Swal from 'sweetalert2';
 
 interface Department {
   _id: string;
@@ -28,6 +29,7 @@ interface Doctor {
   name: string;
   specialtyId: string;
   departmentId: string;
+  examinationPrice: number;
 }
 
 const AppointmentPage = () => {
@@ -49,7 +51,7 @@ const AppointmentPage = () => {
     session: '',
     reason: '',
     agreeTerms: false,
-    locationId: '',
+    location: '',
   });
 
   const [loading, setLoading] = useState({
@@ -174,6 +176,7 @@ const AppointmentPage = () => {
         const res = await api.get(`/doctors/getDoctorBySpecialtyId/${formData.specialtyId}`);
         
         if (res.status === 200) {
+          console.log(res.data);
           setDoctors(res.data);
         } else {
           throw new Error('Failed to fetch doctors');
@@ -209,7 +212,8 @@ const AppointmentPage = () => {
         } else {
           throw new Error('Failed to fetch overtime schedule');
         }
-      } catch (err) {
+      } catch (err: any) {
+        if(err.status === 404) return;
         console.error('Failed to fetch overtime schedule:', err);
         toast.error('Không thể tải lịch khám ngoài giờ của bác sĩ');
       } finally {
@@ -265,7 +269,7 @@ const AppointmentPage = () => {
     setFormData(prev => ({
       ...prev,
       session: `${slot.startTime}-${slot.endTime}`,
-      locationId: getSelectedLocationId(),
+      locationId: getSelectedLocation(),
     }));
   };
 
@@ -296,6 +300,12 @@ const AppointmentPage = () => {
       return;
     }
 
+    Swal.fire({
+      title: 'Đang xử lý',
+      icon: 'info',
+      showLoaderOnConfirm: true,
+    })
+
     try {
       setLoading(prev => ({ ...prev, submitting: true }));
       console.log(formData)
@@ -308,16 +318,38 @@ const AppointmentPage = () => {
         appointmentDate: formData.appointmentDate,
         session: formData.session,
         reason: formData.reason,
-        locationId: formData.locationId,
+        location: formData.location,
       });
 
       if (res.status === 201) {
         toast.success('Đặt lịch hẹn thành công!');
+        Swal.close();
+        Swal.fire({
+          title: 'Đặt lịch thành công',
+          icon: 'success',
+          showConfirmButton: true,
+        })
+        setFormData({
+          departmentId: '',
+          specialtyId: '',
+          doctorId: '',
+          appointmentDate: '',
+          session: '',
+          reason: '',
+          agreeTerms: false,
+          location: '',
+        })
       } else {
         throw new Error(res.data.message || 'Failed to create appointment');
       }
     } catch (err: any) {
       console.error('Failed to submit appointment:', err);
+      Swal.close();
+      Swal.fire({
+        title: 'Có lỗi xảy ra',
+        icon: 'error',
+        showCloseButton: true,
+      })
       toast.error(err.message || 'Đặt lịch hẹn thất bại. Vui lòng thử lại.');
     } finally {
       setLoading(prev => ({ ...prev, submitting: false }));
@@ -350,6 +382,9 @@ const AppointmentPage = () => {
     );
     return selectedSchedule ? (selectedSchedule.locationId as any).name : '';
   }
+
+  const selectedDoctor = doctors.find(d => d._id === formData.doctorId);
+  const price = selectedDoctor?.examinationPrice;
 
   return (
     <div className="container">
@@ -482,6 +517,13 @@ const AppointmentPage = () => {
               </p>
             </div>
           )}
+        </div>
+        <div className="price-section">
+          <div className="examination-price">
+            <label className='price-label'>Giá khám: </label>
+            <p>{price ? new Intl.NumberFormat('vi-VN').format(price) + ' đ' : 'Miễn phí'}</p>
+          </div>
+          <p className='notes'>*Lưu ý: đây là giá chưa bao gồm các xét nghiệm</p>
         </div>
 
         <div className="form-group">

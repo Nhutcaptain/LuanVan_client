@@ -4,11 +4,16 @@ import api from '@/lib/axios';
 import { PencilIcon, CameraIcon } from '@heroicons/react/24/outline';
 import AddressSelector from '@/components/AddressSelectorComponent/AddressSelector';
 import { AddressForm } from '@/interface/AddressForm';
-import Swal from 'sweetalert2'
-import withReactContent from 'sweetalert2-react-content'
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
 import UploadImageComponent from '@/components/UploadImage/UploadImageComponent';
 import { deleteImageFromCloudinary, uploadImageToCloudinary } from '@/services/uploadAvatarService';
+import './styles.css';
 
+interface OptionType {
+  value: string;
+  label: string;
+}
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState<any>(null);
@@ -21,6 +26,7 @@ const ProfilePage = () => {
     phone: '',
     dateOfBirth: '',
     gender: '',
+    occupation: '',
     address: {
       houseNumber: '',
       ward: {
@@ -37,11 +43,15 @@ const ProfilePage = () => {
       }
     },
     avatar: {
-      publicId:'',
-      url:'',
-    }
+      publicId: '',
+      url: '',
+    },
+    ethnicity: '',
+    idType: '',
+    idNumber: '',
+    healthInsuranceNumber: ''
   });
-  const MySwal = withReactContent(Swal)
+  const MySwal = withReactContent(Swal);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -55,6 +65,7 @@ const ProfilePage = () => {
         const userData = res.data.user || res.data;
         setProfile(userData);
         setFormData({
+          occupation: '',
           fullName: userData.fullName || '',
           email: userData.email || '',
           phone: userData.phone || '',
@@ -69,7 +80,11 @@ const ProfilePage = () => {
           avatar: {
             publicId: userData.avatar.publicId,
             url: userData.avatar.url,
-          }
+          },
+          ethnicity: userData.ethnicity ||'',
+          idType: userData.idType || '',
+          idNumber: userData.idNumber || '',
+          healthInsuranceNumber: userData.healthInsuranceNumber || '',
         });
       } catch (error) {
         setProfile(null);
@@ -79,6 +94,14 @@ const ProfilePage = () => {
     };
     fetchProfile();
   }, []);
+
+  const idTypeOptions: OptionType[] = [
+    { value: '', label: 'Chọn loại giấy tờ' },
+    { value: 'Căn cước công dân', label: 'Căn cước công dân' },
+    { value: 'Chứng minh nhân dân', label: 'Chứng minh nhân dân' },
+    { value: 'Hộ chiếu', label: 'Hộ chiếu' },
+    { value: 'Giấy phép lái xe', label: 'Giấy phép lái xe' }
+  ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -103,7 +126,6 @@ const ProfilePage = () => {
     e.preventDefault();
     
     try {
-      
       const token = localStorage.getItem('token');
       if (!token) return;
       const res = await api.put('/users/update', formData, {
@@ -175,47 +197,47 @@ const ProfilePage = () => {
     };
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+    <div className="loading-container">
+      <div className="loading-spinner"></div>
     </div>
   );
 
   if (!profile) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="bg-white p-10 rounded-lg shadow-md text-center max-w-md">
-        <h2 className="text-3xl font-bold text-red-600 mb-6">Không tìm thấy thông tin cá nhân</h2>
-        <p className="text-xl text-gray-600">Vui lòng đăng nhập để xem thông tin cá nhân</p>
+    <div className="error-container">
+      <div className="error-card">
+        <h2 className="error-title">Không tìm thấy thông tin cá nhân</h2>
+        <p className="error-message">Vui lòng đăng nhập để xem thông tin cá nhân</p>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-16 px-6 sm:px-8 lg:px-10">
-      <div className="max-w-5xl mx-auto">
-        <div className="bg-white shadow-xl rounded-lg overflow-hidden">
+    <div className="profile-container">
+      <div className="profile-content">
+        <div className="profile-card">
           {/* Profile Header */}
-          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-8 text-white">
-            <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-bold">Thông tin cá nhân</h1>
+          <div className="profile-header">
+            <div className="profile-header-content">
+              <h1 className="profile-title">Thông tin cá nhân</h1>
               {!isEditing ? (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-2 bg-white text-blue-600 px-6 py-3 rounded-md hover:bg-blue-50 transition text-lg"
+                  className="edit-button"
                 >
                   <PencilIcon className="h-6 w-6" />
                   Chỉnh sửa
                 </button>
               ) : (
-                <div className="flex gap-4">
+                <div className="button-group">
                   <button
                     onClick={() => setIsEditing(false)}
-                    className="bg-white text-gray-600 px-6 py-3 rounded-md hover:bg-gray-100 transition text-lg"
+                    className="cancel-button"
                   >
                     Hủy
                   </button>
                   <button
                     onClick={handleSubmit}
-                    className="bg-white text-blue-600 px-6 py-3 rounded-md hover:bg-blue-50 transition text-lg"
+                    className="save-button"
                   >
                     Lưu thay đổi
                   </button>
@@ -225,85 +247,85 @@ const ProfilePage = () => {
           </div>
 
           {/* Profile Content */}
-          <div className="p-8">
-            <div className="flex flex-col md:flex-row gap-12">
+          <div className="profile-body">
+            <div className="profile-layout">
               {/* Avatar Section */}
-              <div className="flex-shrink-0 flex flex-col items-center">
-                <div className="relative group">
-                 <img
+              <div className="avatar-section">
+                <div className="avatar-container">
+                  <img
                     src={profile.avatar.url || '/default-avatar.png'}
                     alt="Avatar"
-                    className="h-40 w-40 rounded-full object-cover border-4 border-white shadow-lg"
+                    className="avatar-image"
                   />
-                  <label className="absolute bottom-0 right-0 bg-blue-500 text-white p-3 rounded-full cursor-pointer hover:bg-blue-600 transition group-hover:opacity-100 opacity-0">
+                  <label className="avatar-upload">
                     <CameraIcon className="h-6 w-6" />
                     <input
                       type="file"
                       accept="image/*"
                       onChange={handleAvatarUpload}
-                      className="hidden"
+                      className="avatar-upload-input"
                     />
                   </label>
                 </div>
-                <div className="mt-6 text-center">
-                  <h3 className="text-2xl font-semibold">{profile.fullName}</h3>
-                  <p className="text-xl text-gray-500">{profile.role}</p>
+                <div className="user-info">
+                  <h3 className="user-name">{profile.fullName}</h3>
+                  <p className="user-role">{profile.role}</p>
                 </div>
               </div>
 
               {/* Profile Details */}
-              <div className="flex-grow">
+              <div className="details-section">
                 {isEditing ? (
-                  <form className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-lg font-medium text-gray-700 mb-2">Họ và tên</label>
+                  <form className="edit-form">
+                    <div className="form-grid">
+                      <div className="form-group">
+                        <label className="form-label">Họ và tên</label>
                         <input
                           type="text"
                           name="fullName"
                           value={formData.fullName}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+                          className="form-input"
                         />
                       </div>
-                      <div>
-                        <label className="block text-lg font-medium text-gray-700 mb-2">Email</label>
+                      <div className="form-group">
+                        <label className="form-label">Email</label>
                         <input
                           type="email"
                           name="email"
                           value={formData.email}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+                          className="form-input"
                           disabled
                         />
                       </div>
-                      <div>
-                        <label className="block text-lg font-medium text-gray-700 mb-2">Số điện thoại</label>
+                      <div className="form-group">
+                        <label className="form-label">Số điện thoại</label>
                         <input
                           type="tel"
                           name="phone"
                           value={formData.phone}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+                          className="form-input"
                         />
                       </div>
-                      <div>
-                        <label className="block text-lg font-medium text-gray-700 mb-2">Ngày sinh</label>
+                      <div className="form-group">
+                        <label className="form-label">Ngày sinh</label>
                         <input
                           type="date"
                           name="dateOfBirth"
                           value={formData.dateOfBirth}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+                          className="form-input"
                         />
                       </div>
-                      <div>
-                        <label className="block text-lg font-medium text-gray-700 mb-2">Giới tính</label>
+                      <div className="form-group">
+                        <label className="form-label">Giới tính</label>
                         <select
                           name="gender"
                           value={formData.gender}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+                          className="form-select"
                         >
                           <option value="">Chọn giới tính</option>
                           <option value="Nam">Nam</option>
@@ -312,42 +334,111 @@ const ProfilePage = () => {
                         </select>
                       </div>
                     </div>
+                     <div className="additional-info-grid">
+                      <div className="form-group">
+                        <label className="form-label">Nghề nghiệp</label>
+                        <input
+                          type="text"
+                          name="occupation"
+                          value={formData.occupation}
+                          onChange={handleInputChange}
+                          className="form-input"
+                          placeholder="Nhập nghề nghiệp"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Dân tộc</label>
+                        <input
+                          type="text"
+                          name="ethnicity"
+                          value={formData.ethnicity}
+                          onChange={handleInputChange}
+                          className="form-input"
+                          placeholder="Nhập dân tộc"
+                        />
+                      </div>
+                    </div>
 
-                    <div className="border-t-2 pt-6">
-                      <h4 className="text-2xl font-medium mb-4">Địa chỉ</h4>
+                    <div className="id-section">
+                      <h4 className="section-title">Thông tin giấy tờ</h4>
+                      <div className="id-type-container">
+                        <div className="form-group">
+                          <label className="form-label">Loại giấy tờ</label>
+                          <select
+                            name="idType"
+                            value={formData.idType}
+                            onChange={handleInputChange}
+                            className="form-select"
+                          >
+                            {idTypeOptions.map(option => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Số giấy tờ</label>
+                          <input
+                            type="text"
+                            name="idNumber"
+                            value={formData.idNumber}
+                            onChange={handleInputChange}
+                            className="form-input"
+                            placeholder="Nhập số giấy tờ"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="health-section">
+                      <h4 className="section-title">Bảo hiểm y tế</h4>
+                      <div className="form-group">
+                        <label className="form-label">Mã số BHYT</label>
+                        <input
+                          type="text"
+                          name="healthInsuranceNumber"
+                          value={formData.healthInsuranceNumber}
+                          onChange={handleInputChange}
+                          className="form-input"
+                          placeholder="Nhập mã số BHYT"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="address-section">
+                      <h4 className="address-title">Địa chỉ</h4>
                       <AddressSelector form={formData.address} setForm={setAddressWrapper}></AddressSelector>
                     </div>
                   </form>
                 ) : (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h4 className="text-lg font-medium text-gray-500">Họ và tên</h4>
-                        <p className="mt-2 text-xl">{profile.fullName}</p>
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-medium text-gray-500">Email</h4>
-                        <p className="mt-2 text-xl">{profile.email}</p>
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-medium text-gray-500">Số điện thoại</h4>
-                        <p className="mt-2 text-xl">{profile.phone || 'Chưa cập nhật'}</p>
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-medium text-gray-500">Ngày sinh</h4>
-                        <p className="mt-2 text-xl">
-                          {profile.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString() : 'Chưa cập nhật'}
-                        </p>
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-medium text-gray-500">Giới tính</h4>
-                        <p className="mt-2 text-xl">{profile.gender || 'Chưa cập nhật'}</p>
-                      </div>
+                  <div className="details-grid">
+                    <div className="detail-item">
+                      <h4 className="detail-label">Họ và tên</h4>
+                      <p className="detail-value">{profile.fullName}</p>
+                    </div>
+                    <div className="detail-item">
+                      <h4 className="detail-label">Email</h4>
+                      <p className="detail-value">{profile.email}</p>
+                    </div>
+                    <div className="detail-item">
+                      <h4 className="detail-label">Số điện thoại</h4>
+                      <p className="detail-value">{profile.phone || 'Chưa cập nhật'}</p>
+                    </div>
+                    <div className="detail-item">
+                      <h4 className="detail-label">Ngày sinh</h4>
+                      <p className="detail-value">
+                        {profile.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString() : 'Chưa cập nhật'}
+                      </p>
+                    </div>
+                    <div className="detail-item">
+                      <h4 className="detail-label">Giới tính</h4>
+                      <p className="detail-value">{profile.gender || 'Chưa cập nhật'}</p>
                     </div>
 
-                    <div className="border-t-2 pt-6">
-                      <h4 className="text-2xl font-medium mb-4">Địa chỉ</h4>
-                      <p className="text-xl">
+                    <div className="address-section">
+                      <h4 className="address-title">Địa chỉ</h4>
+                      <p className="detail-value">
                         {profile.address
                           ? `${profile.address.houseNumber ? profile.address.houseNumber + ', ' : ''}
                              ${profile.address.ward ? profile.address.ward.name + ', ' : ''}
@@ -355,6 +446,43 @@ const ProfilePage = () => {
                              ${profile.address.province.name || ''}`
                           : 'Chưa cập nhật địa chỉ'}
                       </p>
+                    </div>
+                    <div className="detail-section">
+                      <h4 className="section-title">Thông tin bổ sung</h4>
+                      <div className="additional-info-grid">
+                        <div className="detail-item">
+                          <h4 className="detail-label">Nghề nghiệp</h4>
+                          <p className="detail-value">{profile.occupation || 'Chưa cập nhật'}</p>
+                        </div>
+                        <div className="detail-item">
+                          <h4 className="detail-label">Dân tộc</h4>
+                          <p className="detail-value">{profile.ethnicity || 'Chưa cập nhật'}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="detail-section">
+                      <h4 className="section-title">Thông tin giấy tờ</h4>
+                      <div className="detail-row">
+                        <div className="detail-item">
+                          <h4 className="detail-label">Loại giấy tờ</h4>
+                          <p className="detail-value">{profile.idType || 'Chưa cập nhật'}</p>
+                        </div>
+                        <div className="detail-item">
+                          <h4 className="detail-label">Số giấy tờ</h4>
+                          <p className="detail-value">{profile.idNumber || 'Chưa cập nhật'}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="detail-section">
+                      <h4 className="section-title">Bảo hiểm y tế</h4>
+                      <div className="detail-item">
+                        <h4 className="detail-label">Mã số BHYT</h4>
+                        <p className="detail-value">
+                          {profile.healthInsuranceNumber || 'Chưa cập nhật'}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}

@@ -1,83 +1,64 @@
-import { DoctorListInterface } from "@/interface/DoctorInterface";
-import { useState } from "react";
+import { Department, Specialty } from '@/interface/Department';
+import React from 'react';
 
-
-interface DoctorListProps {
-  doctors: DoctorListInterface[];
-  onAddDoctor: (doctorId: string) => void;
-  allDoctors: DoctorListInterface[];
+interface Doctor {
+    _id: string;
+    name: string;
+    userId: {
+        fullName: string;
+        email: string;
+        phone: string;
+    }
+    specialtyId: string;
+    departmentId: string;
 }
 
-const DoctorList = ({ doctors, onAddDoctor, allDoctors }: DoctorListProps) => {
-  const [showAddDoctor, setShowAddDoctor] = useState(false);
-  const [selectedDoctorId, setSelectedDoctorId] = useState('');
+interface DoctorListProps {
+    doctors: Doctor[];
+    departments: Department[];
+    specialties: Specialty[];
+}
 
-  const availableDoctors = allDoctors.filter(d => 
-    !doctors.some(doc => doc._id === d._id)
-  );
+const DoctorList: React.FC<DoctorListProps> = ({ doctors, departments, specialties }) => {
+    const getDepartmentName = (departmentId: string) => {
+        const dept = departments.find(d => d._id === departmentId);
+        return dept ? dept.name : 'N/A';
+    };
 
-  return (
-    <div>
-      {doctors.length === 0 ? (
-        <div>No doctors found</div>
-      ) : (
-        <ul className="list">
-          {doctors.map((doctor) => (
-            <li key={doctor._id} className="doctor-item">
-              {doctor.fullName}
-            </li>
-          ))}
-        </ul>
-      )}
+    const getSpecialtyName = (specialtyId: string) => {
+        const spec = specialties.find(s => s._id === specialtyId);
+        return spec ? spec.name : 'N/A';
+    };
 
-      <button 
-        className="button button-secondary"
-        onClick={() => setShowAddDoctor(true)}
-        style={{ marginTop: '10px' }}
-      >
-        Add Doctor
-      </button>
-
-      {showAddDoctor && (
-        <div style={{ marginTop: '10px' }}>
-          <select
-            className="form-input"
-            value={selectedDoctorId}
-            onChange={(e) => setSelectedDoctorId(e.target.value)}
-          >
-            <option value="">Select a doctor</option>
-            {availableDoctors.map(doctor => (
-              <option key={doctor._id} value={doctor._id}>{doctor.fullName}</option>
-            ))}
-          </select>
-          <button 
-            className="button button-primary"
-            onClick={() => {
-              if (selectedDoctorId) {
-                onAddDoctor(selectedDoctorId);
-                setSelectedDoctorId('');
-                setShowAddDoctor(false);
-              }
-            }}
-            style={{ marginLeft: '10px' }}
-            disabled={!selectedDoctorId}
-          >
-            Add
-          </button>
-          <button 
-            className="button button-danger"
-            onClick={() => {
-              setSelectedDoctorId('');
-              setShowAddDoctor(false);
-            }}
-            style={{ marginLeft: '10px' }}
-          >
-            Cancel
-          </button>
+    return (
+        <div className="list-container">
+            <table className="data-table">
+                <thead>
+                    <tr>
+                        <th>Tên bác sĩ</th>
+                        <th>Khoa</th>
+                        <th>Chuyên khoa</th>
+                        <th>Email</th>
+                        <th>Số điện thoại</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {doctors.map(doc => (
+                        <tr key={doc._id}>
+                            <td>{doc.userId.fullName}</td>
+                            <td>{getDepartmentName(doc.departmentId)}</td>
+                            <td>{(doc.specialtyId as any).name}</td>
+                            <td>{doc.userId.email}</td>
+                            <td>{doc.userId.phone}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+            {doctors.length === 0 && (
+                <div className="empty-state">Không có bác sĩ nào được tìm thấy</div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default DoctorList;

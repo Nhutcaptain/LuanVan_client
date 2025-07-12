@@ -1,328 +1,448 @@
-'use client';
+"use client";
+import React, { useState, useEffect } from "react";
+import "./styles.css";
+import { Department, Specialty } from "@/interface/Department";
+import { Service } from "@/interface/ServiceInterface";
+import DepartmentList from "@/components/DepartmentComponent/DepartmentList";
+import SpecialtyList from "@/components/DepartmentComponent/SpecialtyList";
+import DoctorList from "@/components/DepartmentComponent/DoctorList";
+import DepartmentForm from "@/components/DepartmentComponent/DepartmentForm";
+import SpecialtyForm from "@/components/DepartmentComponent/SpecialtyForm";
+import ServiceModal from "@/components/DepartmentComponent/ServiceModal";
+import api from "@/lib/axios";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import './styles.css';
-import SearchBar from '@/components/DepartmentComponent/SearchBar';
-import DepartmentList from '@/components/DepartmentComponent/DepartmentList';
-import SpecialtyList from '@/components/DepartmentComponent/SpecialtyList';
-import DoctorList from '@/components/DepartmentComponent/DoctorList';
-import DepartmentForm from '@/components/DepartmentComponent/DepartmentForm';
-import SpecialtyForm from '@/components/DepartmentComponent/SpecialtyForm';
-import { Department, Specialty } from '@/interface/Department';
-import { DoctorListInterface } from '@/interface/DoctorInterface';
-import api from '@/lib/axios';
+interface Doctor {
+  _id: string;
+  userId: {
+    fullName: string;
+    email: string;
+    phone: string;
+  };
+  name: string;
+  specialtyId: string;
+  departmentId: string;
+}
 
-const DepartmentManagementPage = () => {
+const DepartmentManagement: React.FC = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
-  const [doctors, setDoctors] = useState<DoctorListInterface[]>([]);
-  const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
-  const [selectedSpecialty, setSelectedSpecialty] = useState<Specialty | null>(null);
+  const [services, setServices] = useState<Service[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [activeTab, setActiveTab] = useState<
+    "departments" | "specialties" | "doctors"
+  >("departments");
   const [showDepartmentForm, setShowDepartmentForm] = useState(false);
   const [showSpecialtyForm, setShowSpecialtyForm] = useState(false);
-  const [editingDepartment, setEditingDepartment] = useState<Department | null>(null);
-  const [editingSpecialty, setEditingSpecialty] = useState<Specialty | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'department' | 'specialty'>('department');
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [editingDepartment, setEditingDepartment] = useState<Department | null>(
+    null
+  );
+  const [editingSpecialty, setEditingSpecialty] = useState<Specialty | null>(
+    null
+  );
+  const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("");
+  const [selectedSpecialty, setSelectedSpecialty] = useState<string>("");
+  const [selectedSpecialtyId, setSelectedSpecialtyId] = useState("");
+  const [isMultipleSelectedSpecialty, setIsMultipleSelectedSpecialty] =
+    useState(false);
 
-  // Fetch data
+  // Mock data - replace with API calls
   useEffect(() => {
+    // Mock departments
     fetchDepartments();
+
+    // Mock services
+    fetchServices();
+
+    // Mock doctors
   }, []);
 
   const fetchDepartments = async () => {
     try {
-      const response = await api.get('/department/getAllDepartment');
+      const response = await api.get("/department/getAllDepartment");
       setDepartments(response.data);
     } catch (error) {
-      console.error('Error fetching departments:', error);
+      console.error("Error fetching departments:", error);
+    }
+  };
+
+  const fetchServices = async () => {
+    try {
+      const res = await api.get("/service/getAll");
+      setServices(res.data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Lỗi khi lấy thông tin dịch vụ");
     }
   };
 
   useEffect(() => {
-    if(!selectedDepartment?._id) return;
+    if (!selectedDepartment) return;
     const fetchSpecialties = async () => {
-    try {
-      const response = await api.get(`/department/getAllSpecialtyByDepartmentId/${selectedDepartment?._id}`);
-      setSpecialties(response.data);
-    } catch (error) {
-      console.error('Error fetching specialties:', error);
-    }
-  };
-
-  fetchSpecialties();
-  },[selectedDepartment?._id])
+      try {
+        const res = await api.get(
+          `/department/getAllSpecialtyByDepartmentId/${selectedDepartment}`
+        );
+        if (res.status === 200) {
+          setSpecialties(res.data);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchSpecialties();
+  }, [selectedDepartment]);
 
   useEffect(() => {
-    if(!selectedDepartment?._id) return;
+    if (isMultipleSelectedSpecialty) return;
+    if (!selectedDepartment) return;
+    const fetchDoctors = async () => {
+      try {
+        const res = await api.get(
+          `/doctors/getByDepartment/${selectedDepartment}`
+        );
+        if (res.status === 200) {
+          setDoctors(res.data);
+        }
+      } catch (error: any) {
+        if (error.response.status === 404) {
+          toast.error("Không có bác sĩ nào của khoa này");
+        }
+      }
+    };
     fetchDoctors();
-  },[selectedDepartment?._id])
+  }, [selectedDepartment]);
 
-  
-
-  const fetchDoctors = async () => {
-    try {
-      const response = await api.get(`/department/getAll/${selectedDepartment?._id}`);
-      setDoctors(response.data);
-    } catch (error) {
-      console.error('Error fetching doctors:', error);
-    }
+  const handleAddDepartment = (department: Omit<Department, "_id">) => {
+    const newDepartment: Department = {
+      ...department,
+      _id: Date.now().toString(),
+    };
+    setDepartments([...departments, newDepartment]);
+    setShowDepartmentForm(false);
   };
 
-  // Department handlers
-  const handleCreateDepartment = async (department: Omit<Department, '_id'>) => {
-    try {
-      const response = await axios.post('/api/departments', department);
-      setDepartments([...departments, response.data]);
-      setShowDepartmentForm(false);
-    } catch (error) {
-      console.error('Error creating department:', error);
+  const handleUpdateDepartment = (
+    department: Department | Omit<Department, "_id">
+  ) => {
+    if ("_id" in department) {
+      setDepartments(
+        departments.map((d) =>
+          d._id === department._id ? (department as Department) : d
+        )
+      );
     }
+    setEditingDepartment(null);
+    setShowDepartmentForm(false);
   };
 
-  const handleUpdateDepartment = async (department: Department) => {
-    try {
-      const response = await axios.put(`/api/departments/${department._id}`, department);
-      setDepartments(departments.map(d => d._id === department._id ? response.data : d));
-      setEditingDepartment(null);
-      setShowDepartmentForm(false);
-    } catch (error) {
-      console.error('Error updating department:', error);
-    }
+  const handleDeleteDepartment = (id: string) => {
+    setDepartments(departments.filter((d) => d._id !== id));
+    setSpecialties(specialties.filter((s) => s.departmentId !== id));
   };
 
-  const handleDeleteDepartment = async (id: string) => {
-    try {
-      await axios.delete(`/api/departments/${id}`);
-      setDepartments(departments.filter(d => d._id !== id));
-      if (selectedDepartment?._id === id) {
-        setSelectedDepartment(null);
-      }
-    } catch (error) {
-      console.error('Error deleting department:', error);
-    }
+  const handleAddSpecialty = (specialty: Omit<Specialty, "_id">) => {
+    const newSpecialty: Specialty = {
+      ...specialty,
+      _id: Date.now().toString(),
+    };
+    setSpecialties([...specialties, newSpecialty]);
+    setShowSpecialtyForm(false);
   };
 
-  // Specialty handlers
-  const handleCreateSpecialty = async (specialty: Omit<Specialty, '_id'>) => {
-    try {
-      const response = await api.post('/department/createSpecialty',specialty);
-      setSpecialties([...specialties, response.data]);
-      setShowSpecialtyForm(false);
-    } catch (error) {
-      console.error('Error creating specialty:', error);
+  const handleUpdateSpecialty = (
+    specialty: Specialty | Omit<Specialty, "_id">
+  ) => {
+    if ("_id" in specialty) {
+      setSpecialties(
+        specialties.map((s) =>
+          s._id === specialty._id ? (specialty as Specialty) : s
+        )
+      );
     }
+    setEditingSpecialty(null);
+    setShowSpecialtyForm(false);
   };
 
-  const handleUpdateSpecialty = async (specialty: Specialty) => {
-    try {
-      const response = await axios.put(`/api/specialties/${specialty._id}`, specialty);
-      setSpecialties(specialties.map(s => s._id === specialty._id ? response.data : s));
-      setEditingSpecialty(null);
-      setShowSpecialtyForm(false);
-    } catch (error) {
-      console.error('Error updating specialty:', error);
-    }
+  const handleDeleteSpecialty = (id: string) => {
+    setSpecialties(specialties.filter((s) => s._id !== id));
   };
 
-  const handleDeleteSpecialty = async (id: string) => {
-    try {
-      await axios.delete(`/api/specialties/${id}`);
-      setSpecialties(specialties.filter(s => s._id !== id));
-      if (selectedSpecialty?._id === id) {
-        setSelectedSpecialty(null);
-      }
-    } catch (error) {
-      console.error('Error deleting specialty:', error);
-    }
+  const handleAddServicesToSpecialties = async (serviceIds: string[]) => {
+    Swal.fire({
+      title: "Đang thêm dịch vụ cho chuyên khoa",
+      icon: "info",
+      showLoaderOnConfirm: true,
+    });
+    const updatedSpecialties = await Promise.all(
+      specialties.map(async (specialty) => {
+        if (selectedSpecialties.includes(specialty._id)) {
+          const newServiceIds = [
+            ...new Set([...specialty.serviceIds, ...serviceIds]),
+          ];
+
+          try {
+            const res = await api.put(`/department/updateSpecialty/${specialty._id}`, {
+              serviceIds: newServiceIds,
+            });
+            if(res.status === 200) {
+              Swal.close();
+              Swal.fire({
+                title: "Đã thêm dịch vụ thành công",
+                icon: "success",
+                timer: 1500,
+              });
+            }
+          } catch (error: any) { 
+            Swal.close();
+            Swal.fire({
+              title: "Lỗi rồi",
+              text: `${error.response}`,
+              icon: "error",
+              showCloseButton: true,
+            });
+            console.error(`Lỗi cập nhật specialty ${specialty._id}:`, error);
+          } 
+          return { ...specialty, serviceIds: newServiceIds };
+        }
+        return specialty;
+      })
+    );
+
+    setSpecialties(updatedSpecialties);
+    setShowServiceModal(false);
+    setSelectedSpecialties([]);
   };
 
-  // Doctor handlers
-  const handleAddDoctorToDepartment = async (doctorId: string, departmentId: string) => {
-    try {
-      await axios.post('/api/doctors/assign', { doctorId, departmentId });
-      fetchDoctors();
-    } catch (error) {
-      console.error('Error adding doctor to department:', error);
-    }
-  };
+  const handleDepartmentSelect = (id: string) => {
+    setSelectedDepartment(id);
+    setActiveTab('specialties');
+  }
 
-  const handleAddDoctorToSpecialty = async (doctorId: string, specialtyId: string) => {
-    try {
-      await axios.post('/api/doctors/assign', { doctorId, specialtyId });
-      fetchDoctors();
-    } catch (error) {
-      console.error('Error adding doctor to specialty:', error);
-    }
-  };
-
-  // Filter data based on search term
-  const filteredDepartments = departments.filter(department =>
-    department.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    department.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredDepartments = departments.filter(
+    (dept) =>
+      dept.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      dept.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredSpecialties = specialties.filter(specialty =>
-    specialty.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredSpecialties = specialties.filter((spec) => {
+    const matchesSearch =
+      spec.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      spec?.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      spec?.code.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDepartment =
+      !selectedDepartment || spec.departmentId === selectedDepartment;
+    return matchesSearch && matchesDepartment;
+  });
+
+  const filteredDoctors = doctors.filter((doc) => {
+    const matchesSearch =
+      doc.userId.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.userId.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDepartment =
+      !selectedDepartment || doc.departmentId === selectedDepartment;
+    const matchesSpecialty =
+      !selectedSpecialty || doc.specialtyId === selectedSpecialty;
+    return matchesSearch && matchesDepartment && matchesSpecialty;
+  });
 
   return (
-    <div className="container">
+    <div className="department-management">
       <div className="header">
-        <h1 className="title">Department Management</h1>
-        <div>
-          <button 
-            className="button button-primary" 
-            onClick={() => {
-              setEditingDepartment(null);
-              setShowDepartmentForm(true);
-            }}
+        <h1>Quản lý Khoa và Chuyên khoa</h1>
+        <div className="tabs">
+          <button
+            className={`d-tab ${activeTab === "departments" ? "active" : ""}`}
+            onClick={() => setActiveTab("departments")}
           >
-            Thêm khoa
+            Khoa
           </button>
-          <button 
-            className="button button-secondary" 
-            onClick={() => {
-              setEditingSpecialty(null);
-              setShowSpecialtyForm(true);
-            }}
-            style={{ marginLeft: '10px' }}
+          <button
+            className={`d-tab ${activeTab === "specialties" ? "active" : ""}`}
+            onClick={() => setActiveTab("specialties")}
           >
-            Thêm Chuyên Khoa
+            Chuyên khoa
+          </button>
+          <button
+            className={`d-tab ${activeTab === "doctors" ? "active" : ""}`}
+            onClick={() => setActiveTab("doctors")}
+          >
+            Bác sĩ
           </button>
         </div>
       </div>
 
-      <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-
-      <div className="grid">
-        <div className="section">
-          <div className="section-title">
-            DANH SÁCH KHOA
-            <div style={{ float: 'right' }}>
-              <button 
-                className={`button button-small ${viewMode === 'department' ? 'button-primary' : 'button-secondary'}`}
-                onClick={() => setViewMode('department')}
-              >
-                Danh sách Bác sĩ
-              </button>
-            </div>
+      <div className="content">
+        <div className="toolbar">
+          <div className="search-boxs">
+            <input
+              type="text"
+              placeholder="Tìm kiếm..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
+
+          {activeTab === "specialties" && (
+            <select
+              value={selectedDepartment}
+              onChange={(e) => setSelectedDepartment(e.target.value)}
+            >
+              <option value="">Tất cả khoa</option>
+              {departments.map((dept) => (
+                <option key={dept._id} value={dept._id}>
+                  {dept.name}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {activeTab === "doctors" && (
+            <>
+              <select
+                value={selectedDepartment}
+                onChange={(e) => {
+                  setSelectedDepartment(e.target.value);
+                  setSelectedSpecialty("");
+                }}
+              >
+                <option value="">Tất cả khoa</option>
+                {departments.map((dept) => (
+                  <option key={dept._id} value={dept._id}>
+                    {dept.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={selectedSpecialty}
+                onChange={(e) => setSelectedSpecialty(e.target.value)}
+              >
+                <option value="">Tất cả chuyên khoa</option>
+                {specialties
+                  .filter(
+                    (spec) =>
+                      !selectedDepartment ||
+                      spec.departmentId === selectedDepartment
+                  )
+                  .map((spec) => (
+                    <option key={spec._id} value={spec._id}>
+                      {spec.name}
+                    </option>
+                  ))}
+              </select>
+            </>
+          )}
+
+          <div className="actions">
+            {activeTab === "departments" && (
+              <button
+                className="btn btn-primary"
+                onClick={() => setShowDepartmentForm(true)}
+              >
+                Thêm khoa
+              </button>
+            )}
+            {activeTab === "specialties" && (
+              <>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setShowSpecialtyForm(true)}
+                >
+                  Thêm chuyên khoa
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowServiceModal(true)}
+                  disabled={selectedSpecialties.length === 0}
+                >
+                  Thêm dịch vụ ({selectedSpecialties.length})
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {activeTab === "departments" && (
           <DepartmentList
             departments={filteredDepartments}
-            onSelect={setSelectedDepartment}
-            onEdit={(department) => {
-              setEditingDepartment(department);
+            onSelected={handleDepartmentSelect}
+            onEdit={(dept) => {
+              setEditingDepartment(dept);
               setShowDepartmentForm(true);
             }}
             onDelete={handleDeleteDepartment}
-            selectedId={selectedDepartment?._id}
           />
-        </div>
+        )}
 
-        <div className="section">
-          <div className="section-title">
-            CHUYÊN KHOA
-            {selectedDepartment && (
-              <span> ({selectedDepartment.name})</span>
-            )}
-            <div style={{ float: 'right' }}>
-              <button 
-                className={`button button-small ${viewMode === 'specialty' ? 'button-primary' : 'button-secondary'}`}
-                onClick={() => setViewMode('specialty')}
-              >
-                Danh sách Bác sĩ
-              </button>
-            </div>
-          </div>
+        {activeTab === "specialties" && (
           <SpecialtyList
-            specialties={filteredSpecialties
-            }
-            onSelect={setSelectedSpecialty}
-            onEdit={(specialty) => {
-              setEditingSpecialty(specialty);
+            specialties={filteredSpecialties}
+            departments={departments}
+            isMultipleSelected={isMultipleSelectedSpecialty}
+            services={services}
+            onSelectedSpecialty={setSelectedSpecialtyId}
+            selectedSpecialties={selectedSpecialties}
+            onSelectionChange={setSelectedSpecialties}
+            onEdit={(spec) => {
+              setEditingSpecialty(spec);
               setShowSpecialtyForm(true);
             }}
             onDelete={handleDeleteSpecialty}
-            selectedId={selectedSpecialty?._id}
           />
-        </div>
-      </div>
+        )}
 
-      <div className="section">
-        <div className="section-title">
-          {viewMode === 'department' 
-            ? selectedDepartment 
-              ? `Doctors in ${selectedDepartment.name}`
-              : 'Select a department to view doctors'
-            : selectedSpecialty
-              ? `Doctors in ${selectedSpecialty.name}`
-              : 'Select a specialty to view doctors'
-          }
-        </div>
-        <DoctorList
-          doctors={doctors}
-          onAddDoctor={
-            viewMode === 'department'
-              ? (doctorId) => selectedDepartment && handleAddDoctorToDepartment(doctorId, selectedDepartment._id)
-              : (doctorId) => selectedSpecialty && handleAddDoctorToSpecialty(doctorId, selectedSpecialty._id)
-          }
-          allDoctors={doctors}
-        />
+        {activeTab === "doctors" && (
+          <DoctorList
+            doctors={filteredDoctors}
+            departments={departments}
+            specialties={specialties}
+          />
+        )}
       </div>
 
       {showDepartmentForm && (
-        <div className="modal">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2 className="modal-title">
-                {editingDepartment ? 'Edit Department' : 'Create Department'}
-              </h2>
-              <button className="modal-close" onClick={() => setShowDepartmentForm(false)}>
-                &times;
-              </button>
-            </div>
-            <DepartmentForm
-              department={editingDepartment}
-              onSubmit={(department) => {
-                if (editingDepartment) {
-                  void handleUpdateDepartment(department as Department);
-                } else {
-                  void handleCreateDepartment(department as Omit<Department, '_id'>);
-                }
-              }}
-              onCancel={() => setShowDepartmentForm(false)}
-            />
-          </div>
-        </div>
+        <DepartmentForm
+          department={editingDepartment}
+          onSave={
+            editingDepartment ? handleUpdateDepartment : handleAddDepartment
+          }
+          onCancel={() => {
+            setShowDepartmentForm(false);
+            setEditingDepartment(null);
+          }}
+        />
       )}
 
       {showSpecialtyForm && (
-        <div className="modal">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2 className="modal-title">
-                {editingSpecialty ? 'Edit Specialty' : 'Create Specialty'}
-              </h2>
-              <button className="modal-close" onClick={() => setShowSpecialtyForm(false)}>
-                &times;
-              </button>
-            </div>
-            <SpecialtyForm
-              specialty={editingSpecialty}
-              departments={departments}
-              onSubmit={editingSpecialty 
-                ? (specialty) => { void handleUpdateSpecialty(specialty as Specialty); }
-                : (specialty) => { void handleCreateSpecialty(specialty as Omit<Specialty, '_id'>); }
-              }
-              onCancel={() => setShowSpecialtyForm(false)}
-            />
-          </div>
-        </div>
+        <SpecialtyForm
+          specialty={editingSpecialty}
+          departments={departments}
+          onSave={editingSpecialty ? handleUpdateSpecialty : handleAddSpecialty}
+          onCancel={() => {
+            setShowSpecialtyForm(false);
+            setEditingSpecialty(null);
+          }}
+        />
+      )}
+
+      {showServiceModal && (
+        <ServiceModal
+          serviceSelected={
+            specialties
+              .filter(s => selectedSpecialties.includes(s._id))
+              .flatMap(s => s.serviceIds)
+          }
+          services={services}
+          onAddServices={handleAddServicesToSpecialties}
+          onClose={() => setShowServiceModal(false)}
+        />
       )}
     </div>
   );
 };
 
-export default DepartmentManagementPage;
+export default DepartmentManagement;

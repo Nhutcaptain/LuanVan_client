@@ -30,7 +30,7 @@ const DoctorSidebarComponent = () => {
         {
             icon: <FaRegRectangleList className='text-2xl' />,
             label: 'Lịch đặt khám',
-            link: '/bac-si/lich-kham'
+            link: '/bac-si/danh-sach-dat-kham'
         },
         {
             icon: <FaRegRectangleList className='text-2xl' />,

@@ -2,7 +2,7 @@ import React from 'react';
 
 interface Props {
   label?: string;
-  value: string;
+  value: string | number;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   type?: string;
   placeholder?: string;

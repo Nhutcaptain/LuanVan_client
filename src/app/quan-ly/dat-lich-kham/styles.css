@@ -173,6 +173,32 @@
   color: #444;
 }
 
+.price-label{
+  display: block;
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: #444;
+}
+.price-section{
+  margin-bottom: 20px;
+}
+.examination-price{
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+}
+.examination-price p {
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: green;
+}
+
+.notes{
+  color: gray;
+  font-size: 1.1rem;
+}
+
 .form-textarea {
   width: 100%;
   border: 1px solid #ddd;

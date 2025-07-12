@@ -8,10 +8,12 @@ export interface Appointment {
   specialtyId?: string;
   status?: "scheduled" | "completed" | "cancelled";
   reason?: string;
+  location?: string;
   notificationSent?: {
     email?: boolean;
     sms?: boolean;
   };
+  notes: string;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -15,9 +15,9 @@ const LoginGoogleSuccessPage = () => {
       try {
         const res = api.get('/auth/me')
         .then((response) => {
-          const fullName = response.data.fullName;
-          const role = response.data.role;
-          const userId = response.data._id;
+          const fullName = response.data.user.fullName;
+          const role = response.data.user.role;
+          const userId = response.data.user._id;
           if(fullName) {
             localStorage.setItem('fullName', fullName);
             localStorage.setItem('role',role);

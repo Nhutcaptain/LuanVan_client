@@ -1,5 +1,5 @@
 import { uploadImageToCloudinary } from '@/services/uploadAvatarService';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import './styles.css'
 
 interface UploadImageData {
@@ -17,6 +17,11 @@ interface Props {
 const UploadImageComponent = (props: Props) => {
     const { initialAvatar, onFileSelect, size = 200, onChange } = props;
     const [preview, setPreview] = useState(initialAvatar || '');
+
+    useEffect(() => {
+        if(!initialAvatar) return;
+        setPreview(initialAvatar);
+    },[initialAvatar])
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];

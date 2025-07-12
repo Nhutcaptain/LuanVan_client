@@ -1,3 +1,4 @@
+
 export interface Department {
     _id: string;
     name: string;
@@ -10,4 +11,5 @@ export interface Specialty {
     name: string;
     description: string;
     code: string;
+    serviceIds: string[];
 }
