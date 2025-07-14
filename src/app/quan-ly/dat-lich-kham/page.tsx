@@ -12,6 +12,8 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { get } from 'http';
 import Swal from 'sweetalert2';
+import { Service } from '@/interface/ServiceInterface';
+import ServiceList from './Services/ServiceList';
 
 interface Department {
   _id: string;
@@ -22,6 +24,7 @@ interface Specialty {
   _id: string;
   name: string;
   departmentId: string;
+  serviceIds: Service[];
 }
 
 interface Doctor {
@@ -41,7 +44,8 @@ const AppointmentPage = () => {
   const searchParams = useSearchParams();
   const [overtimeSchedule, setOvertimeSchedule] = useState<OvertimeSchedule | null>(null);
   const [availableTimeSlots, setAvailableTimeSlots] = useState<OvertimeSlot[]>([]);
-  const [userId, setUserId] = useState('')
+  const [userId, setUserId] = useState('');
+  const [showServiceList, setShowServiceList] = useState(false);
   
   const [formData, setFormData] = useState({
     departmentId: '',
@@ -148,6 +152,7 @@ const AppointmentPage = () => {
         
         if (res.status === 200) {
           setSpecialties(res.data);
+          console.log('Thông tin chuyên khoa: ', res.data);
         } else {
           throw new Error('Failed to fetch specialties');
         }
@@ -165,8 +170,6 @@ const AppointmentPage = () => {
   // Fetch doctors when either department or specialty is selected
   useEffect(() => {
     if (!formData.specialtyId) {
-      // setDoctors([]);
-      // setFormData(prev => ({ ...prev, doctorId: '' }));
       return;
     }
 
@@ -385,6 +388,8 @@ const AppointmentPage = () => {
 
   const selectedDoctor = doctors.find(d => d._id === formData.doctorId);
   const price = selectedDoctor?.examinationPrice;
+  const selectedSpecialty = specialties.find(d => d._id === formData.specialtyId);
+  const services = selectedSpecialty?.serviceIds
 
   return (
     <div className="container">
@@ -524,6 +529,16 @@ const AppointmentPage = () => {
             <p>{price ? new Intl.NumberFormat('vi-VN').format(price) + ' đ' : 'Miễn phí'}</p>
           </div>
           <p className='notes'>*Lưu ý: đây là giá chưa bao gồm các xét nghiệm</p>
+        </div>
+        <div className="service-section">
+          {showServiceList && (
+            <ServiceList services={services ?? []}></ServiceList>
+          )}
+          {!showServiceList ? (
+            <p className="show-list" onClick={() => setShowServiceList(!showServiceList)}>Xem các dịch vụ liên quan</p>
+          ) : (
+            <p className='hide-list' onClick={() => setShowServiceList(!showServiceList)}>Ẩn bớt</p>
+          )}
         </div>
 
         <div className="form-group">

@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import InputComponent from '@/components/InputComponent/InputComponent';
 import api from '@/lib/axios';
@@ -9,6 +9,14 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const router = useRouter();
+
+  useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const callbackUrl = params.get('callbackUrl');
+  if (callbackUrl) {
+    localStorage.setItem('callbackUrl', callbackUrl);
+  }
+}, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });

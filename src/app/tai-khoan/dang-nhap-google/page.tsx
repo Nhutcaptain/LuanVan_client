@@ -2,41 +2,51 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/axios';
+import Cookies from 'js-cookie';
 
 const LoginGoogleSuccessPage = () => {
   const router = useRouter();
 
   useEffect(() => {
     // Lấy token từ URL (?token=...)
-    const params = new URLSearchParams(window.location.search);
+    const handleToken = async() => {
+      const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
+    const callbackUrl = localStorage.getItem('callbackUrl');
+    localStorage.removeItem('callbackUrl');
     if (token) {
       localStorage.setItem('token', token);
+      Cookies.set('token', token, {
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'Strict',
+        });
+      
       try {
-        const res = api.get('/auth/me')
-        .then((response) => {
-          const fullName = response.data.user.fullName;
-          const role = response.data.user.role;
-          const userId = response.data.user._id;
+        const response = await api.get('/auth/me')
+        if(response.status === 200) {
+          console.log(response.data);
+          const fullName = response.data.fullName;
+          const role = response.data.role;
+          const userId = response.data._id;
           if(fullName) {
             localStorage.setItem('fullName', fullName);
             localStorage.setItem('role',role);
             localStorage.setItem('userId',userId);
             window.dispatchEvent(new Event('userChange')); // Cập nhật user trên toàn ứng dụng
           }
-        })
+        }
+        router.replace(callbackUrl ?? '/');
       }catch(error) {
         console.error('Lỗi khi lưu token:', error);
       }
 
-      // Có thể gọi API lấy profile và lưu fullName nếu muốn
-      setTimeout(() => {
-        router.push('/');
-      }, 1000);
     } else {
       // Nếu không có token, chuyển về trang đăng nhập
       router.push('/tai-khoan/dang-nhap');
     }
+    }
+
+    handleToken();
   }, [router]);
 
   return (

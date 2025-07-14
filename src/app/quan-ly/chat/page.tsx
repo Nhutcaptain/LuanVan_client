@@ -15,6 +15,7 @@ export default function Home() {
   const [isDiagnosisMode, setIsDiagnosisMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const endpoint = isDiagnosisMode ? '/symptom/diagnose' : '/openai/generate';
 
   const handleSend = async (message: string) => {
     setMessages((prev) => [...prev, { role: "user", content: message }]);
@@ -22,7 +23,10 @@ export default function Home() {
     const userId = localStorage.getItem('userId');
 
     try {
-      const res = await api.post("/openai/generate", { prompt: message, userId: userId });
+      const payload = isDiagnosisMode
+        ? {description: message, userId}
+        : {prompt: message, userId}
+      const res = await api.post(endpoint, payload)
       if (res.status === 200) {
         console.log(res.data.response);
         setMessages((prev) => [
@@ -32,6 +36,15 @@ export default function Home() {
             content: res.data.response,
           },
         ]);
+      //   const voices = window.speechSynthesis.getVoices();
+      //   console.log(voices);
+      //   if ('speechSynthesis' in window) {
+      //   const utterance = new SpeechSynthesisUtterance(res.data.response);
+      //   utterance.lang = 'vi-VN'; // Nếu tiếng Việt, hoặc 'en-US' nếu tiếng Anh
+      //   utterance.pitch = 1;
+      //   utterance.rate = 1;
+      //   window.speechSynthesis.speak(utterance);
+      // }
       }
     } catch (error) {
       toast.error("Đã xảy ra lỗi khi gửi yêu cầu");
