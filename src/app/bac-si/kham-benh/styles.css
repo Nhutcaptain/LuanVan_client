@@ -1,7 +1,12 @@
 .new-examination-page {
-  max-width: 1200px;
+  max-width: 90%;
   margin: 0 auto;
   padding: 2rem 1rem;
+}
+
+.main-page{
+  display: flex;
+  width: 100%;
 }
 
 .page-header {

@@ -19,6 +19,7 @@ interface Appointment {
   };
   appointmentDate: string;
   session: string;
+  queueNumber: number;
   departmentId: {
     name: string;
     _id: string;
@@ -184,6 +185,10 @@ const AppointmentsPage = () => {
             <h2>CHI TIẾT LỊCH HẸN</h2>
             
             <div className="detail-section">
+            <div className="detail-row">
+                <strong className="detail-label">Số thứ tự: </strong>
+                <span className="detail-value">{selectedAppointment.queueNumber}</span>
+              </div>
               <div className="detail-row">
                 <span className="detail-label"><FaCalendarAlt /> Ngày khám:</span>
                 <span className="detail-value">{formatDate(selectedAppointment.appointmentDate)}</span>

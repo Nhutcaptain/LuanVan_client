@@ -9,9 +9,10 @@ interface Props {
   onPatientSelect: (patient: IPatient | null) => void;
   onPatientUpdate?: (updatedPatient: IPatient) => void;
   onSubmit?: () => void;
+  patientId: string;
 }
 
-const PatientInfoLookup = ({ onPatientSelect, onPatientUpdate, onSubmit }: Props) => {
+const PatientInfoLookup = ({ onPatientSelect, onPatientUpdate, onSubmit, patientId }: Props) => {
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [patients, setPatients] = useState<IPatient[]>([]);
@@ -32,6 +33,17 @@ const PatientInfoLookup = ({ onPatientSelect, onPatientUpdate, onSubmit }: Props
       });
     }
   }, [selectedPatient]);
+
+  useEffect(() => {
+    if(!patientId) return;
+    const fetchPatient = async() => {
+      const res = await api.get(`patient/getPatientWithId/${patientId}`)
+      if(res.status === 200) {
+        handleSelectPatient(res.data);
+      }
+    }
+    fetchPatient();
+  },[patientId])
 
   const handleSearch = async () => {
     if (!fullName.trim() || !phoneNumber.trim()) {
@@ -250,6 +262,12 @@ const PatientInfoLookup = ({ onPatientSelect, onPatientUpdate, onSubmit }: Props
                 <span className="info-label">Họ tên:</span>
                 <span className="info-value">
                   {(selectedPatient || patients[0]).userId.fullName}
+                </span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Mã bệnh nhân: </span>
+                <span className="info-value">
+                  {(selectedPatient || patients[0]).patientCode}
                 </span>
               </div>
               <div className="info-item">

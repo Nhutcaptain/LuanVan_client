@@ -34,6 +34,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased hide-scrollbar`}
       >
          <HeaderWrapper />
+         <div id="modal-root"></div>
         {children}
         <Chatbot></Chatbot>
       </body>

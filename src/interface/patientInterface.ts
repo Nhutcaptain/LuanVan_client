@@ -6,6 +6,7 @@ export interface IPatient {
   medicalHistory?: string;
   allergies?: string;
   medications?: string;
+  patientCode: string;
   insurance?: {
     provider?: string;
     number?: string;

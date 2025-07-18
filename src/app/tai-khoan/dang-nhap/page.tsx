@@ -32,6 +32,9 @@ const LoginPage = () => {
         localStorage.setItem('token', res.data.token);
         localStorage.setItem('fullName', res.data.fullName || '');
         localStorage.setItem('role',res.data.role || '');
+        if(res.data.role === 'doctor') {
+          localStorage.setItem('doctorId', res.data.doctorId);
+        }
         window.location.href = '/'; // Redirect to home page
       } else {
         setErrorMsg('Đăng nhập thất bại!');

@@ -45,7 +45,7 @@ const DoctorSchedulePage = () => {
     scheduleId: string;
   } | null>(null);
 
-  const doctorId = getDoctorIdFromToken();
+  const doctorId = localStorage.getItem('doctorId');
 
   const fetchOvertimeSchedules = async () => {
     if (!doctorId) return;

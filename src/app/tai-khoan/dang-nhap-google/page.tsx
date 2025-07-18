@@ -19,6 +19,7 @@ const LoginGoogleSuccessPage = () => {
       Cookies.set('token', token, {
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'Strict',
+            expires: 30,
         });
       
       try {

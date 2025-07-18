@@ -1,5 +1,4 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import { ExaminationFormData, PrescriptionItem } from '@/interface/ExaminationInterface';
 import PrescriptionForm from '../PrescriptionForm/PrescriptionForm';
@@ -8,46 +7,57 @@ import PatientInfoLookup from '../PatientInfoLookup/PatientInfoLookup';
 import {jwtDecode} from 'jwt-decode';
 import InputComponent from '../InputComponent/InputComponent';
 import { PDFExportDialog } from '@/modals/PDFExportModal';
+import { Service } from '@/interface/ServiceInterface';
+import { IPatient } from '@/interface/patientInterface';
+import { div } from 'framer-motion/client';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface DecodedToken {
   userId?: string;
   // Add other properties if needed
 }
 
-const getDoctorIdFromToken = () => {
-  try{
-    const token = localStorage.getItem('token');
-    if(!token) return '';
-    const decoded = jwtDecode<DecodedToken>(token);
-    return decoded.userId;
-  }catch(error) {
-    console.error('Không thể decode toke', error);
-    return '';
-  }
-}
-
 
 interface ExaminationFormProps {
-
+  doctorId: string;
   onSubmit: (data: ExaminationFormData) => void;
   isSubmitting?: boolean;
+  selectedPatient: string;
+  onPatientInfo: (patient: IPatient) => void;
+  selectedServices: Service[];
+  onSaveTerm: (data: ExaminationFormData) => void;
+  initialExamination?: ExaminationFormData;
 }
 
 export default function ExaminationForm({ 
- 
+  doctorId,
   onSubmit,
-  isSubmitting = false 
+  onSaveTerm,
+  isSubmitting = false,
+  selectedPatient,
+  onPatientInfo,
+  selectedServices,
+  initialExamination
+ 
 }: ExaminationFormProps) {
   const [formData, setFormData] = useState<Omit<ExaminationFormData, 'prescriptions'>>({
     date: new Date().toISOString().split('T')[0],
     subjective: '',
+    patientCode:'',
     objective: '',
     assessment: '',
+    testOrders: [{
+      serviceId: '',
+      status: '',
+      resultFile: '',
+    }],
+    status: '',
     plan: '',
     notes: '',
     patientId: '',
     followUp: new Date(),
-    doctorId: getDoctorIdFromToken(),
+    doctorId: doctorId,
   });
 
   const [prescriptions, setPrescriptions] = useState<PrescriptionItem[]>([]);
@@ -60,6 +70,46 @@ export default function ExaminationForm({
     frequency: '',
     duration: ''
   });
+
+  useEffect(() => {
+    const updatedTestOrders = selectedServices.map(service => ({
+      serviceId: service._id,
+      status: 'ordered', 
+      resultFile: '',
+    }));
+
+    setFormData(prev => ({
+      ...prev,
+      doctorId,
+      testOrders: updatedTestOrders,
+    }));
+  },[selectedServices])
+
+useEffect(() => {
+    if (initialExamination) {
+      setFormData(initialExamination);
+      if (initialExamination.prescriptions) {
+        setPrescriptions(initialExamination.prescriptions);
+      }
+    } else {
+      // Reset form when no initial examination
+      setFormData({
+        date: new Date().toISOString().split('T')[0],
+        subjective: '',
+        patientCode: '',
+        objective: '',
+        assessment: '',
+        testOrders: [],
+        status: '',
+        plan: '',
+        notes: '',
+        patientId: selectedPatient,
+        followUp: new Date(),
+        doctorId: doctorId,
+      });
+      setPrescriptions([]);
+    }
+  }, [initialExamination, doctorId, selectedPatient]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -87,8 +137,38 @@ export default function ExaminationForm({
     setPrescriptions(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleSaveTemp = () => {
+    onSaveTerm({
+      ...formData,
+      prescriptions
+    })
+    console.log(formData);
+
+  }
+
+  const validateForm = (requiredFields: string[]): boolean => {
+  for (const field of requiredFields) {
+    const value = (formData as Record<string, any>)[field];
+    if (!value || (typeof value === 'string' && value.trim() === '')) {
+      const fieldNames: Record<string, string> = {
+        date: 'Ngày khám',
+        subjective: 'Triệu chứng chủ quan',
+        objective: 'Triệu chứng khách quan',
+        assessment: 'Chẩn đoán',
+        plan: 'Kế hoạch điều trị',
+        followUp: 'Ngày tái khám',
+      };
+      toast.error(`Vui lòng nhập: ${fieldNames[field] || field}`);
+      return false;
+    }
+  }
+  return true;
+};
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const requiredFields = ['date', 'subjective', 'objective', 'assessment', 'plan', 'followUp'];
+    if (!validateForm(requiredFields)) return;
     onSubmit({
       ...formData,
       prescriptions,
@@ -96,6 +176,13 @@ export default function ExaminationForm({
     setFormData({
       date: new Date().toISOString().split('T')[0],
     subjective: '',
+    patientCode:'',
+     testOrders: [{
+      serviceId: '',
+      status: '',
+      resultFile: '',
+    }],
+    status: '',
     objective: '',
     assessment: '',
     plan: '',
@@ -114,21 +201,23 @@ export default function ExaminationForm({
   };
 
   const handlePatientSelect = (patient: any) => {
-    console.log("In the handle patient select:", patient)
+    onPatientInfo(patient);
     if(patient) {
       setFormData(prev => ({
       ...prev,
-      patientId: patient.userId,
+      patientId: patient.userId._id,
+      patientCode: patient.patientCode,
     }));
     setPatientInfo(patient);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="examination-form">
+    <div>
+      <form  className="examination-form">
       <div className="form-section">
         <h2>Thông Tin Khám Bệnh</h2>
-        <PatientInfoLookup onPatientSelect={handlePatientSelect} />
+        <PatientInfoLookup onPatientSelect={handlePatientSelect} patientId={selectedPatient}/>
         <div className="form-group">
           <label htmlFor="date">Ngày Khám</label>
           <input
@@ -181,8 +270,8 @@ export default function ExaminationForm({
             value={formData.assessment}
             onChange={handleChange}
             rows={3}
-            required
             placeholder="Chẩn đoán bệnh..."
+            required
           />
         </div>
 
@@ -194,7 +283,6 @@ export default function ExaminationForm({
             value={formData.plan}
             onChange={handleChange}
             rows={3}
-            required
             placeholder="Phác đồ điều trị..."
           />
         </div>
@@ -209,6 +297,7 @@ export default function ExaminationForm({
             placeholder="Tên thuốc"
             value={newPrescription.medication}
             onChange={handlePrescriptionChange}
+            required
           />
           <input
             type="text"
@@ -216,6 +305,7 @@ export default function ExaminationForm({
             placeholder="Liều lượng"
             value={newPrescription.dosage}
             onChange={handlePrescriptionChange}
+            required
           />
           <input
             type="text"
@@ -223,6 +313,7 @@ export default function ExaminationForm({
             placeholder="Tần suất"
             value={newPrescription.frequency}
             onChange={handlePrescriptionChange}
+            required
           />
           <input
             type="text"
@@ -230,6 +321,7 @@ export default function ExaminationForm({
             placeholder="Thời gian"
             value={newPrescription.duration}
             onChange={handlePrescriptionChange}
+            required
           />
           <button 
             type="button" 
@@ -279,13 +371,19 @@ export default function ExaminationForm({
         />
       </div>
         
-      <button 
-        type="submit" 
-        disabled={isSubmitting}
-        className="submit-btn"
-      >
-        {isSubmitting ? 'Đang Lưu...' : 'Lưu Hồ Sơ Khám Bệnh'}
-      </button>
+      <div className="btn-group">
+        <button 
+          type='submit'
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className="submit-btn"
+        >
+          {isSubmitting ? 'Đang Lưu...' : 'Lưu Hồ Sơ Khám Bệnh'}
+        </button>
+        <button className='submit-btn' onClick={handleSaveTemp} type='button'>
+          Lưu để chờ kết quả xét nghiệm
+        </button>
+      </div>
       {pdfData && (
         <PDFExportDialog
           open={showPDFExportDialog}
@@ -295,5 +393,7 @@ export default function ExaminationForm({
         />
       )}
     </form>
+    <ToastContainer></ToastContainer>
+    </div>
   );
 }

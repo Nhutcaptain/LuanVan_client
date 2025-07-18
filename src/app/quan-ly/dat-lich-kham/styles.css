@@ -143,6 +143,25 @@
   height: 1.2rem;
   cursor: pointer;
 }
+.consultation-type{
+  max-width: 300px;
+  margin-bottom: 20px;
+}
+
+.consultation-type label{
+  font-weight: bold;
+}
+
+.consultation-type select {
+  margin-top: 10px;
+  width: 100%;
+  padding: 0.65rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: white;
+  transition: border-color 0.15s ease-in-out;
+}
 
 .session-text {
   font-size: 1.1rem;

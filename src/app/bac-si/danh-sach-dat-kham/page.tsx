@@ -14,7 +14,7 @@ const DoctorAppointmentsList = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const doctorId = await getDoctorIdByUserId();
+      const doctorId = localStorage.getItem('doctorId');
       if (!doctorId) return;
       try {
         const res = await api.get(

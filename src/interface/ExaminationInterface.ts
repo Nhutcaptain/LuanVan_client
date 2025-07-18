@@ -1,3 +1,5 @@
+import { TestOrder } from "./TestOrders";
+
 export interface PrescriptionItem {
   medication: string;
   dosage: string;
@@ -6,9 +8,12 @@ export interface PrescriptionItem {
 }
 
 export interface ExaminationFormData {
+  _id?: string;
   doctorId?: string;
   patientId: string;
   date: string;
+  status: string;
+  testOrders: TestOrder[];
   subjective: string;
   objective: string;
   assessment: string;
@@ -16,6 +21,7 @@ export interface ExaminationFormData {
   followUp?: Date;
   prescriptions: PrescriptionItem[];
   notes: string;
+  patientCode: string;
 }
 
 export interface ExaminationDetail {

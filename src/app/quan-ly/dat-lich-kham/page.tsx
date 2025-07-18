@@ -1,19 +1,23 @@
-'use client'
-import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
-import './styles.css';
-import SelectComponent from '@/components/SelectComponent/SelectComponent';
-import { IUser } from '@/interface/usermodel';
-import api from '@/lib/axios';
-import { toast } from 'react-toastify';
-import { useRouter, useSearchParams } from 'next/navigation';
-import InputComponent from '@/components/InputComponent/InputComponent';
-import { OvertimeSchedule, OvertimeSlot } from '@/interface/Shifts';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import { get } from 'http';
-import Swal from 'sweetalert2';
-import { Service } from '@/interface/ServiceInterface';
-import ServiceList from './Services/ServiceList';
+"use client";
+import { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import "./styles.css";
+import SelectComponent from "@/components/SelectComponent/SelectComponent";
+import { IUser } from "@/interface/usermodel";
+import api from "@/lib/axios";
+import { toast } from "react-toastify";
+import { useRouter, useSearchParams } from "next/navigation";
+import InputComponent from "@/components/InputComponent/InputComponent";
+import {
+  OvertimeSchedule,
+  OvertimeSlot,
+  WeeklySchedule,
+} from "@/interface/Shifts";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { get } from "http";
+import Swal from "sweetalert2";
+import { Service } from "@/interface/ServiceInterface";
+import ServiceList from "./Services/ServiceList";
 
 interface Department {
   _id: string;
@@ -42,20 +46,26 @@ const AppointmentPage = () => {
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const searchParams = useSearchParams();
-  const [overtimeSchedule, setOvertimeSchedule] = useState<OvertimeSchedule | null>(null);
-  const [availableTimeSlots, setAvailableTimeSlots] = useState<OvertimeSlot[]>([]);
-  const [userId, setUserId] = useState('');
+  const [overtimeSchedule, setOvertimeSchedule] =
+    useState<OvertimeSchedule | null>(null);
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<OvertimeSlot[]>(
+    []
+  );
+  const [userId, setUserId] = useState("");
   const [showServiceList, setShowServiceList] = useState(false);
-  
+  const [consultationService, setConsultationService] = useState("");
+  const [weeklySchedule, setWeeklySchedule] = useState<WeeklySchedule>();
+  const [allowDayOfWeek, setAllowDayOfWeek] = useState<number[] | null>(null);
+
   const [formData, setFormData] = useState({
-    departmentId: '',
-    specialtyId: '',
-    doctorId: '',
-    appointmentDate: '',
-    session: '',
-    reason: '',
+    departmentId: "",
+    specialtyId: "",
+    doctorId: "",
+    appointmentDate: "",
+    session: "",
+    reason: "",
     agreeTerms: false,
-    location: '',
+    location: "",
   });
 
   const [loading, setLoading] = useState({
@@ -68,47 +78,47 @@ const AppointmentPage = () => {
   });
 
   useEffect(() => {
-    const doctorId = searchParams.get('doctorId');
-    const departmentId = searchParams.get('departmentId');
-    const specialtyId = searchParams.get('specialtyId');
-    const fetchUserId = async() => {
-      if(!doctorId) return;
-      try{
+    const doctorId = searchParams.get("doctorId");
+    const departmentId = searchParams.get("departmentId");
+    const specialtyId = searchParams.get("specialtyId");
+    const fetchUserId = async () => {
+      if (!doctorId) return;
+      try {
         const res = await api.get(`/users/getUserId/${doctorId}`);
-        if(res.status === 200) {
+        if (res.status === 200) {
           setUserId(res.data.userId);
         }
-      }catch(error) {
+      } catch (error) {
         console.error(error);
-        toast.error('Không tìm thấy thông tin người dùng này');
+        toast.error("Không tìm thấy thông tin người dùng này");
       }
-    }
+    };
     fetchUserId();
-    
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
-      departmentId: departmentId || '',
-      specialtyId: specialtyId || '',
-      doctorId: doctorId || '',
-    }))
-  },[])
+      departmentId: departmentId || "",
+      specialtyId: specialtyId || "",
+      doctorId: doctorId || "",
+    }));
+  }, []);
 
   // Fetch patient data from backend
   useEffect(() => {
     const fetchPatient = async () => {
       try {
-        const res = await api.get('/auth/me');
-        
+        const res = await api.get("/auth/me");
+
         if (res.status === 200) {
           setPatient(res.data);
         } else {
-          throw new Error('Failed to fetch patient');
+          throw new Error("Failed to fetch patient");
         }
       } catch (err) {
-        console.error('Failed to fetch patient:', err);
-        toast.error('Không thể tải thông tin bệnh nhân');
+        console.error("Failed to fetch patient:", err);
+        toast.error("Không thể tải thông tin bệnh nhân");
       } finally {
-        setLoading(prev => ({ ...prev, patient: false }));
+        setLoading((prev) => ({ ...prev, patient: false }));
       }
     };
 
@@ -119,18 +129,18 @@ const AppointmentPage = () => {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const res = await api.get('/department/getAllDepartment');
-        
+        const res = await api.get("/department/getAllDepartment");
+
         if (res.status === 200) {
           setDepartments(res.data);
         } else {
-          throw new Error('Failed to fetch departments');
+          throw new Error("Failed to fetch departments");
         }
       } catch (err) {
-        console.error('Failed to fetch departments:', err);
-        toast.error('Không thể tải danh sách khoa');
+        console.error("Failed to fetch departments:", err);
+        toast.error("Không thể tải danh sách khoa");
       } finally {
-        setLoading(prev => ({ ...prev, departments: false }));
+        setLoading((prev) => ({ ...prev, departments: false }));
       }
     };
 
@@ -147,20 +157,22 @@ const AppointmentPage = () => {
 
     const fetchSpecialties = async () => {
       try {
-        setLoading(prev => ({ ...prev, specialties: true }));
-        const res = await api.get(`/department/getAllSpecialtyByDepartmentId/${formData.departmentId}`);
-        
+        setLoading((prev) => ({ ...prev, specialties: true }));
+        const res = await api.get(
+          `/department/getAllSpecialtyByDepartmentId/${formData.departmentId}`
+        );
+
         if (res.status === 200) {
           setSpecialties(res.data);
-          console.log('Thông tin chuyên khoa: ', res.data);
+          console.log("Thông tin chuyên khoa: ", res.data);
         } else {
-          throw new Error('Failed to fetch specialties');
+          throw new Error("Failed to fetch specialties");
         }
       } catch (err) {
-        console.error('Failed to fetch specialties:', err);
-        toast.error('Không thể tải danh sách chuyên khoa');
+        console.error("Failed to fetch specialties:", err);
+        toast.error("Không thể tải danh sách chuyên khoa");
       } finally {
-        setLoading(prev => ({ ...prev, specialties: false }));
+        setLoading((prev) => ({ ...prev, specialties: false }));
       }
     };
 
@@ -175,20 +187,22 @@ const AppointmentPage = () => {
 
     const fetchDoctors = async () => {
       try {
-        setLoading(prev => ({ ...prev, doctors: true }));
-        const res = await api.get(`/doctors/getDoctorBySpecialtyId/${formData.specialtyId}`);
-        
+        setLoading((prev) => ({ ...prev, doctors: true }));
+        const res = await api.get(
+          `/doctors/getDoctorBySpecialtyId/${formData.specialtyId}`
+        );
+
         if (res.status === 200) {
           console.log(res.data);
           setDoctors(res.data);
         } else {
-          throw new Error('Failed to fetch doctors');
+          throw new Error("Failed to fetch doctors");
         }
       } catch (err) {
-        console.error('Failed to fetch doctors:', err);
-        toast.error('Không thể tải danh sách bác sĩ');
+        console.error("Failed to fetch doctors:", err);
+        toast.error("Không thể tải danh sách bác sĩ");
       } finally {
-        setLoading(prev => ({ ...prev, doctors: false }));
+        setLoading((prev) => ({ ...prev, doctors: false }));
       }
     };
 
@@ -199,77 +213,111 @@ const AppointmentPage = () => {
     if (!formData.doctorId) {
       setOvertimeSchedule(null);
       setAvailableTimeSlots([]);
-      setFormData(prev => ({ ...prev, appointmentDate: '', session: '' }));
+      setFormData((prev) => ({ ...prev, appointmentDate: "", session: "" }));
       return;
     }
 
     const fetchOvertimeSchedule = async () => {
       try {
-        if(!userId) return;
-        setLoading(prev => ({ ...prev, dates: true }));
-        const res = await api.get(`/schedule/getOvertimeSchedule/${userId}`);
-        
+        if (!formData.doctorId) return;
+        setLoading((prev) => ({ ...prev, dates: true }));
+        const res = await api.get(
+          `/schedule/getOvertimeSchedule/${formData.doctorId}`
+        );
+
         if (res.status === 200) {
-          console.log(res.data);
           setOvertimeSchedule(res.data);
         } else {
-          throw new Error('Failed to fetch overtime schedule');
+          throw new Error("Failed to fetch overtime schedule");
         }
-      } catch (err: any) {
-        if(err.status === 404) return;
-        console.error('Failed to fetch overtime schedule:', err);
-        toast.error('Không thể tải lịch khám ngoài giờ của bác sĩ');
+      } catch (error: any) {
+        if (error.status === 404) return;
+        console.error("Failed to fetch overtime schedule:", error);
+        toast.error("Không thể tải lịch khám ngoài giờ của bác sĩ");
       } finally {
-        setLoading(prev => ({ ...prev, dates: false }));
+        setLoading((prev) => ({ ...prev, dates: false }));
       }
     };
+    const fetchWeeklySchedule = async () => {
+      try {
+        if (!formData.doctorId) return;
+        const res = await api.get(
+          `/schedule/getScheduleByDoctorId/${formData.doctorId}`
+        );
+        if (res.status === 200) {
+          setWeeklySchedule(res.data);
+          console.log(res.data);
+        }
+      } catch (error: any) {
+        if (error.status === 404) return;
+        toast.error("Không thể tải giờ làm việc của bác sĩ");
+      }
+    };
+    fetchWeeklySchedule();
 
     fetchOvertimeSchedule();
-  }, [userId, formData.appointmentDate]);
+  }, [formData.appointmentDate, formData.doctorId]);
 
-   useEffect(() => {
+  useEffect(() => {
     if (!formData.appointmentDate || !overtimeSchedule) {
       setAvailableTimeSlots([]);
-      setFormData(prev => ({ ...prev, session: '' }));
+      setFormData((prev) => ({ ...prev, session: "" }));
       return;
     }
 
     const selectedDate = new Date(formData.appointmentDate);
     const dayOfWeek = selectedDate.getDay(); // 0 (Sunday) to 6 (Saturday)
-    
+
     const weeklySlot = overtimeSchedule.weeklySchedule.find(
-      slot => slot.dayOfWeek === dayOfWeek && slot.isActive
+      (slot) => slot.dayOfWeek === dayOfWeek && slot.isActive
     );
 
     if (weeklySlot) {
       setAvailableTimeSlots(weeklySlot.slots);
     } else {
       setAvailableTimeSlots([]);
-      toast.warning('Bác sĩ không có lịch khám ngoài giờ vào ngày này');
+      toast.warning("Bác sĩ không có lịch khám ngoài giờ vào ngày này");
     }
-  }, [ overtimeSchedule]);
+  }, [overtimeSchedule]);
 
-    const isDateDisabled = (date: Date) => {
+  useEffect(() => {
+    if (consultationService === "officeConsultation" && weeklySchedule) {
+      const availableDays = weeklySchedule.schedule.map((s) => s.dayOfWeek);
+      console.log("Giờ hành chính", availableDays);
+      setAllowDayOfWeek(availableDays);
+    } else if (
+      consultationService === "overtimeConsultation" &&
+      overtimeSchedule
+    ) {
+      const availableDays = overtimeSchedule?.weeklySchedule.map(
+        (item) => item.dayOfWeek
+      );
+      console.log("Ngoài giờ", availableDays);
+      setAllowDayOfWeek(availableDays);
+    }
+  }, [consultationService, weeklySchedule, overtimeSchedule]);
+
+  const isDateDisabled = (date: Date) => {
     if (!overtimeSchedule) return true;
-    
+
     const dayOfWeek = date.getDay();
     return !overtimeSchedule.weeklySchedule.some(
-      slot => slot.dayOfWeek === dayOfWeek && slot.isActive
+      (slot) => slot.dayOfWeek === dayOfWeek && slot.isActive
     );
   };
 
   const getSelectedLocationId = () => {
-     const selectedDayOfWeek = formData.appointmentDate
+    const selectedDayOfWeek = formData.appointmentDate
       ? new Date(formData.appointmentDate).getDay()
       : null;
     const selectedSchedule = overtimeSchedule?.weeklySchedule.find(
-      item => item.dayOfWeek === selectedDayOfWeek
+      (item) => item.dayOfWeek === selectedDayOfWeek
     );
-    return selectedSchedule ? (selectedSchedule.locationId): '';
-  }
+    return selectedSchedule ? selectedSchedule.locationId : "";
+  };
 
   const handleTimeSlotChange = (slot: OvertimeSlot) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       session: `${slot.startTime}-${slot.endTime}`,
       locationId: getSelectedLocation(),
@@ -277,43 +325,43 @@ const AppointmentPage = () => {
   };
 
   const handleChange = (
-  e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-) => {
-  const { name, value, type } = e.target;
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value, type } = e.target;
 
-  // Nếu là checkbox, dùng checked; còn lại dùng value
-  const newValue = type === 'checkbox'
-    ? (e.target as HTMLInputElement).checked
-    : type === 'date'
-    ? new Date(value).toISOString().split('T')[0] // giữ định dạng yyyy-mm-dd
-    : value;
+    // Nếu là checkbox, dùng checked; còn lại dùng value
+    const newValue =
+      type === "checkbox"
+        ? (e.target as HTMLInputElement).checked
+        : type === "date"
+        ? new Date(value).toISOString().split("T")[0] // giữ định dạng yyyy-mm-dd
+        : value;
 
-  setFormData(prev => ({
-    ...prev,
-    [name]: newValue
-  }));
-};
-
+    setFormData((prev) => ({
+      ...prev,
+      [name]: newValue,
+    }));
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.agreeTerms) {
-      toast.error('Vui lòng đồng ý với điều khoản và dịch vụ');
+      toast.error("Vui lòng đồng ý với điều khoản và dịch vụ");
       return;
     }
 
     Swal.fire({
-      title: 'Đang xử lý',
-      icon: 'info',
+      title: "Đang xử lý",
+      icon: "info",
       showLoaderOnConfirm: true,
-    })
+    });
 
     try {
-      setLoading(prev => ({ ...prev, submitting: true }));
-      console.log(formData)
-      
-      const res = await api.post('/appointment/createAppointment', {
+      setLoading((prev) => ({ ...prev, submitting: true }));
+      console.log(formData);
+
+      const res = await api.post("/appointment/createAppointment", {
         patientId: patient?._id,
         doctorId: formData.doctorId,
         departmentId: formData.departmentId,
@@ -325,37 +373,37 @@ const AppointmentPage = () => {
       });
 
       if (res.status === 201) {
-        toast.success('Đặt lịch hẹn thành công!');
+        toast.success("Đặt lịch hẹn thành công!");
         Swal.close();
         Swal.fire({
-          title: 'Đặt lịch thành công',
-          icon: 'success',
+          title: "Đặt lịch thành công",
+          icon: "success",
           showConfirmButton: true,
-        })
+        });
         setFormData({
-          departmentId: '',
-          specialtyId: '',
-          doctorId: '',
-          appointmentDate: '',
-          session: '',
-          reason: '',
+          departmentId: "",
+          specialtyId: "",
+          doctorId: "",
+          appointmentDate: "",
+          session: "",
+          reason: "",
           agreeTerms: false,
-          location: '',
-        })
+          location: "",
+        });
       } else {
-        throw new Error(res.data.message || 'Failed to create appointment');
+        throw new Error(res.data.message || "Failed to create appointment");
       }
     } catch (err: any) {
-      console.error('Failed to submit appointment:', err);
+      console.error("Failed to submit appointment:", err);
       Swal.close();
       Swal.fire({
-        title: 'Có lỗi xảy ra',
-        icon: 'error',
+        title: "Có lỗi xảy ra",
+        icon: "error",
         showCloseButton: true,
-      })
-      toast.error(err.message || 'Đặt lịch hẹn thất bại. Vui lòng thử lại.');
+      });
+      toast.error(err.message || "Đặt lịch hẹn thất bại. Vui lòng thử lại.");
     } finally {
-      setLoading(prev => ({ ...prev, submitting: false }));
+      setLoading((prev) => ({ ...prev, submitting: false }));
     }
   };
 
@@ -374,27 +422,58 @@ const AppointmentPage = () => {
       </div>
     );
   }
-  
-  const allowDayOfWeek = overtimeSchedule?.weeklySchedule.map(item => item.dayOfWeek);
+
   const getSelectedLocation = () => {
-     const selectedDayOfWeek = formData.appointmentDate
+    const selectedDayOfWeek = formData.appointmentDate
       ? new Date(formData.appointmentDate).getDay()
       : null;
     const selectedSchedule = overtimeSchedule?.weeklySchedule.find(
-      item => item.dayOfWeek === selectedDayOfWeek
+      (item) => item.dayOfWeek === selectedDayOfWeek
     );
-    return selectedSchedule ? (selectedSchedule.locationId as any).name : '';
-  }
+    return selectedSchedule ? (selectedSchedule.locationId as any).name : "";
+  };
 
-  const selectedDoctor = doctors.find(d => d._id === formData.doctorId);
+  const getAvailableTimeSlots = () => {
+    if (!formData.appointmentDate || !consultationService) return;
+    const dayOfWeek = new Date(formData.appointmentDate).getDay();
+
+    if (consultationService === "officeConsultation" && weeklySchedule) {
+      const scheduleForDay = weeklySchedule.schedule.find(
+        (s) => s.dayOfWeek === dayOfWeek
+      );
+      return (
+        scheduleForDay?.shiftIds.map((shift) => ({
+          startTime: shift.startTime,
+          endTime: shift.endTime,
+        })) ?? []
+      );
+    }
+
+    if (consultationService === "overtimeConsultation" && overtimeSchedule) {
+      const scheduleForDay = overtimeSchedule.weeklySchedule.find(
+        (s) => s.dayOfWeek === dayOfWeek && s.isActive
+      );
+      return (
+        scheduleForDay?.slots.map((slot) => ({
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+        })) ?? []
+      );
+    }
+    return [];
+  };
+
+  const selectedDoctor = doctors.find((d) => d._id === formData.doctorId);
   const price = selectedDoctor?.examinationPrice;
-  const selectedSpecialty = specialties.find(d => d._id === formData.specialtyId);
-  const services = selectedSpecialty?.serviceIds
+  const selectedSpecialty = specialties.find(
+    (d) => d._id === formData.specialtyId
+  );
+  const services = selectedSpecialty?.serviceIds;
 
   return (
     <div className="container">
       <h1 className="page-title">ĐẶT LỊCH HẸN KHÁM BỆNH</h1>
-      
+
       {/* Patient information section */}
       <div className="patient-info-section">
         <h2 className="section-title">THÔNG TIN BỆNH NHÂN</h2>
@@ -415,7 +494,9 @@ const AppointmentPage = () => {
             <div className="info-item">
               <label className="info-label">Địa chỉ:</label>
               <div className="address-details">
-                {patient.address.houseNumber && <span>{patient.address.houseNumber}, </span>}
+                {patient.address.houseNumber && (
+                  <span>{patient.address.houseNumber}, </span>
+                )}
                 <span>{patient.address.ward.name}, </span>
                 <span>{patient.address.district.name}, </span>
                 <span>{patient.address.province.name}</span>
@@ -428,7 +509,7 @@ const AppointmentPage = () => {
       {/* Appointment form */}
       <form onSubmit={handleSubmit} className="appointment-form">
         <h2 className="section-title">THÔNG TIN ĐẶT LỊCH</h2>
-        
+
         <div className="form-grid">
           <div className="form-column">
             <SelectComponent
@@ -436,74 +517,98 @@ const AppointmentPage = () => {
               name="departmentId"
               value={formData.departmentId}
               onChange={handleChange}
-              options={departments.map(dept => ({
+              options={departments.map((dept) => ({
                 label: dept.name,
-                value: dept._id
+                value: dept._id,
               }))}
               required
             />
-
-            <SelectComponent
-              label="Chuyên khoa"
-              name="specialtyId"
-              value={formData.specialtyId}
-              onChange={handleChange}
-              options={specialties.map(spec => ({
-                label: spec.name,
-                value: spec._id
-              }))}
-              disabled={!formData.departmentId || loading.specialties}
-            />
-          </div>
-
-          <div className="form-column">
             <SelectComponent
               label="Bác sĩ*"
               name="doctorId"
               value={formData.doctorId}
               onChange={handleChange}
-              options={doctors.map(doctor => ({
+              options={doctors.map((doctor) => ({
                 label: doctor.name,
-                value: doctor._id
+                value: doctor._id,
               }))}
-              disabled={(!formData.departmentId && !formData.specialtyId) || loading.doctors}
+              disabled={
+                (!formData.departmentId && !formData.specialtyId) ||
+                loading.doctors
+              }
               required
             />
           </div>
+
+          <div className="form-column">
+            <SelectComponent
+              label="Chuyên khoa"
+              name="specialtyId"
+              value={formData.specialtyId}
+              onChange={handleChange}
+              options={specialties.map((spec) => ({
+                label: spec.name,
+                value: spec._id,
+              }))}
+              disabled={!formData.departmentId || loading.specialties}
+            />
+          </div>
+        </div>
+        <div className="consultation-type">
+          <label>Loại dịch vụ khám*</label>
+          <select
+            name="consultationService"
+            value={consultationService}
+            onChange={(e) => setConsultationService(e.target.value)}
+          >
+            <option value="">-- Chọn loại dịch vụ --</option>
+            <option value="officeConsultation">
+              Khám trong giờ hành chính
+            </option>
+            <option value="overtimeConsultation">Khám ngoài giờ</option>
+          </select>
         </div>
 
-         <div className="date-session-container">
+        <div className="date-session-container">
           <div className="form-group">
             <label htmlFor="appointmentDate" className="form-label">
               Ngày khám*
             </label>
             <DatePicker
               id="appointmentDate"
-              selected={formData.appointmentDate ? new Date(formData.appointmentDate) : null}
+              selected={
+                formData.appointmentDate
+                  ? new Date(formData.appointmentDate)
+                  : null
+              }
               onChange={(date: Date | null) => {
-                setFormData(prev => ({
+                setFormData((prev) => ({
                   ...prev,
-                  appointmentDate: date ? date.toISOString().split('T')[0] : ''
+                  appointmentDate: date ? date.toISOString().split("T")[0] : "",
                 }));
               }}
               minDate={new Date()}
               placeholderText="Chọn ngày khám"
-              filterDate={(date: Date) => (allowDayOfWeek ?? []).includes(date.getDay())}
+              filterDate={(date: Date) =>
+                (allowDayOfWeek ?? []).includes(date.getDay())
+              }
               dateFormat="yyyy-MM-dd"
               className="form-input"
             />
           </div>
 
-          {availableTimeSlots.length > 0 && (
+          {getAvailableTimeSlots() && getAvailableTimeSlots()!.length > 0 && (
             <div className="time-slot-picker">
               <label className="time-slot-label">Chọn khung giờ*</label>
               <div className="time-slot-options">
-                {availableTimeSlots.map((slot, index) => (
+                {getAvailableTimeSlots()?.map((slot, index) => (
                   <button
                     type="button"
                     key={index}
                     className={`time-slot-option ${
-                      formData.session === `${slot.startTime}-${slot.endTime}` ? 'selected' : ''
+                      formData.session === `${slot.startTime}-${slot.endTime}`
+                        ? "selected"
+                        : ""
                     }`}
                     onClick={() => handleTimeSlotChange(slot)}
                   >
@@ -516,28 +621,44 @@ const AppointmentPage = () => {
 
           {formData.session && (
             <div className="location">
-              <label className='location-label'>Địa điểm*</label>
+              <label className="location-label">Địa điểm*</label>
               <p className="location-value">
-                {getSelectedLocation() || 'Chưa chọn ngày khám'}
+                {getSelectedLocation() || "Chưa chọn ngày khám"}
               </p>
             </div>
           )}
         </div>
         <div className="price-section">
           <div className="examination-price">
-            <label className='price-label'>Giá khám: </label>
-            <p>{price ? new Intl.NumberFormat('vi-VN').format(price) + ' đ' : 'Miễn phí'}</p>
+            <label className="price-label">Giá khám: </label>
+            <p>
+              {price
+                ? new Intl.NumberFormat("vi-VN").format(price) + " đ"
+                : "Miễn phí"}
+            </p>
           </div>
-          <p className='notes'>*Lưu ý: đây là giá chưa bao gồm các xét nghiệm</p>
+          <p className="notes">
+            *Lưu ý: đây là giá chưa bao gồm các xét nghiệm
+          </p>
         </div>
         <div className="service-section">
           {showServiceList && (
             <ServiceList services={services ?? []}></ServiceList>
           )}
           {!showServiceList ? (
-            <p className="show-list" onClick={() => setShowServiceList(!showServiceList)}>Xem các dịch vụ liên quan</p>
+            <p
+              className="show-list"
+              onClick={() => setShowServiceList(!showServiceList)}
+            >
+              Xem các dịch vụ liên quan
+            </p>
           ) : (
-            <p className='hide-list' onClick={() => setShowServiceList(!showServiceList)}>Ẩn bớt</p>
+            <p
+              className="hide-list"
+              onClick={() => setShowServiceList(!showServiceList)}
+            >
+              Ẩn bớt
+            </p>
           )}
         </div>
 
@@ -566,7 +687,12 @@ const AppointmentPage = () => {
               className="terms-checkbox"
               required
             />
-            <span className="terms-text">Tôi đồng ý với <a href="/terms" className="terms-link">điều khoản và dịch vụ</a></span>
+            <span className="terms-text">
+              Tôi đồng ý với{" "}
+              <a href="/terms" className="terms-link">
+                điều khoản và dịch vụ
+              </a>
+            </span>
           </label>
         </div>
 

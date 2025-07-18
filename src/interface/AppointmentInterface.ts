@@ -9,6 +9,7 @@ export interface Appointment {
   status?: "scheduled" | "completed" | "cancelled";
   reason?: string;
   location?: string;
+  queueNumber: string;
   notificationSent?: {
     email?: boolean;
     sms?: boolean;
