@@ -4,7 +4,7 @@ import { Service } from "@/interface/ServiceInterface";
 import { IPatient } from "@/interface/patientInterface";
 import { DoctorInterface } from "@/interface/DoctorInterface";
 import PrescriptionModal from "@/modals/PrescriptionModal";
-import ResultModal from "@/modals/ResultModal"; // Tạo component mới này
+import ResultModal from "@/modals/ResultModal";
 
 interface Props {
   services: Service[];
@@ -13,6 +13,8 @@ interface Props {
   onSelectedServicesChange: (services: Service[]) => void;
   initialSelectedServices: Service[];
   tempExamination?: any;
+  selectedPatient: string;
+  provisional: string;
 }
 
 const ServiceList: React.FC<Props> = ({
@@ -22,11 +24,15 @@ const ServiceList: React.FC<Props> = ({
   onSelectedServicesChange,
   initialSelectedServices,
   tempExamination,
+  selectedPatient,
+  provisional
 }) => {
   const [isPrescriptionModalOpen, setIsPrescriptionModalOpen] = useState(false);
   const [isResultModalOpen, setIsResultModalOpen] = useState(false);
   const [currentResultUrl, setCurrentResultUrl] = useState("");
   const [printedServices, setPrintedServices] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const currentDate = new Date().toLocaleDateString("vi-VN");
 
   const getServiceOrder = (serviceId: string) => {
@@ -75,68 +81,100 @@ const ServiceList: React.FC<Props> = ({
     }
   };
 
+  const toggleSortDirection = () => {
+    setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+  };
+
   const hasUnprintedServices = initialSelectedServices.some(
     (service) => isNewService(service._id) && !printedServices.includes(service._id)
   );
 
+  // Filter and sort services
+  const filteredServices = services
+    .filter(service =>
+      service.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      const nameA = a.name.toLowerCase();
+      const nameB = b.name.toLowerCase();
+      return sortDirection === "asc" 
+        ? nameA.localeCompare(nameB)
+        : nameB.localeCompare(nameA);
+    });
+
   return (
     <div className="service-list-container">
-      <h2>Danh sách dịch vụ</h2>
+      <div className="service-list-header">
+        <h2>Danh sách dịch vụ</h2>
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="Tìm kiếm dịch vụ..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+          <span className="search-icon">🔍</span>
+        </div>
+      </div>
+      {!selectedPatient && (
+        <div className="patient-selection-alert">
+          Vui lòng chọn bệnh nhân trước khi chọn dịch vụ
+        </div>
+      )}
 
-      <div className="table-responsive">
-        <table className="service-table">
-          <thead>
-            <tr>
-              <th>Chọn</th>
-              <th>Tên dịch vụ</th>
-              <th>Trạng thái</th>
-              <th>Kết quả</th>
-              <th>Giá</th>
-            </tr>
-          </thead>
-          <tbody>
-            {services.map((service) => {
-              const order = getServiceOrder(service._id);
-              const isNew = isNewService(service._id);
-              return (
-                <tr key={service._id}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={initialSelectedServices.some(
-                        (s) => s._id === service._id
+      <div className="table-wrapper">
+        <div className="table-responsive">
+          <table className="service-table">
+            <thead>
+              <tr>
+                <th>Chọn</th>
+                <th onClick={toggleSortDirection} className="sortable-header">
+                  Tên dịch vụ
+                  <span className="sort-icon">
+                    {sortDirection === "asc" ? " ↑" : " ↓"}
+                  </span>
+                </th>
+                <th>Trạng thái</th>
+                <th>Giá</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredServices.map((service) => {
+                const order = getServiceOrder(service._id);
+                const isNew = isNewService(service._id);
+                return (
+                  <tr key={service._id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={initialSelectedServices.some(
+                          (s) => s._id === service._id
+                        )}
+                        onChange={() => toggleServiceSelection(service)}
+                        className="service-checkbox"
+                        disabled={!selectedPatient}
+                      />
+                    </td>
+                    <td>{service.name}</td>
+                    <td>
+                      {order?.status === 'ordered' && (
+                        <span className="status-waiting">Đang đợi kết quả</span>
                       )}
-                      onChange={() => toggleServiceSelection(service)}
-                    />
-                  </td>
-                  <td>{service.name}</td>
-                  <td>
-                    {order?.status === 'ordered' && (
-                      <span className="status-waiting">(Đang đợi kết quả)</span>
-                    )}
-                    {order?.status === 'completed' && (
-                      <span className="status-completed">(Đã có kết quả)</span>
-                    )}
-                    {isNew && (
-                      <span className="status-new">(Mới thêm)</span>
-                    )}
-                  </td>
-                  <td>
-                    {order?.resultFileUrl && (
-                      <button 
-                        className="view-result-button"
-                        onClick={() => handleViewResult(service._id)}
-                      >
-                        Xem kết quả
-                      </button>
-                    )}
-                  </td>
-                  <td>{service.price.toLocaleString()} VND</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                      {order?.status === 'completed' && (
+                        <span className="status-completed">Đã có kết quả</span>
+                      )}
+                      {isNew && (
+                        <span className="status-new">Mới thêm</span>
+                      )}
+                    </td>
+                    <td>{service.price.toLocaleString()} VND</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {initialSelectedServices.length > 0 && (
@@ -149,7 +187,8 @@ const ServiceList: React.FC<Props> = ({
               const isPrinted = printedServices.includes(service._id);
               return (
                 <li key={service._id}>
-                  {service.name} - {service.price.toLocaleString()} VND
+                  <span className="service-name">{service.name}</span>
+                  <span className="service-price"> - {service.price.toLocaleString()} VND</span>
                   {order?.status === 'ordered' && (
                     <span className="status-waiting"> (Đang đợi kết quả)</span>
                   )}
@@ -159,14 +198,16 @@ const ServiceList: React.FC<Props> = ({
                   {isNew && !isPrinted && (
                     <span className="status-new"> (Chưa in)</span>
                   )}
-                  {order?.resultFileUrl && (
+                  {
+                    order?.resultFileUrl && (
                     <button 
                       className="view-result-button small"
                       onClick={() => handleViewResult(service._id)}
                     >
                       Xem kết quả
                     </button>
-                  )}
+                  )
+                  }
                 </li>
               );
             })}
@@ -199,6 +240,7 @@ const ServiceList: React.FC<Props> = ({
         patientInfo={patientInfo}
         doctorInfo={doctorInfo}
         currentDate={currentDate}
+        provisional={provisional}
       />
 
       <ResultModal

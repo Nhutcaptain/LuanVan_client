@@ -231,6 +231,10 @@
   color: #e74c3c;
 }
 
+.status.waiting_result {
+  color: #df910b;
+}
+
 .action-buttons {
   display: flex;
   justify-content: flex-end;
@@ -250,6 +254,20 @@
 
 .btn-cancel:hover {
   background-color: #c0392b;
+}
+
+.btn-navigate {
+  background-color: #04a319;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-navigate:hover {
+  background-color: #03602a;
 }
 
 .btn-close {

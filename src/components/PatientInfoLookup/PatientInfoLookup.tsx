@@ -135,7 +135,7 @@ const PatientInfoLookup = ({ onPatientSelect, onPatientUpdate, onSubmit, patient
 
   return (
     <div className="patient-lookup-container">
-      <div className="search-section">
+      {/* <div className="search-section">
         <h2>Tìm Kiếm Bệnh Nhân</h2>
         <div className="search-fields">
           <div className="form-group">
@@ -195,8 +195,6 @@ const PatientInfoLookup = ({ onPatientSelect, onPatientUpdate, onSubmit, patient
       </div>
 
       {isLoading && <div className="loading-indicator">Đang tải dữ liệu...</div>}
-
-      {/* Chỉ hiển thị danh sách khi có nhiều hơn 1 kết quả */}
       {!isLoading && patients.length > 1 && !selectedPatient && (
         <div className="patient-results">
           <h3>Kết Quả Tìm Kiếm ({patients.length})</h3>
@@ -217,7 +215,7 @@ const PatientInfoLookup = ({ onPatientSelect, onPatientUpdate, onSubmit, patient
             ))}
           </ul>
         </div>
-      )}
+      )} */}
 
       {!isLoading && searchAttempted && patients.length === 0 && !selectedPatient && (
         <div className="no-results">

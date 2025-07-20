@@ -4,17 +4,18 @@ import { PDFDownloadLink } from '@react-pdf/renderer';
 import { ExaminationFormData } from '@/interface/ExaminationInterface';
 import { IPatient } from '@/interface/patientInterface';
 import { ExaminationPDF } from '@/components/ExaminationForm/ExaminationPDF';
+import { DoctorInterface } from '@/interface/DoctorInterface';
 
 interface PDFDownloadButtonProps {
   examinationData: ExaminationFormData;
   patientInfo?: IPatient;
-  doctorName?: string | null;
+  doctorInfo: DoctorInterface | null;
 }
 
 const PDFDownloadButton = ({
   examinationData,
   patientInfo,
-  doctorName
+  doctorInfo
 }: PDFDownloadButtonProps) => {
   if (typeof window === 'undefined') return null;
 
@@ -24,7 +25,7 @@ const PDFDownloadButton = ({
         <ExaminationPDF
           data={examinationData}
           patientInfo={patientInfo}
-          doctorName={doctorName}
+          doctorInfo={doctorInfo}
         />
       }
       fileName={`benh_an_${patientInfo?.userId.fullName || 'unknown'}_${new Date(

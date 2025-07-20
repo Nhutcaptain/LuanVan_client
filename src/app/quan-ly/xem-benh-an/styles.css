@@ -50,7 +50,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
   border-bottom: 1px solid #eee;
   padding-bottom: 10px;
 }
@@ -132,6 +132,8 @@
 }
 
 .doctor-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   color: #666;
   margin: 0;
 }
@@ -193,4 +195,134 @@
 button:disabled, input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.appointment-type {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  margin-left: 8px;
+}
+
+.appointment-type.normal {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.appointment-type.overtime {
+  color: #ff8104;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+/* Bảng xét nghiệm */
+.test-orders-list table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.test-orders-list th, 
+.test-orders-list td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.test-orders-list th {
+  background-color: #f5f5f5;
+}
+
+/* Tổng chi phí */
+.total-section {
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.total-cost {
+  font-size: 1.2em;
+  color: #d32f2f;
+  font-weight: bold;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+/* Thẻ bệnh án trong danh sách */
+.record-card .cost-info {
+  margin-top: 8px;
+  color: #666;
+  font-size: 0.9em;
+}
+
+/* Header chi tiết */
+.detail-header {
+  background-color: #f5f5f5;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.doctor-info {
+  margin-top: 10px;
+}
+
+.doctor-info p {
+  margin: 5px 0;
+}
+
+/* Follow-up section */
+.follow-up {
+  background-color: #e8f5e9;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.see-result {
+  display: inline-block;
+  color: #1a73e8;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background-color: #f0f6ff;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9em;
+  border: 1px solid #d3e3fd;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+}
+
+.see-result:hover {
+  background-color: #e1ecfe;
+  color: #0d5bbc;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.see-result:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Nếu bạn muốn thêm icon */
+.see-result.with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Phiên bản outline */
+.see-result.outline {
+  background-color: transparent;
+  border: 1px solid #1a73e8;
+  color: #1a73e8;
+}
+
+.see-result.outline:hover {
+  background-color: #1a73e8;
+  color: white;
 }

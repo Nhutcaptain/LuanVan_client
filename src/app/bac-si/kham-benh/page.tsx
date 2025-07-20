@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "./styles.css";
 import ExaminationForm from "@/components/ExaminationForm/ExaminationFormComponent";
 import api from "@/lib/axios";
@@ -13,6 +13,7 @@ import ServiceList from "@/components/ExaminationForm/ServiceList";
 import { IPatient } from "@/interface/patientInterface";
 import { Appointment } from "@/interface/AppointmentInterface";
 import { ExaminationFormData } from "@/interface/ExaminationInterface";
+import { useSocket } from "@/hook/useSocket";
 
 const ExaminationPage = () => {
   const router = useRouter();
@@ -26,7 +27,41 @@ const ExaminationPage = () => {
   const [paraclinicalOrders, setParaclinicalOrders] = useState([]);
   const [selectedServices, setSelectedServices] = useState<Service[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState("");
-  const [tempExamination, setTempExamination] = useState<ExaminationFormData>()
+  const [tempExamination, setTempExamination] = useState<ExaminationFormData>();
+  const [isTempExaminationChange, setIsTempExaminationChange] = useState(false);
+  const [provisional, setProvisional] = useState("");
+  const [isOvertime, setIsOvertime] = useState(false)
+
+  const { joinRoom } = useSocket(
+    process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000",
+    {
+      eventHandlers: {
+        "examination-update": (data) => {
+          if (tempExamRef.current?._id === data.examinationId) {
+            setTempExamination((prev) => {
+              if (!prev) return prev;
+              return {
+                ...prev,
+                testOrders: data.data.testOrders,
+              };
+            });
+          }
+        },
+      },
+    }
+  );
+
+  const tempExamRef = useRef(tempExamination);
+
+  useEffect(() => {
+    tempExamRef.current = tempExamination;
+  }, [tempExamination]);
+
+  useEffect(() => {
+    if (tempExamination?._id) {
+      joinRoom(`examination_${tempExamination._id}`);
+    }
+  }, [tempExamination?._id, joinRoom]);
 
   useEffect(() => {
     const id = localStorage.getItem("doctorId");
@@ -43,32 +78,29 @@ const ExaminationPage = () => {
   }, []);
 
   useEffect(() => {
-    if(!selectedPatient) return;
-    const fetchTempAppointment = async() => {
-      try{
-        const res = await api.post('/examination/temp_get',{
+    if (!selectedPatient) return;
+    setTempExamination(undefined);
+    setSelectedServices([]);
+    const fetchTempAppointment = async () => {
+      try {
+        const res = await api.post("/examination/temp_get", {
           doctorId,
           patientId: selectedPatient,
-          date: new Date()
-        })
-        if(res.status === 200) {
+          date: new Date(),
+        });
+        if (res.status === 200) {
           setTempExamination(res.data);
-          console.log(res.data);
         }
-      }catch(error:any) {
-
-      }
-    }
+      } catch (error: any) {}
+    };
     fetchTempAppointment();
-  },[selectedPatient])
+  }, [selectedPatient]);
 
   useEffect(() => {
     if (!doctorInfo?.specialtyId) return;
     const fetchServices = async () => {
       try {
-        const res = await api.get(
-          `/service/getBySpecialtyId/${(doctorInfo.specialtyId as any)._id}`
-        );
+        const res = await api.get(`/service/getAll/`);
         if (res.status === 200) {
           setServices(res.data);
         }
@@ -78,50 +110,77 @@ const ExaminationPage = () => {
   }, [doctorInfo?.specialtyId]);
 
   useEffect(() => {
-    if(tempExamination?.testOrders.length && services.length > 0) {
-      const matched = services.filter(service => 
+    setSelectedServices([]);
+    if (tempExamination?.testOrders.length && services.length > 0) {
+      const matched = services.filter((service) =>
         tempExamination.testOrders.some((s: any) => s.serviceId === service._id)
-      )
-       setSelectedServices(matched)
+      );
+      setSelectedServices(matched);
     }
-  },[tempExamination])
+  }, [tempExamination]);
 
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
-    try {
-      const response = await api.post("/patient/postExamination", data);
-      if (response.status === 201) {
-        MySwal.fire({
-          title: <strong className="text-2xl">Cập nhật hình ảnh</strong>,
-          html: <i className="text-xl">Đã cập nhật ảnh đại diện thành công</i>,
-          icon: "success",
-          showConfirmButton: true,
-        });
+    const payload = {
+      ...data,
+      isOvertime,
+      status: "completed", // đảm bảo luôn là giá trị này
+    };
+    if (tempExamination) {
+      const res = await api.put(
+        `/examination/update/${tempExamination._id}`,
+        payload
+      );
+      if (res.status === 200) {
+        setTempExamination(res.data);
       }
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
+      const response = await api.put(
+        `/appointment/${selectedAppointment}/status`,
+        {
+          examination: tempExamination._id,
+          status: "completed",
+        }
+      );
       setIsSubmitting(false);
+    } else {
+      try {
+        const response = await api.post("/patient/postExamination", payload);
+      } catch (error) {
+        console.error("Error:", error);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
   const handleSaveTemp = async (data: any) => {
     const payload = {
-    ...data,
-    status: 'waiting_result', // đảm bảo luôn là giá trị này
-  };
-    if(tempExamination) {
-      const res = await api.put(`/examination/update/${tempExamination._id}`,payload)
-      if(res.status === 200) {
+      ...data,
+      status: "waiting_result", // đảm bảo luôn là giá trị này
+    };
+    if (tempExamination) {
+      const res = await api.put(
+        `/examination/update/${tempExamination._id}`,
+        payload
+      );
+      if (res.status === 200) {
         setTempExamination(res.data);
       }
+      const response = await api.put(
+        `/appointment/${selectedAppointment}/status`,
+        {
+          examination: tempExamination._id,
+          status: "waiting_result",
+        }
+      );
     } else {
+      const response = await api.post("/examination/temp_save", data);
+      setTempExamination(data);
       const res = await api.put(`/appointment/${selectedAppointment}/status`, {
+        examinationId: response.data._id,
         status: "waiting_result",
       });
-      const response = await api.post('/examination/temp_save',data);
     }
-    
   };
 
   const handleSelectedServicesChange = useCallback((selected: Service[]) => {
@@ -141,15 +200,18 @@ const ExaminationPage = () => {
         <ExaminationForm
           initialExamination={tempExamination}
           doctorId={doctorId}
+          doctorInfo={doctorInfo}
           onSaveTerm={handleSaveTemp}
           onPatientInfo={setPatientInfo}
           selectedPatient={selectedPatient}
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
           selectedServices={selectedServices}
+          onProvisionalChange={setProvisional}
         />
         <div className="side-page">
           <PatientList
+            onOvertimeChange={setIsOvertime}
             onPatientSelected={setSelectedPatient}
             doctorId={doctorId ?? ""}
             selectedPatient={selectedPatient}
@@ -163,6 +225,8 @@ const ExaminationPage = () => {
             initialSelectedServices={selectedServices}
             onSelectedServicesChange={handleSelectedServicesChange}
             tempExamination={tempExamination}
+            selectedPatient={selectedPatient}
+            provisional={provisional}
           />
         </div>
       </div>

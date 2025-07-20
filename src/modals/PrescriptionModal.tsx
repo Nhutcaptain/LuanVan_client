@@ -1,19 +1,28 @@
-import React, { useEffect } from 'react';
-import Modal from 'react-modal';
-import { Document, Page, Text, View, StyleSheet, PDFViewer, PDFDownloadLink, Font } from '@react-pdf/renderer';
-import { Service } from '@/interface/ServiceInterface';
-import { IPatient } from '@/interface/patientInterface';
-import { DoctorInterface } from '@/interface/DoctorInterface';
+import React, { useEffect } from "react";
+import Modal from "react-modal";
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  PDFViewer,
+  PDFDownloadLink,
+  Font,
+} from "@react-pdf/renderer";
+import { Service } from "@/interface/ServiceInterface";
+import { IPatient } from "@/interface/patientInterface";
+import { DoctorInterface } from "@/interface/DoctorInterface";
 
 Font.register({
-  family: 'Roboto',
+  family: "Roboto",
   fonts: [
     {
-      src: '/font/Roboto-Regular.ttf',
+      src: "/font/Roboto-Regular.ttf",
     },
     {
-      src: '/font/Roboto-Bold.ttf',
-      fontWeight: 'bold',
+      src: "/font/Roboto-Bold.ttf",
+      fontWeight: "bold",
     },
   ],
 });
@@ -22,18 +31,18 @@ Font.register({
 const styles = StyleSheet.create({
   page: {
     padding: 40,
-    fontFamily: 'Roboto',
+    fontFamily: "Roboto",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 20,
     borderBottom: 1,
     paddingBottom: 10,
   },
   hospitalName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   patientCode: {
     fontSize: 12,
@@ -50,33 +59,37 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 20,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
+  },
+  provisional: {
+    fontSize: 11,
+    marginBottom: 20,
   },
   table: {
-    width: '100%',
-    borderStyle: 'solid',
+    width: "100%",
+    borderStyle: "solid",
     borderWidth: 1,
     borderRightWidth: 0,
     borderBottomWidth: 0,
   },
   tableRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   tableColHeader: {
-    width: '15%',
-    borderStyle: 'solid',
+    width: "15%",
+    borderStyle: "solid",
     borderWidth: 1,
     borderLeftWidth: 0,
     borderTopWidth: 0,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
     padding: 5,
   },
   tableCol: {
-    width: '85%',
-    borderStyle: 'solid',
+    width: "65%",
+    borderStyle: "solid",
     borderWidth: 1,
     borderLeftWidth: 0,
     borderTopWidth: 0,
@@ -84,71 +97,86 @@ const styles = StyleSheet.create({
   },
   tableCellHeader: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   tableCell: {
     fontSize: 12,
   },
   footer: {
     marginTop: 40,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   doctorInfo: {
     fontSize: 12,
-    textAlign: 'right',
+    textAlign: "right",
   },
 });
 
 // PDF Document Component
-const PrescriptionPDF = ({ 
-  selectedServices, 
-  patientInfo, 
+const PrescriptionPDF = ({
+  selectedServices,
+  patientInfo,
   doctorInfo,
-  currentDate 
-}: { 
-  selectedServices: Service[]; 
-  patientInfo: IPatient | null; 
+  currentDate,
+  provisional,
+}: {
+  selectedServices: Service[];
+  patientInfo: IPatient | null;
   doctorInfo: DoctorInterface | null;
   currentDate: string;
+  provisional: string;
 }) => (
   <Document>
     {selectedServices.map((service, serviceIndex) => (
-        <Page key={service._id} size="A5" style={styles.page}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.hospitalName}>BỆNH VIỆN ĐA KHOA LỤC LÂM</Text>
-          <Text style={styles.date}>Ngày: {currentDate}</Text>
-        </View>
-        <Text style={styles.patientCode}>Mã BN: {patientInfo?.patientCode}</Text>
-      </View>
-
-      {/* Patient Info */}
-      <View style={styles.patientInfo}>
-        <Text>Họ và tên: {patientInfo?.userId.fullName}</Text>
-        <Text>Ngày sinh: {new Date(patientInfo?.userId?.dateOfBirth ?? '').toLocaleDateString()}</Text>
-      </View>
-
-      {/* Title */}
-      <View style={styles.title}>
-        <Text>CHỈ ĐỊNH {service.name}</Text>
-      </View>
-
-      {/* Services Table */}
-      <View style={styles.table}>
-        {/* Table Header */}
-        <View style={styles.tableRow}>
-          <View style={styles.tableColHeader}>
-            <Text style={styles.tableCellHeader}>STT</Text>
+      <Page key={service._id} size="A5" style={styles.page}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.hospitalName}>BỆNH VIỆN ĐA KHOA LỤC LÂM</Text>
+            <Text style={styles.date}>Ngày: {currentDate}</Text>
           </View>
-          <View style={styles.tableCol}>
-            <Text style={styles.tableCellHeader}>Nội dung chỉ định</Text>
-          </View>
+          <Text style={styles.patientCode}>
+            Mã BN: {patientInfo?.patientCode}
+          </Text>
         </View>
-        
-        {/* Table Rows */}
-       <View style={styles.tableRow}>
+
+        {/* Patient Info */}
+        <View style={styles.patientInfo}>
+          <Text>Họ và tên: {patientInfo?.userId.fullName}</Text>
+          <Text>
+            Ngày sinh:{" "}
+            {new Date(
+              patientInfo?.userId?.dateOfBirth ?? ""
+            ).toLocaleDateString()}
+          </Text>
+        </View>
+        <View style={styles.provisional}>
+          <Text>Chẩn đoán sơ bộ: {provisional ?? ""}</Text>
+        </View>
+
+        {/* Title */}
+        <View style={styles.title}>
+          <Text>CHỈ ĐỊNH {service.name}</Text>
+        </View>
+
+        {/* Services Table */}
+        <View style={styles.table}>
+          {/* Table Header */}
+          <View style={styles.tableRow}>
+            <View style={styles.tableColHeader}>
+              <Text style={styles.tableCellHeader}>STT</Text>
+            </View>
+            <View style={styles.tableCol}>
+              <Text style={styles.tableCellHeader}>Nội dung chỉ định</Text>
+            </View>
+            <View style={styles.tableColHeader}>
+              <Text style={styles.tableCellHeader}>Giá dịch vụ</Text>
+            </View>
+          </View>
+
+          {/* Table Rows */}
+          <View style={styles.tableRow}>
             <View style={styles.tableColHeader}>
               <Text style={styles.tableCell}>{serviceIndex + 1}</Text>
             </View>
@@ -160,22 +188,28 @@ const PrescriptionPDF = ({
                 </Text>
               )}
             </View>
+            <View style={styles.tableColHeader}>
+              <Text style={styles.tableCell}>
+                {service.price
+                  ? service.price.toLocaleString() + " VND"
+                  : "---"}
+              </Text>
+            </View>
           </View>
+        </View>
 
-      </View>
-
-      {/* Footer */}
-      <View style={styles.footer}>
-        <View></View>
-        {doctorInfo && (
-          <View style={styles.doctorInfo}>
-            <Text>Khoa: {doctorInfo.departmentId}</Text>
-            <Text>Chuyên khoa: {(doctorInfo.specialtyId as any).name}</Text>
-            <Text>Bác sĩ chỉ định: {doctorInfo.userId.fullName}</Text>
-          </View>
-        )}
-      </View>
-    </Page>
+        {/* Footer */}
+        <View style={styles.footer}>
+          <View></View>
+          {doctorInfo && (
+            <View style={styles.doctorInfo}>
+              <Text>Khoa: {(doctorInfo.departmentId as any).name}</Text>
+              <Text>Chuyên khoa: {(doctorInfo.specialtyId as any).name}</Text>
+              <Text>Bác sĩ chỉ định: {doctorInfo.userId.fullName}</Text>
+            </View>
+          )}
+        </View>
+      </Page>
     ))}
   </Document>
 );
@@ -187,6 +221,7 @@ interface PrescriptionModalProps {
   patientInfo: IPatient | null;
   doctorInfo: DoctorInterface | null;
   currentDate: string;
+  provisional: string;
 }
 
 const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
@@ -195,12 +230,13 @@ const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
   selectedServices,
   patientInfo,
   doctorInfo,
-  currentDate
+  currentDate,
+  provisional,
 }) => {
-    useEffect(() => {
-        Modal.setAppElement('#modal-root');
-    },[])
-   
+  useEffect(() => {
+    Modal.setAppElement("#modal-root");
+  }, []);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -211,33 +247,37 @@ const PrescriptionModal: React.FC<PrescriptionModalProps> = ({
     >
       <div className="modal-header">
         <h2>Xem trước chỉ định</h2>
-        <button onClick={onClose} className="close-button">×</button>
+        <button onClick={onClose} className="close-button">
+          ×
+        </button>
       </div>
-      
+
       <PDFViewer width="100%" height="500px">
-        <PrescriptionPDF 
-          selectedServices={selectedServices} 
-          patientInfo={patientInfo} 
+        <PrescriptionPDF
+          selectedServices={selectedServices}
+          patientInfo={patientInfo}
           doctorInfo={doctorInfo}
           currentDate={currentDate}
+          provisional={provisional}
         />
       </PDFViewer>
-      
+
       <div className="modal-footer">
-        <PDFDownloadLink 
+        <PDFDownloadLink
           document={
-            <PrescriptionPDF 
-              selectedServices={selectedServices} 
-              patientInfo={patientInfo} 
+            <PrescriptionPDF
+              selectedServices={selectedServices}
+              patientInfo={patientInfo}
               doctorInfo={doctorInfo}
               currentDate={currentDate}
+              provisional={provisional}
             />
-          } 
+          }
           fileName={`chidinh_${patientInfo?.patientCode}.pdf`}
         >
           {({ loading }) => (
             <button className="download-button" disabled={loading}>
-              {loading ? 'Đang tạo PDF...' : 'Tải xuống PDF'}
+              {loading ? "Đang tạo PDF..." : "Tải xuống PDF"}
             </button>
           )}
         </PDFDownloadLink>

@@ -13,7 +13,7 @@ export default function PrescriptionForm(props: Props) {
     <div className="prescription-item">
       <span className="prescription-medication">{item.medication}</span>
       <span className="prescription-detail">
-        {item.dosage} · {item.frequency} · {item.duration}
+        {item.dosage} · {item.frequency} · {item.quantity} . {item.duration}
       </span>
       <button 
         type="button" 

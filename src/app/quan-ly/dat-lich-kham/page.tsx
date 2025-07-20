@@ -4,7 +4,7 @@ import "./styles.css";
 import SelectComponent from "@/components/SelectComponent/SelectComponent";
 import { IUser } from "@/interface/usermodel";
 import api from "@/lib/axios";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { useRouter, useSearchParams } from "next/navigation";
 import InputComponent from "@/components/InputComponent/InputComponent";
 import {
@@ -18,6 +18,7 @@ import { get } from "http";
 import Swal from "sweetalert2";
 import { Service } from "@/interface/ServiceInterface";
 import ServiceList from "./Services/ServiceList";
+import { validatePatientInfo } from "@/utils/validatePatientInfo";
 
 interface Department {
   _id: string;
@@ -36,7 +37,8 @@ interface Doctor {
   name: string;
   specialtyId: string;
   departmentId: string;
-  examinationPrice: number;
+  overtimeExaminationPrice: number;
+  officeExaminationPrice: number
 }
 
 const AppointmentPage = () => {
@@ -164,7 +166,6 @@ const AppointmentPage = () => {
 
         if (res.status === 200) {
           setSpecialties(res.data);
-          console.log("Thông tin chuyên khoa: ", res.data);
         } else {
           throw new Error("Failed to fetch specialties");
         }
@@ -193,7 +194,6 @@ const AppointmentPage = () => {
         );
 
         if (res.status === 200) {
-          console.log(res.data);
           setDoctors(res.data);
         } else {
           throw new Error("Failed to fetch doctors");
@@ -246,7 +246,6 @@ const AppointmentPage = () => {
         );
         if (res.status === 200) {
           setWeeklySchedule(res.data);
-          console.log(res.data);
         }
       } catch (error: any) {
         if (error.status === 404) return;
@@ -283,7 +282,6 @@ const AppointmentPage = () => {
   useEffect(() => {
     if (consultationService === "officeConsultation" && weeklySchedule) {
       const availableDays = weeklySchedule.schedule.map((s) => s.dayOfWeek);
-      console.log("Giờ hành chính", availableDays);
       setAllowDayOfWeek(availableDays);
     } else if (
       consultationService === "overtimeConsultation" &&
@@ -292,7 +290,6 @@ const AppointmentPage = () => {
       const availableDays = overtimeSchedule?.weeklySchedule.map(
         (item) => item.dayOfWeek
       );
-      console.log("Ngoài giờ", availableDays);
       setAllowDayOfWeek(availableDays);
     }
   }, [consultationService, weeklySchedule, overtimeSchedule]);
@@ -345,6 +342,11 @@ const AppointmentPage = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    const validationError = validatePatientInfo(patient);
+    if (validationError) {
+      toast.info(validationError);
+      return;
+    }
 
     if (!formData.agreeTerms) {
       toast.error("Vui lòng đồng ý với điều khoản và dịch vụ");
@@ -359,7 +361,6 @@ const AppointmentPage = () => {
 
     try {
       setLoading((prev) => ({ ...prev, submitting: true }));
-      console.log(formData);
 
       const res = await api.post("/appointment/createAppointment", {
         patientId: patient?._id,
@@ -464,7 +465,7 @@ const AppointmentPage = () => {
   };
 
   const selectedDoctor = doctors.find((d) => d._id === formData.doctorId);
-  const price = selectedDoctor?.examinationPrice;
+  const price = consultationService === 'overtimeConsultation' ? selectedDoctor?.overtimeExaminationPrice : selectedDoctor?.officeExaminationPrice;
   const selectedSpecialty = specialties.find(
     (d) => d._id === formData.specialtyId
   );
@@ -708,6 +709,7 @@ const AppointmentPage = () => {
           )}
         </button>
       </form>
+      <ToastContainer></ToastContainer>
     </div>
   );
 };

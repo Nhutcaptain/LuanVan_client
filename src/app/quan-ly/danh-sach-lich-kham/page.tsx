@@ -28,8 +28,9 @@ interface Appointment {
     name: string;
     _id: string;
   };
-  status: "scheduled" | "completed" | "cancelled";
+  status: "scheduled" | "completed" | "cancelled" | 'waiting_result';
   reason?: string;
+  examinationId: string;
 }
 
 const AppointmentsPage = () => {
@@ -126,6 +127,10 @@ const AppointmentsPage = () => {
     return diffDays;
 };
 
+const handleGotoMedicalRecord = (id: string) => {
+  router.push(`/quan-ly/xem-benh-an?examinationId=${id}`)
+}
+
   return (
     <div className="appointments-container">
       <h1 className="page-title">DANH SÁCH LỊCH HẸN</h1>
@@ -167,6 +172,7 @@ const AppointmentsPage = () => {
                 <p><FaClock className="icon" /> Khung giờ: {formatSession(appointment.session)}</p>
                 <div className={`status-badge ${appointment.status}`}>
                   {appointment.status === 'scheduled' ? 'Đã đặt' : 
+                  appointment.status === 'waiting_result' ? 'Đang khám' : 
                    appointment.status === 'completed' ? 'Hoàn thành' : 'Đã hủy'}
                 </div>
               </div>
@@ -213,7 +219,8 @@ const AppointmentsPage = () => {
                 <span className="detail-label">Trạng thái:</span>
                 <span className={`detail-value status ${selectedAppointment.status}`}>
                   {selectedAppointment.status === 'scheduled' ? 'Đã đặt' : 
-                   selectedAppointment.status === 'completed' ? 'Hoàn thành' : 'Đã hủy'}
+                   selectedAppointment.status === 'waiting_result' ? 'Đang chờ kết quả' :
+                   selectedAppointment.status === 'completed' ? 'Khám xong' : 'Đã huỷ'}
                   {selectedAppointment.status === 'completed' && (
                     <FaCheckCircle className="completed-icon" />
                   )}
@@ -234,6 +241,14 @@ const AppointmentsPage = () => {
                   onClick={() => handleCancelAppointment(selectedAppointment._id)}
                 >
                   Hủy lịch hẹn
+                </button>
+              )}
+              {selectedAppointment.status === 'completed' && (
+                <button 
+                  className="btn-navigate"
+                  onClick={() => handleGotoMedicalRecord(selectedAppointment.examinationId)}
+                >
+                  Xem bệnh án
                 </button>
               )}
               <button 
