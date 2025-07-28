@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import 'antd/dist/reset.css';
 import HeaderComponent from "@/components/HeaderComponent/HeaderComponent";
 import HeaderWrapper from "@/components/HeaderWrapper";
 import Chatbot from "@/components/ChatbotComponent/ChatbotComponent";

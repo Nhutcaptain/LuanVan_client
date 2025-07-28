@@ -186,10 +186,13 @@ const DepartmentManagement: React.FC = () => {
           ];
 
           try {
-            const res = await api.put(`/department/updateSpecialty/${specialty._id}`, {
-              serviceIds: newServiceIds,
-            });
-            if(res.status === 200) {
+            const res = await api.put(
+              `/department/updateSpecialty/${specialty._id}`,
+              {
+                serviceIds: newServiceIds,
+              }
+            );
+            if (res.status === 200) {
               Swal.close();
               Swal.fire({
                 title: "Đã thêm dịch vụ thành công",
@@ -197,7 +200,7 @@ const DepartmentManagement: React.FC = () => {
                 timer: 1500,
               });
             }
-          } catch (error: any) { 
+          } catch (error: any) {
             Swal.close();
             Swal.fire({
               title: "Lỗi rồi",
@@ -206,7 +209,7 @@ const DepartmentManagement: React.FC = () => {
               showCloseButton: true,
             });
             console.error(`Lỗi cập nhật specialty ${specialty._id}:`, error);
-          } 
+          }
           return { ...specialty, serviceIds: newServiceIds };
         }
         return specialty;
@@ -218,10 +221,123 @@ const DepartmentManagement: React.FC = () => {
     setSelectedSpecialties([]);
   };
 
+  const handleAddServiceToDepartment = async (serviceIds: string[]) => {
+    // Kiểm tra nếu không có chuyên khoa được chọn
+    if (!selectedDepartment) {
+      await Swal.fire({
+        title: "Thao tác cần thiết",
+        text: "Bạn phải chọn chuyên khoa trước khi thêm dịch vụ",
+        icon: "warning",
+        confirmButtonText: "Đã hiểu",
+      });
+      return;
+    }
+
+    // Kiểm tra chuyên khoa có tồn tại không
+    const departmentToUpdate = departments.find(
+      (dept) => dept._id === selectedDepartment
+    );
+    if (!departmentToUpdate) {
+      await Swal.fire({
+        title: "Lỗi",
+        text: "Không tìm thấy chuyên khoa được chọn",
+        icon: "error",
+        confirmButtonText: "Đóng",
+      });
+      return;
+    }
+
+    // Kiểm tra nếu không có dịch vụ nào được chọn
+    if (!serviceIds || serviceIds.length === 0) {
+      await Swal.fire({
+        title: "Thao tác cần thiết",
+        text: "Bạn chưa chọn dịch vụ nào để thêm",
+        icon: "warning",
+        confirmButtonText: "Đã hiểu",
+      });
+      return;
+    }
+
+    // Hiển thị thông báo đang xử lý
+    Swal.fire({
+      title: "Đang xử lý...",
+      html: "Vui lòng chờ trong giây lát",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    try {
+      // Tạo danh sách serviceIds mới (loại bỏ trùng lặp)
+      const existingServiceIds = departmentToUpdate.serviceIds || [];
+      const uniqueServiceIds = [
+        ...new Set([...existingServiceIds, ...serviceIds]),
+      ];
+
+      // Gọi API cập nhật
+      const res = await api.put(
+        `/department/updateDepartment/${selectedDepartment}`,
+        {
+          serviceIds: uniqueServiceIds,
+        }
+      );
+
+      // Đóng thông báo đang xử lý
+      Swal.close();
+
+      // Kiểm tra kết quả trả về
+      if (res.status === 200) {
+        // Cập nhật state departments
+        setDepartments(
+          departments.map((dept) =>
+            dept._id === selectedDepartment ? res.data : dept
+          )
+        );
+
+        // Thông báo thành công
+        await Swal.fire({
+          title: "Thành công",
+          text: "Đã thêm dịch vụ vào chuyên khoa thành công",
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } else {
+        throw new Error(`HTTP status ${res.status}`);
+      }
+    } catch (error: any) {
+      // Đóng thông báo đang xử lý
+      Swal.close();
+
+      // Hiển thị thông báo lỗi chi tiết hơn
+      let errorMessage = "Đã xảy ra lỗi khi thêm dịch vụ";
+      if (error.response) {
+        errorMessage = error.response.data?.message || errorMessage;
+      }
+
+      await Swal.fire({
+        title: "Lỗi",
+        text: errorMessage,
+        icon: "error",
+        confirmButtonText: "Đã hiểu",
+      });
+
+      console.error(
+        `Lỗi khi cập nhật chuyên khoa ${selectedDepartment}:`,
+        error
+      );
+    } finally {
+      // Đóng modal và reset selectedDepartment
+      setShowServiceModal(false);
+      setSelectedDepartment("");
+    }
+  };
+
   const handleDepartmentSelect = (id: string) => {
     setSelectedDepartment(id);
-    setActiveTab('specialties');
-  }
+    // setActiveTab('specialties');
+  };
 
   const filteredDepartments = departments.filter(
     (dept) =>
@@ -339,12 +455,21 @@ const DepartmentManagement: React.FC = () => {
 
           <div className="actions">
             {activeTab === "departments" && (
-              <button
-                className="btn btn-primary"
-                onClick={() => setShowDepartmentForm(true)}
-              >
-                Thêm khoa
-              </button>
+              <>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setShowDepartmentForm(true)}
+                >
+                  Thêm khoa
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowServiceModal(true)}
+                  disabled={!selectedDepartment}
+                >
+                  Thêm dịch vụ ({selectedSpecialties.length})
+                </button>
+              </>
             )}
             {activeTab === "specialties" && (
               <>
@@ -430,14 +555,22 @@ const DepartmentManagement: React.FC = () => {
       )}
 
       {showServiceModal && (
+        // <ServiceModal
+        //   serviceSelected={specialties
+        //     .filter((s) => selectedDepartment.includes(s._id))
+        //     .flatMap((s) => s.serviceIds)}
+        //   services={services}
+        //   onAddServices={handleAddServiceToDepartment}
+        //   onClose={() => setShowServiceModal(false)}
+        // />
         <ServiceModal
           serviceSelected={
-            specialties
-              .filter(s => selectedSpecialties.includes(s._id))
-              .flatMap(s => s.serviceIds)
+            departments
+              .find((s) => s._id === selectedDepartment)
+              ?.serviceIds?.map((svc: any) => svc._id) || []
           }
           services={services}
-          onAddServices={handleAddServicesToSpecialties}
+          onAddServices={handleAddServiceToDepartment}
           onClose={() => setShowServiceModal(false)}
         />
       )}

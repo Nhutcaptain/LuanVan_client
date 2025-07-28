@@ -3,6 +3,7 @@ export interface Department {
     _id: string;
     name: string;
     description: string;
+    serviceIds: string[];
 }
 
 export interface Specialty {

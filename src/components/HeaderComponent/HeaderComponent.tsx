@@ -4,6 +4,8 @@ import './styles.css'
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
+
 
 const HeaderComponent = () => {
     const [isScrolledPastFirst, setIsScrolledPastFirst] = useState(false);
@@ -45,9 +47,12 @@ const HeaderComponent = () => {
     }, []);
 
     const handleLogout = () => {
+        Cookies.remove('token');
         localStorage.removeItem('token');
         localStorage.removeItem('fullName');
         localStorage.removeItem('role');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('doctorId');
         setUser(null);
         window.dispatchEvent(new Event('userChanged'));
         router.push('/');

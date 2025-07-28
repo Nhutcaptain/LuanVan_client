@@ -1,0 +1,312 @@
+.record-detail {
+  background: white;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.back-button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+
+.back-button:hover {
+  background: #2980b9;
+}
+
+.detail-header {
+  margin-bottom: 25px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.detail-header h2 {
+  margin: 0 0 5px 0;
+  color: #2c3e50;
+}
+
+.doctor-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  color: #666;
+  margin: 0;
+}
+
+.detail-section {
+  margin-bottom: 25px;
+}
+
+.detail-section h3 {
+  color: #3498db;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.detail-content {
+  margin: 0;
+  line-height: 1.6;
+  color: #333;
+}
+
+.diagnosis {
+  font-weight: bold;
+  color: #e53935;
+}
+
+.prescription-list {
+  display: grid;
+  gap: 15px;
+}
+
+.prescription-item {
+  background: #f5f5f5;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #3498db;
+}
+
+.prescription-item p {
+  margin: 5px 0;
+}
+
+.loading-indicator {
+  text-align: center;
+  padding: 20px;
+  color: #3498db;
+  font-weight: bold;
+}
+
+.error-message {
+  text-align: center;
+  padding: 20px;
+  color: #e53935;
+  background: #ffebee;
+  border-radius: 5px;
+  margin: 10px 0;
+}
+
+/* Disabled state */
+button:disabled, input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.appointment-type {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  margin-left: 8px;
+}
+
+.appointment-type.normal {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.appointment-type.overtime {
+  color: #ff8104;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+/* Bảng xét nghiệm */
+.test-orders-list table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.test-orders-list th, 
+.test-orders-list td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.test-orders-list th {
+  background-color: #f5f5f5;
+}
+
+/* Tổng chi phí */
+.total-section {
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.total-cost {
+  font-size: 1.2em;
+  color: #d32f2f;
+  font-weight: bold;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+/* Thẻ bệnh án trong danh sách */
+.record-card .cost-info {
+  margin-top: 8px;
+  color: #666;
+  font-size: 0.9em;
+}
+
+/* Header chi tiết */
+.detail-header {
+  background-color: #f5f5f5;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.doctor-info {
+  margin-top: 10px;
+}
+
+.doctor-info p {
+  margin: 5px 0;
+}
+
+/* Follow-up section */
+.follow-up {
+  background-color: #e8f5e9;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.see-result {
+  display: inline-block;
+  color: #1a73e8;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background-color: #f0f6ff;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9em;
+  border: 1px solid #d3e3fd;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+}
+
+.see-result:hover {
+  background-color: #e1ecfe;
+  color: #0d5bbc;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.see-result:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Nếu bạn muốn thêm icon */
+.see-result.with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Phiên bản outline */
+.see-result.outline {
+  background-color: transparent;
+  border: 1px solid #1a73e8;
+  color: #1a73e8;
+}
+
+.see-result.outline:hover {
+  background-color: #1a73e8;
+  color: white;
+}
+/* Thêm vào file styles.css */
+
+/* Container chính cho thông tin bệnh nhân */
+.patient-info-section {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.patient-info-section h2 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.5rem;
+}
+
+/* Chi tiết thông tin bệnh nhân */
+.patient-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.patient-detail-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.patient-detail-row:last-child {
+  border-bottom: none;
+}
+
+.patient-detail-label {
+  font-weight: 600;
+  color: #34495e;
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.patient-detail-value {
+  color: #2c3e50;
+  flex: 1;
+}
+
+/* Responsive cho mobile */
+@media (max-width: 768px) {
+  .patient-details {
+    grid-template-columns: 1fr;
+  }
+  
+  .patient-detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .patient-detail-label {
+    min-width: auto;
+  }
+}
+
+/* Màu sắc cho các icon */
+.patient-info-section svg {
+  color: #3498db;
+}
+
+/* Animation khi hover */
+.patient-info-section {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.patient-info-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}

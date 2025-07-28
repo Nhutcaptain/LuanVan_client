@@ -157,6 +157,7 @@ export default function ExaminationForm({
         isOvertimeAppointment: false
       });
       setPrescriptions([]);
+
     }
   }, [initialExamination, doctorId, selectedPatient]);
 
@@ -278,33 +279,34 @@ export default function ExaminationForm({
       invoiceNumber,
       prescriptions,
     });
-    // setFormData({
-    //   date: new Date().toISOString().split("T")[0],
-    //   subjective: "",
-    //   patientCode: "",
-    //   invoiceNumber: "",
-    //   testOrders: [
-    //     {
-    //       serviceId: "",
-    //       status: "",
-    //       resultFile: "",
-    //     },
-    //   ],
-    //   status: "",
-    //   provisional: "",
-    //   assessment: "",
-    //   plan: "",
-    //   notes: "",
-    //   patientId: "",
-    // });
-    // setNewPrescription({
-    //   medication: "",
-    //   dosage: "",
-    //   frequency: "",
-    //   duration: "",
-    //   quantity: 0,
-    //   unit: '',
-    // });
+    setFormData({
+      date: new Date().toISOString().split("T")[0],
+      subjective: "",
+      patientCode: "",
+      invoiceNumber: "",
+      testOrders: [
+        {
+          serviceId: "",
+          status: "",
+          resultFile: "",
+        },
+      ],
+      status: "",
+      provisional: "",
+      assessment: "",
+      plan: "",
+      notes: "",
+      patientId: "",
+      isOvertimeAppointment: false,
+    });
+    setNewPrescription({
+      medication: "",
+      dosage: "",
+      frequency: "",
+      duration: "",
+      quantity: 0,
+      unit: '',
+    });
     setPrescriptions([]);
     setPdfData({ ...formData, invoiceNumber, prescriptions });
     setShowPDFExportDialog(true);

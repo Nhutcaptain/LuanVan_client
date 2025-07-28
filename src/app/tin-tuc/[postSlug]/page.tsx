@@ -4,9 +4,10 @@ import api from '@/lib/axios';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import { useEffect, useState } from 'react';
-import './styles.css';
+
 import { useParams, useRouter } from 'next/navigation';
 import 'ckeditor5/ckeditor5.css';
+import './styles.css';
 
 interface Post {
   id: string;
@@ -58,7 +59,7 @@ export default function PostDetail({ post: serverPost }: { post: Post }) {
         </header>
 
         <div 
-          className="ck-content" 
+          className="tinymce-content" 
           dangerouslySetInnerHTML={{ __html: post.content }} 
         />
       </article>

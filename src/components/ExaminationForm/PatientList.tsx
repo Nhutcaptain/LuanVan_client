@@ -1,11 +1,12 @@
 "use client";
 import { useSocket } from "@/hook/useSocket";
+import { Appointment } from "@/interface/AppointmentInterface";
 import api from "@/lib/axios";
-import React, { useEffect, useState } from "react";
+import { isCancel } from "axios";
+import React, { useCallback, useEffect, useState } from "react";
 
 interface PatientList {
   queueNumber: number;
-  fullName: string;
   _id: string;
   status: string;
   patientId: {
@@ -41,12 +42,12 @@ const PatientList = (props: Props) => {
     selectedPatient,
     onAppointmentSelected,
     onOvertimeChange,
-
   } = props;
   const [appointments, setAppointments] = useState<PatientList[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isOvertime, setIsOvertime] = useState(false)
+  const [isOvertime, setIsOvertime] = useState(false);
+  const [isACanceled, setIsACanceled] = useState(false)
 
   const { socket, joinRoom, leaveRoom } = useSocket(
     process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000",
@@ -65,13 +66,20 @@ const PatientList = (props: Props) => {
             )
           );
         },
-        "appointment-status-changed": (updatedAppointment: PatientList) => {
+        "appointment-status-completed": (appointmentId: string) => {
           setAppointments((prev) =>
             prev.map((app) =>
-              app._id === updatedAppointment._id ? updatedAppointment : app
+              app._id === appointmentId ? {...app, status: 'completed'} : app
             )
           );
         },
+        "new-appointment": (appointment: PatientList) => {
+          setAppointments((prev) => [...prev, appointment]);
+        },
+
+        "cancel-appointment": (isCancel: boolean) => {
+          setIsACanceled(isCancel)
+        }
       },
     }
   );
@@ -85,6 +93,34 @@ const PatientList = (props: Props) => {
       return [];
     }
   };
+
+  useEffect(() => {
+    if(!isACanceled) return;
+     const fetchAppointment = async() => {
+      const res = await api.get(
+          `/appointment/appointments/today/${doctorId}`
+        );
+        if (res.status === 200) {
+          setIsOvertime(res.data.isOvertime);
+          // Fetch test orders for each appointment in parallel
+          const appointmentsWithTestOrders = await Promise.all(
+            res.data.appointments.map(async (appointment: PatientList) => {
+              if (appointment.examinationId) {
+                const testOrders = await fetchTestOrders(
+                  appointment.examinationId
+                );
+                return { ...appointment, testOrders };
+              }
+              return appointment;
+            })
+          );
+
+          setAppointments(appointmentsWithTestOrders);
+          setIsACanceled(false);
+        }
+     }
+     fetchAppointment();
+  },[isACanceled])
 
   useEffect(() => {
     if (!doctorId) return;
@@ -118,7 +154,7 @@ const PatientList = (props: Props) => {
           setAppointments(appointmentsWithTestOrders);
         }
       } catch (err: any) {
-        if(err?.response?.status === 404) return;
+        if (err?.response?.status === 404) return;
       } finally {
         setLoading(false);
       }
@@ -141,24 +177,6 @@ const PatientList = (props: Props) => {
 
     onPatientSelected(appointment.patientId._id);
     onAppointmentSelected(appointment._id);
-
-    if (
-      appointment.status !== "waiting_result" &&
-      appointment.status !== "completed"
-    ) {
-      try {
-        const res = await api.put(`/appointment/${appointment._id}/status`, {
-          status: "examining",
-        });
-        if (res.status === 200) {
-          setAppointments((prev) =>
-            prev.map((app) => (app._id === res.data._id ? res.data : app))
-          );
-        }
-      } catch (err) {
-        console.error("Failed to update appointment status:", err);
-      }
-    }
   };
 
   const statusDisplayMap: Record<string, string> = {
@@ -172,12 +190,12 @@ const PatientList = (props: Props) => {
       (test) => test.status === "ordered" || test.status === "in_progress"
     ).length;
   };
-  const areAllTestsCompleted = (testOrders: TestOrder[] = []) => {
-    return (
-      testOrders.length > 0 &&
-      testOrders.every((test) => test.status === "completed")
-    );
-  };
+ const areAllTestsCompleted = useCallback((testOrders: TestOrder[] = []) => {
+  return (
+    testOrders.length > 0 &&
+    testOrders.every((test) => test.status === "completed")
+  );
+}, []);
 
   if (loading) {
     return (
@@ -206,30 +224,42 @@ const PatientList = (props: Props) => {
         <tbody>
           {appointments.length > 0 ? (
             appointments.map((appointment) => {
+              if (!appointment._id) {
+                console.error("Appointment missing _id:", appointment);
+                return null; // Bỏ qua nếu không có _id
+              }
               const pendingTests = countPendingTests(appointment.testOrders);
               const isCompleted = appointment.status === "completed";
-              
+
               return (
                 <tr
                   key={appointment._id}
                   className={`patient-row ${
-                    selectedPatient === appointment.patientId._id && !isCompleted
+                    selectedPatient === appointment.patientId._id &&
+                    !isCompleted
                       ? "patient-selected"
                       : ""
                   } ${
-                    isCompleted ? "bg-green-100 cursor-not-allowed" : "hover:bg-gray-100 cursor-pointer"
+                    isCompleted
+                      ? "bg-green-100 cursor-not-allowed"
+                      : "hover:bg-gray-100 cursor-pointer"
                   }`}
                   onClick={() => handlePatientClick(appointment)}
                 >
-                  <td className={isCompleted ? "italic" : ""}>{appointment.queueNumber}</td>
-                  <td className={isCompleted ? "italic" : ""}>{appointment.patientId.fullName}</td>
+                  <td className={isCompleted ? "italic" : ""}>
+                    {appointment.queueNumber}
+                  </td>
+                  <td className={isCompleted ? "italic" : ""}>
+                    {appointment.patientId.fullName}
+                  </td>
                   <td className="flex flex-col">
                     {isCompleted ? (
-                      <span className="text-green-600 italic">Đã khám xong</span>
+                      <span className="text-green-600 italic">
+                        Đã khám xong
+                      </span>
                     ) : (
                       <>
-                        {areAllTestsCompleted(appointment.testOrders) &&
-                          appointment.status === "waiting_result" && (
+                        {areAllTestsCompleted(appointment.testOrders) && (
                             <span className="text-green-600">
                               (Đã có kết quả xét nghiệm)
                             </span>
@@ -238,8 +268,8 @@ const PatientList = (props: Props) => {
                         {!areAllTestsCompleted(appointment.testOrders) &&
                           countPendingTests(appointment.testOrders) > 0 && (
                             <span className="text-orange-500">
-                              {countPendingTests(appointment.testOrders)} xét nghiệm
-                              đang chờ
+                              {countPendingTests(appointment.testOrders)} xét
+                              nghiệm đang chờ
                             </span>
                           )}
                       </>

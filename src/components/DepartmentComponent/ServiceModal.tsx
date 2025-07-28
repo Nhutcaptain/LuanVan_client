@@ -16,6 +16,7 @@ const ServiceModal: React.FC<ServiceModalProps> = ({ services, onAddServices, on
     useEffect(() => {
         if(!serviceSelected) return;
         setSelectedServices(serviceSelected);
+        console.log(serviceSelected)
     },[serviceSelected])
 
     const serviceTypeLabels = {

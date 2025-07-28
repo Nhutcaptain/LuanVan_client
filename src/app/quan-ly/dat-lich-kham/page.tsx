@@ -23,6 +23,7 @@ import { validatePatientInfo } from "@/utils/validatePatientInfo";
 interface Department {
   _id: string;
   name: string;
+  serviceIds: Service[];
 }
 
 interface Specialty {
@@ -38,7 +39,7 @@ interface Doctor {
   specialtyId: string;
   departmentId: string;
   overtimeExaminationPrice: number;
-  officeExaminationPrice: number
+  officeExaminationPrice: number;
 }
 
 const AppointmentPage = () => {
@@ -61,13 +62,14 @@ const AppointmentPage = () => {
 
   const [formData, setFormData] = useState({
     departmentId: "",
-    specialtyId: "",
+    // specialtyId: "",
     doctorId: "",
     appointmentDate: "",
     session: "",
     reason: "",
     agreeTerms: false,
     location: "",
+    isOvertime: false,
   });
 
   const [loading, setLoading] = useState({
@@ -82,7 +84,7 @@ const AppointmentPage = () => {
   useEffect(() => {
     const doctorId = searchParams.get("doctorId");
     const departmentId = searchParams.get("departmentId");
-    const specialtyId = searchParams.get("specialtyId");
+    // const specialtyId = searchParams.get("specialtyId");
     const fetchUserId = async () => {
       if (!doctorId) return;
       try {
@@ -100,7 +102,7 @@ const AppointmentPage = () => {
     setFormData((prev) => ({
       ...prev,
       departmentId: departmentId || "",
-      specialtyId: specialtyId || "",
+      // specialtyId: specialtyId || "",
       doctorId: doctorId || "",
     }));
   }, []);
@@ -181,16 +183,41 @@ const AppointmentPage = () => {
   }, [formData.departmentId]);
 
   // Fetch doctors when either department or specialty is selected
-  useEffect(() => {
-    if (!formData.specialtyId) {
-      return;
-    }
+  // useEffect(() => {
+  //   if (!formData.specialtyId) {
+  //     return;
+  //   }
 
-    const fetchDoctors = async () => {
+  //   const fetchDoctors = async () => {
+  //     try {
+  //       setLoading((prev) => ({ ...prev, doctors: true }));
+  //       const res = await api.get(
+  //         `/doctors/getDoctorBySpecialtyId/${formData.specialtyId}`
+  //       );
+
+  //       if (res.status === 200) {
+  //         setDoctors(res.data);
+  //       } else {
+  //         throw new Error("Failed to fetch doctors");
+  //       }
+  //     } catch (err) {
+  //       console.error("Failed to fetch doctors:", err);
+  //       toast.error("Không thể tải danh sách bác sĩ");
+  //     } finally {
+  //       setLoading((prev) => ({ ...prev, doctors: false }));
+  //     }
+  //   };
+
+  //   fetchDoctors();
+  // }, [formData.departmentId, formData.specialtyId]);
+
+  useEffect(() => {
+    if(!formData.departmentId) return;
+     const fetchDoctors = async () => {
       try {
         setLoading((prev) => ({ ...prev, doctors: true }));
         const res = await api.get(
-          `/doctors/getDoctorBySpecialtyId/${formData.specialtyId}`
+          `/doctors/getForAppointment/${formData.departmentId}`
         );
 
         if (res.status === 200) {
@@ -207,7 +234,7 @@ const AppointmentPage = () => {
     };
 
     fetchDoctors();
-  }, [formData.departmentId, formData.specialtyId]);
+  },[formData.departmentId])
 
   useEffect(() => {
     if (!formData.doctorId) {
@@ -342,6 +369,7 @@ const AppointmentPage = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
     const validationError = validatePatientInfo(patient);
     if (validationError) {
       toast.info(validationError);
@@ -355,8 +383,12 @@ const AppointmentPage = () => {
 
     Swal.fire({
       title: "Đang xử lý",
-      icon: "info",
-      showLoaderOnConfirm: true,
+      text: "Vui lòng đợi trong giây lát...",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
     });
 
     try {
@@ -366,43 +398,62 @@ const AppointmentPage = () => {
         patientId: patient?._id,
         doctorId: formData.doctorId,
         departmentId: formData.departmentId,
-        specialtyId: formData.specialtyId,
+        // specialtyId: formData.specialtyId,
         appointmentDate: formData.appointmentDate,
         session: formData.session,
         reason: formData.reason,
         location: formData.location,
+        isOvertime: consultationService === 'overtimeConsultation' ? true : false,
       });
 
+      Swal.close();
+
       if (res.status === 201) {
-        toast.success("Đặt lịch hẹn thành công!");
-        Swal.close();
-        Swal.fire({
+        await Swal.fire({
           title: "Đặt lịch thành công",
           icon: "success",
-          showConfirmButton: true,
+          confirmButtonText: "Đóng",
         });
+
         setFormData({
           departmentId: "",
-          specialtyId: "",
+          // specialtyId: "",
           doctorId: "",
           appointmentDate: "",
           session: "",
           reason: "",
           agreeTerms: false,
           location: "",
+          isOvertime: false,
         });
       } else {
-        throw new Error(res.data.message || "Failed to create appointment");
+        throw new Error(res.data.message || "Đặt lịch thất bại");
       }
     } catch (err: any) {
-      console.error("Failed to submit appointment:", err);
       Swal.close();
-      Swal.fire({
-        title: "Có lỗi xảy ra",
-        icon: "error",
-        showCloseButton: true,
-      });
-      toast.error(err.message || "Đặt lịch hẹn thất bại. Vui lòng thử lại.");
+
+      const status = err.response?.status;
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Đặt lịch thất bại. Vui lòng thử lại.";
+
+      if (status === 409) {
+        // Trường hợp xung đột (ví dụ: trùng lịch, quá số lượng...)
+        await Swal.fire({
+          title: "Không thể đặt lịch",
+          text: errorMessage,
+          icon: "warning",
+          confirmButtonText: "OK",
+        });
+      } else {
+        await Swal.fire({
+          title: "Có lỗi xảy ra",
+          text: errorMessage,
+          icon: "error",
+          confirmButtonText: "Đóng",
+        });
+      }
     } finally {
       setLoading((prev) => ({ ...prev, submitting: false }));
     }
@@ -465,11 +516,18 @@ const AppointmentPage = () => {
   };
 
   const selectedDoctor = doctors.find((d) => d._id === formData.doctorId);
-  const price = consultationService === 'overtimeConsultation' ? selectedDoctor?.overtimeExaminationPrice : selectedDoctor?.officeExaminationPrice;
-  const selectedSpecialty = specialties.find(
-    (d) => d._id === formData.specialtyId
+  const price =
+    consultationService === "overtimeConsultation"
+      ? selectedDoctor?.overtimeExaminationPrice
+      : selectedDoctor?.officeExaminationPrice;
+  // const selectedSpecialty = specialties.find(
+  //   (d) => d._id === selectedDoctor.specialtyId
+  // );
+  // const services = selectedSpecialty?.serviceIds;
+  const selectedDepartment = departments.find(
+    (d) => d._id === formData.departmentId
   );
-  const services = selectedSpecialty?.serviceIds;
+  const services = selectedDepartment?.serviceIds
 
   return (
     <div className="container">
@@ -534,14 +592,14 @@ const AppointmentPage = () => {
                 value: doctor._id,
               }))}
               disabled={
-                (!formData.departmentId && !formData.specialtyId) ||
+                (!formData.departmentId) ||
                 loading.doctors
               }
               required
             />
           </div>
 
-          <div className="form-column">
+          {/* <div className="form-column">
             <SelectComponent
               label="Chuyên khoa"
               name="specialtyId"
@@ -553,7 +611,7 @@ const AppointmentPage = () => {
               }))}
               disabled={!formData.departmentId || loading.specialties}
             />
-          </div>
+          </div> */}
         </div>
         <div className="consultation-type">
           <label>Loại dịch vụ khám*</label>

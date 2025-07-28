@@ -1,6 +1,6 @@
 /* Base Styles */
 .doctor-list-container {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -163,4 +163,193 @@
   .view-profile {
     width: 100%;
   }
+}
+
+/* Toolbar styles */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-box {
+  position: relative;
+  flex-grow: 1;
+  max-width: 400px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+}
+
+.filters {
+  display: flex;
+  gap: 1rem;
+}
+
+.filters select {
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: white;
+  cursor: pointer;
+}
+
+/* Stats styles */
+.stats {
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.filter-tag {
+  background-color: #e3f2fd;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-tag button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  font-size: 1rem;
+  padding: 0;
+}
+
+/* No results styles */
+.no-results {
+  text-align: center;
+  padding: 3rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin: 2rem 0;
+}
+
+.no-results p {
+  margin-bottom: 1rem;
+  color: #666;
+}
+
+.no-results button {
+  padding: 0.5rem 1.5rem;
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.no-results button:hover {
+  background-color: #1565c0;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-box {
+    max-width: none;
+  }
+  
+  .filters {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+/* Tabs navigation */
+.tabs-navigation {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 20px;
+}
+
+.tab-button {
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #666;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s;
+}
+
+.tab-button:hover {
+  color: #333;
+}
+
+.tab-button.active {
+  color: #2a6496;
+  border-bottom-color: #2a6496;
+  font-weight: bold;
+}
+
+/* Tab content */
+.tab-content {
+  padding: 20px 0;
+}
+
+/* TinyMCE content styles */
+.tinymce-content {
+  line-height: 1.6;
+}
+
+.tinymce-content p {
+  margin-bottom: 1em;
+}
+
+.tinymce-content h2, 
+.tinymce-content h3, 
+.tinymce-content h4 {
+  margin: 1.5em 0 1em;
+  color: #2a6496;
+}
+
+.tinymce-content ul, 
+.tinymce-content ol {
+  margin-bottom: 1em;
+  padding-left: 2em;
+}
+
+.no-content {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
 }

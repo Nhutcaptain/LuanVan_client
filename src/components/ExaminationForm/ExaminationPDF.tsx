@@ -221,7 +221,6 @@ export const ExaminationPDF = ({
 
   const formatAddress = (address: AddressForm | string | undefined): string => {
     if (!address) return "N/A";
-    console.log(doctorInfo);
 
     if (typeof address === "string") return address;
 

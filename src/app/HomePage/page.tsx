@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { FaPhoneAlt } from "react-icons/fa";
+import { FaBook, FaCalendarAlt, FaHistory, FaPhoneAlt } from "react-icons/fa";
 import "./style.css";
 import {
   FaHeartPulse,
@@ -27,6 +27,7 @@ const HomePage = () => {
   const [currentSection, setCurrentSection] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const [showAll, setShowAll] = useState(false);
+  const [role, setRole] = useState("");
   const { ref, inView } = useInView({
     threshold: 0.1, // hợp lệ ở đây
     triggerOnce: false,
@@ -36,6 +37,8 @@ const HomePage = () => {
   const { sideNews, mainNews, otherNews } = newSplitter(newsData);
 
   useEffect(() => {
+    const role = localStorage.getItem("role");
+    setRole(role ?? "");
     const onScroll = () => {
       const scrollPos = window.scrollY;
       const vh = window.innerHeight;
@@ -149,32 +152,74 @@ const HomePage = () => {
               } mb-10`}
             >
               <h2 className="text-4xl font-bold mb-6 text-center text-[#3D90D7]">
-                Chăm sóc sức khoẻ cực đơn giản
+                {role === "doctor"
+                  ? "Các chức năng"
+                  : "Chăm sóc sức khoẻ cực đơn giản"}
               </h2>
-              <div className="features ">
-                <Link href={"/quan-ly/quan-ly-suc-khoe"}>
+              {role === "doctor" ? (
+                <div className="features">
+                  <Link href={"/bac-si/lich-lam-viec"}>
+                    <ButtonCardComponent>
+                      <FaCalendarAlt size={80} color="#0065F8"></FaCalendarAlt>
+                      <p className="text-[#0065F8] font-bold">
+                        Xem lịch làm việc
+                      </p>
+                    </ButtonCardComponent>
+                  </Link>
+                  <Link href={"/bac-si/kham-benh"}>
+                    <ButtonCardComponent>
+                      <FaUserDoctor size={80} color="#0065F8"></FaUserDoctor>
+                      <p className="text-[#0065F8] font-bold">Khám bệnh</p>
+                    </ButtonCardComponent>
+                  </Link>
+                  <Link href={"/quan-ly/dat-lich-kham"}>
+                    <ButtonCardComponent>
+                      <FaHistory size={80} color="#0065F8"></FaHistory>
+                      <p className="text-[#0065F8] font-bold">
+                        Xem lịch sử khám
+                      </p>
+                    </ButtonCardComponent>
+                  </Link>
+                  <Link href={"/quan-ly/chat"}>
+                    <ButtonCardComponent>
+                      <FaBook size={80} color="#0065F8"></FaBook>
+                      <p className="text-[#0065F8] font-bold">
+                        Đăng bài báo khoa học
+                      </p>
+                    </ButtonCardComponent>
+                  </Link>
+                </div>
+              ) : (
+                <div className="features ">
+                  <Link href={"/quan-ly/quan-ly-suc-khoe"}>
+                    <ButtonCardComponent>
+                      <FaHeartPulse size={80} color="#0065F8"></FaHeartPulse>
+                      <p className="text-[#0065F8] font-bold">
+                        Quản lý sức khoẻ
+                      </p>
+                    </ButtonCardComponent>
+                  </Link>
                   <ButtonCardComponent>
-                    <FaHeartPulse size={80} color="#0065F8"></FaHeartPulse>
-                    <p className="text-[#0065F8] font-bold">Quản lý sức khoẻ</p>
+                    <FaUserDoctor size={80} color="#0065F8"></FaUserDoctor>
+                    <p className="text-[#0065F8] font-bold">Tìm bác sĩ</p>
                   </ButtonCardComponent>
-                </Link>
-                <ButtonCardComponent>
-                  <FaUserDoctor size={80} color="#0065F8"></FaUserDoctor>
-                  <p className="text-[#0065F8] font-bold">Tìm bác sĩ</p>
-                </ButtonCardComponent>
-                <Link href={'/quan-ly/dat-lich-kham'}>
-                  <ButtonCardComponent>
-                    <FaCalendarDays size={80} color="#0065F8"></FaCalendarDays>
-                    <p className="text-[#0065F8] font-bold">Đặt lịch khám</p>
-                  </ButtonCardComponent>
-                </Link>
-                <Link href={'/quan-ly/chat'}>
-                  <ButtonCardComponent>
-                    <FaRobot size={80} color="#0065F8"></FaRobot>
-                    <p className="text-[#0065F8] font-bold">Tư vấn AI</p>
-                  </ButtonCardComponent>
-                </Link>
-              </div>
+                  <Link href={"/quan-ly/dat-lich-kham"}>
+                    <ButtonCardComponent>
+                      <FaCalendarDays
+                        size={80}
+                        color="#0065F8"
+                      ></FaCalendarDays>
+                      <p className="text-[#0065F8] font-bold">Đặt lịch khám</p>
+                    </ButtonCardComponent>
+                  </Link>
+                  <Link href={"/quan-ly/chat"}>
+                    <ButtonCardComponent>
+                      <FaRobot size={80} color="#0065F8"></FaRobot>
+                      <p className="text-[#0065F8] font-bold">Tư vấn AI</p>
+                    </ButtonCardComponent>
+                  </Link>
+                </div>
+              )}
             </div>
             <div
               className="bottom_features flex-[2]"

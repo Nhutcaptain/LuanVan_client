@@ -6,7 +6,7 @@ export interface Appointment {
   session: string;
   departmentId?: string;
   specialtyId?: string;
-  status?: "scheduled" | "completed" | "cancelled";
+  status?: "scheduled" | "completed" | "cancelled" | "examining" | "waiting_result";
   reason?: string;
   location?: string;
   queueNumber: string;
@@ -15,6 +15,7 @@ export interface Appointment {
     sms?: boolean;
   };
   notes: string;
+  isOvertime: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

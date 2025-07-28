@@ -1,5 +1,5 @@
 import { Department } from "@/interface/Department";
-import React from "react";
+import React, { useState } from "react";
 
 interface DepartmentListProps {
   departments: Department[];
@@ -14,6 +14,7 @@ const DepartmentList: React.FC<DepartmentListProps> = ({
   onDelete,
   onSelected,
 }) => {
+  const [selectedDepartment, setSelectedDepartment] = useState('')
   return (
     <div className="list-container">
       <table className="data-table">
@@ -29,7 +30,10 @@ const DepartmentList: React.FC<DepartmentListProps> = ({
         <table className="data-table">
           <tbody>
             {departments.map((dept) => (
-              <tr key={dept._id} onClick={() => onSelected(dept._id)}>
+              <tr key={dept._id} onClick={() => {
+                onSelected(dept._id);
+                setSelectedDepartment(dept._id);
+              }} className={`${selectedDepartment === dept._id ? 'active' : ''}`}>
                 <td>{dept.name}</td>
                 <td>{dept.description}</td>
                 <td>

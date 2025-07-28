@@ -5,6 +5,8 @@ import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { FaCheckCircle, FaCalendarAlt, FaUserMd, FaHospital, FaClock, FaInfoCircle } from 'react-icons/fa';
 import './styles.css';
+import { useSocket } from '@/hook/useSocket';
+import Swal from 'sweetalert2';
 
 interface Appointment {
   _id: string;
@@ -24,10 +26,6 @@ interface Appointment {
     name: string;
     _id: string;
   };
-  specialtyId: {
-    name: string;
-    _id: string;
-  };
   status: "scheduled" | "completed" | "cancelled" | 'waiting_result';
   reason?: string;
   examinationId: string;
@@ -37,11 +35,38 @@ const AppointmentsPage = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [loading, setLoading] = useState(true);
+  const [patientId, setPatientId] = useState('')
   const router = useRouter();
 
+  const {socket , joinRoom, leaveRoom} = useSocket("http://localhost:5000", {
+    eventHandlers: {
+      "appointment-status-completed": (appointmentId: string) => {
+        Swal.fire({
+          title: "Quá trình khám hoàn tất",
+          text: 'Quá trình khám của bạn đã hoàn tất',
+          icon: 'success',
+          showConfirmButton: true,
+        })
+        setAppointments((prev) => 
+          prev.map((app) => 
+            app._id === appointmentId ? {...app, status: 'completed'} : app
+          )
+        )
+      }
+    }
+  })
+
+  useEffect(() => {
+    if(!patientId) return;
+    joinRoom(`patient_${patientId}`);
+    return () => {
+      leaveRoom(`patient_${patientId}`);
+    }
+  },[patientId, joinRoom,leaveRoom])
 
   useEffect(() => {
     const patientId = localStorage.getItem('userId');
+    setPatientId(patientId ?? '');
     const fetchAppointments = async () => {
       try {
         const res = await api.get(`/appointment/getMyAppointments/${patientId}`);
@@ -162,9 +187,14 @@ const handleGotoMedicalRecord = (id: string) => {
                 </h3>
                 {appointment.status === 'completed' ? (
                     <FaCheckCircle className="completed-icon" />
-                    ) : daysRemaining <= 4 && daysRemaining >= 0 ? (
+                    ) : daysRemaining <= 4 && daysRemaining >= 2 ? (
                     <span className="days-remaining red">Còn {daysRemaining} ngày</span>
-                    ) : null}
+                    ) : daysRemaining === 1 ? (
+                    <span className="days-remaining red">Ngày mai</span>
+                    ) : daysRemaining === 0 ? (
+                    <span className="days-remaining red">Hôm nay</span>
+                    ) : null
+                  }
               </div>
               <div className="card-body">
                 <p><FaUserMd className="icon" /> Bác sĩ: {appointment.doctorId.userId.fullName}</p>
@@ -212,10 +242,6 @@ const handleGotoMedicalRecord = (id: string) => {
                 <span className="detail-value">{selectedAppointment.departmentId.name}</span>
               </div>
               <div className="detail-row">
-                <span className="detail-label">Chuyên khoa:</span>
-                <span className="detail-value">{selectedAppointment.specialtyId.name}</span>
-              </div>
-              <div className="detail-row">
                 <span className="detail-label">Trạng thái:</span>
                 <span className={`detail-value status ${selectedAppointment.status}`}>
                   {selectedAppointment.status === 'scheduled' ? 'Đã đặt' : 
@@ -240,7 +266,7 @@ const handleGotoMedicalRecord = (id: string) => {
                   className="btn-cancel"
                   onClick={() => handleCancelAppointment(selectedAppointment._id)}
                 >
-                  Hủy lịch hẹn
+                  Huỷ lịch hẹn
                 </button>
               )}
               {selectedAppointment.status === 'completed' && (

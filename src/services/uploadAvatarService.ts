@@ -22,6 +22,7 @@ export const uploadImageToCloudinary = async (file: File): Promise<{ url: string
 
 export const deleteImageFromCloudinary = async (publicId: string) => {
   const token = localStorage.getItem('token');
+  console.log(publicId);
   if (!token) throw new Error('Chưa đăng nhập');
 
   const res = await api.delete('/images/delete', { data: {publicId} })
@@ -29,30 +30,30 @@ export const deleteImageFromCloudinary = async (publicId: string) => {
   return res.data;
 };
 
-export const processImagesAndUpload = async (content: string) => {
-  const div = document.createElement('div');
-  div.innerHTML = content;
+// export const processImagesAndUpload = async (content: string) => {
+//   const div = document.createElement('div');
+//   div.innerHTML = content;
 
-  const images = div.querySelectorAll('img');
+//   const images = div.querySelectorAll('img');
 
-  for (const img of images) {
-    const src = img.getAttribute('src');
-    if (src && src.startsWith('data:image/')) {
-      try {
-        const file = dataURLtoFile(src, 'image.png');
-        const { url, publicId } = await uploadImageToCloudinary(file);
+//   for (const img of images) {
+//     const src = img.getAttribute('src');
+//     if (src && src.startsWith('data:image/')) {
+//       try {
+//         const file = dataURLtoFile(src, 'image.png');
+//         const { url, publicId } = await uploadImageToCloudinary(file);
         
-        // Cập nhật ảnh với URL mới và thêm publicId để dùng sau
-        img.setAttribute('src', url);
-        img.setAttribute('data-public-id', publicId);
-      } catch (error) {
-        console.error('Upload ảnh thất bại:', error);
-      }
-    }
-  }
+//         // Cập nhật ảnh với URL mới và thêm publicId để dùng sau
+//         img.setAttribute('src', url);
+//         img.setAttribute('data-public-id', publicId);
+//       } catch (error) {
+//         console.error('Upload ảnh thất bại:', error);
+//       }
+//     }
+//   }
 
-  return div.innerHTML;
-};
+//   return div.innerHTML;
+// };
 
 function dataURLtoFile(dataurl: string, filename: string): File {
   const arr = dataurl.split(',');
