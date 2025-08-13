@@ -6,11 +6,14 @@ import { IUser } from "./usermodel";
   nameSlug?: string;
   userId: IUser;
   departmentId?: string;
+  description?: string;
   specialtyId?: string;
   specialization: string;
   certificate: string[];
   experience: string[];
   examinationPrice?: number;
+  overtimeExaminationPrice?: number;
+  officeExaminationPrice?: number;
   schedule: {
     date: string;
     time: string;

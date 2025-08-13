@@ -4,6 +4,8 @@ export interface Department {
     name: string;
     description: string;
     serviceIds: string[];
+    content: string;
+    contentId: string;
 }
 
 export interface Specialty {

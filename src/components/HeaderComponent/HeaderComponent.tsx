@@ -61,7 +61,7 @@ const HeaderComponent = () => {
     return (
         <div>
             <header
-                className={`fixed top-0 left-0 w-full px-0 py-3 transition-colors duration-500 z-30 shadow-md
+                className={` top-0 left-0 w-full px-0 py-3 transition-colors duration-500 z-30 shadow-md
                 ${isScrolledPastFirst ? 'bg-[#5A3E36]/95 text-white backdrop-blur' : 'bg-white/80 text-[#5A3E36]'}
                 rounded-b-xl`}
             >

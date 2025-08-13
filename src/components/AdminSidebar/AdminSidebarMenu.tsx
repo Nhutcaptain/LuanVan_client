@@ -20,12 +20,12 @@ const AdminSidebarMenu = () => {
         {
             icon: <RiHeartPulseLine className='text-2xl' />,
             label: 'Đăng bài viết',
-            link: '/bac-si/lich-lam-viec'
+            link: '/admin/dang-bai'
         },
         {
             icon: <FaRegRectangleList className='text-2xl' />,
             label: 'Quản lý kho thuốc',
-            link: '/bac-si/lich-kham'
+            link: '/admin/medicine-management'
         },
         {
             icon: <FaRegRectangleList className='text-2xl' />,
@@ -45,17 +45,12 @@ const AdminSidebarMenu = () => {
         {
             icon: <FaRegCalendarPlus className='text-2xl' />,
             label: 'Quản lý viện phí và thanh toán',
-            link: '/bac-si/tai-lieu'
+            link: '/admin/stats'
         },
         {
             icon: <FaRegCalendarPlus className='text-2xl' />,
             label: 'Quản lý dịch vụ',
             link: '/admin/service'
-        },
-        {
-            icon: <FaRegCalendarPlus className='text-2xl' />,
-            label: 'Quản lý báo cáo thống kê',
-            link: '/bac-si/tai-lieu'
         },
     ];
 

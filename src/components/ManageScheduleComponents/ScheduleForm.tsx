@@ -27,7 +27,8 @@ interface Doctor {
 interface SpecialSchedule {
   _id: string;
   doctorId: string;
-  date: Date;
+  startDate: Date;
+  endDate: Date;
   type: string;
   note: string;
 }
@@ -115,6 +116,7 @@ const ScheduleForm = ({
   getDepartmentName,
 }: ScheduleFormProps) => {
   const formatDateString = (date: Date) => date.toISOString().split('T')[0];
+  const formatDateDisplay = (date: Date) => new Date(date).toLocaleDateString('vi-VN');
 
   const filteredDoctors: Doctor[] = doctors.filter(doctor => {
      return doctor.fullName.toLowerCase().includes(searchTerm.toLowerCase());
@@ -129,6 +131,7 @@ const ScheduleForm = ({
         <button 
           onClick={onToggleMultiSelectMode}
           className={`toggle-btn ${multiSelectMode ? 'active' : ''}`}
+          type="button"
         >
           {multiSelectMode ? 'Đang chọn nhiều bác sĩ' : 'Xếp lịch cho nhiều bác sĩ'}
         </button>
@@ -149,86 +152,6 @@ const ScheduleForm = ({
           </div>
         )}
       </div>
-
-      {/* Doctor selection */}
-      <div className="doctor-selection">
-        <h3>{multiSelectMode ? 'Chọn nhiều bác sĩ' : 'Chọn bác sĩ'}</h3>
-        <div className="doctor-grid">
-          {filteredDoctors.map(doctor => (
-            <div 
-              key={doctor._id}
-              className={`doctor-card-schedule ${selectedDoctors.includes(doctor._id) ? 'selected' : ''}`}
-              onClick={() => onDoctorSelection(doctor._id)}
-            >
-              <div className="doctor-info">
-                <span className="doctor-name">{doctor.fullName}</span>
-                <span className="doctor-department">{getDepartmentName(doctor.departmentId)}</span>
-              </div>
-              <div className="doctor-actions">
-                <button 
-                  className="special-schedule-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSetShowSpecialDates(showSpecialDates === doctor._id ? null : doctor._id);
-                  }}
-                >
-                  Xem lịch đặc biệt
-                </button>
-                <button 
-                  className="add-special-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAddSpecialSchedule(doctor._id);
-                  }}
-                >
-                  + Thêm ngày đặc biệt
-                </button>
-              </div>
-              {multiSelectMode && (
-                <input 
-                  type="checkbox" 
-                  checked={selectedDoctors.includes(doctor._id)} 
-                  readOnly 
-                  className="doctor-checkbox"
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Special dates modal */}
-      {showSpecialDates && (
-        <div className="special-dates-modal">
-          <div className="modal-header">
-            <h3>Lịch đặc biệt của {getDoctorName(showSpecialDates)}</h3>
-            <button onClick={() => onSetShowSpecialDates(null)}>×</button>
-          </div>
-          <div className="modal-content">
-            {specialSchedules.filter(s => s.doctorId === showSpecialDates).length > 0 ? (
-              specialSchedules
-                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                .map(schedule => (
-                  <div key={schedule._id} className="special-schedule-item">
-                    <span className="schedule-date">{new Date(schedule.date).toLocaleDateString()}</span>
-                    <span className={`schedule-type ${schedule.type.replace(/\s+/g, '-').toLowerCase()}`}>
-                      {schedule.type}
-                    </span>
-                    <span className="schedule-note">{schedule.note}</span>
-                    <button 
-                      className="delete-btn"
-                      onClick={() => onDeleteSpecialSchedule(schedule._id)}
-                    >
-                      Xóa
-                    </button>
-                  </div>
-                ))
-            ) : (
-              <p className="no-special-dates">Không có lịch đặc biệt</p>
-            )}
-          </div>
-        </div>
-      )}
 
       <form onSubmit={onSubmit}>
         <div className="form-group">
@@ -273,23 +196,92 @@ const ScheduleForm = ({
             />
             <span className="search-icon">🔍</span>
           </div>
-          
         )}
 
-        <div className="date-range-picker">
-            <input 
-              type="date" 
-              value={formatDateString(fromDate)} 
-              onChange={(e) => onFromDateChange(new Date(e.target.value))} 
-            />
-            <span>đến</span>
-            <input 
-              type="date" 
-              value={formatDateString(toDate)} 
-              onChange={(e) => onToDateChange(new Date(e.target.value))} 
-              min={formatDateString(fromDate)}
-            />
+        <div className="doctor-selection">
+          <h3>{multiSelectMode ? 'Chọn nhiều bác sĩ' : 'Chọn bác sĩ'}</h3>
+          <div className="doctor-grid">
+            {filteredDoctors.map(doctor => (
+              <div 
+                key={doctor._id}
+                className={`doctor-card-schedule ${selectedDoctors.includes(doctor._id) ? 'selected' : ''}`}
+                onClick={() => onDoctorSelection(doctor._id)}
+              >
+                <div className="doctor-info">
+                  <span className="doctor-name">{doctor.fullName}</span>
+                  <span className="doctor-department">{getDepartmentName(doctor.departmentId)}</span>
+                </div>
+                <div className="doctor-actions">
+                  <button 
+                    className="special-schedule-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSetShowSpecialDates(showSpecialDates === doctor._id ? null : doctor._id);
+                    }}
+                    type="button"
+                  >
+                    Xem lịch đặc biệt
+                  </button>
+                  <button 
+                    className="add-special-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddSpecialSchedule(doctor._id);
+                    }}
+                    type="button"
+                  >
+                    + Thêm ngày đặc biệt
+                  </button>
+                </div>
+                {multiSelectMode && (
+                  <input 
+                    type="checkbox" 
+                    checked={selectedDoctors.includes(doctor._id)} 
+                    readOnly 
+                    className="doctor-checkbox"
+                  />
+                )}
+              </div>
+            ))}
           </div>
+        </div>
+
+        {/* Special dates modal */}
+        {showSpecialDates && (
+          <div className="special-dates-modal">
+            <div className="modal-header">
+              <h3>Lịch đặc biệt của {getDoctorName(showSpecialDates)}</h3>
+              <button onClick={() => onSetShowSpecialDates(null)} type="button">×</button>
+            </div>
+            <div className="modal-content">
+              {specialSchedules.filter(s => s.doctorId === showSpecialDates).length > 0 ? (
+                specialSchedules
+                  .filter(s => s.doctorId === showSpecialDates)
+                  .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+                  .map(schedule => (
+                    <div key={schedule._id} className="special-schedule-item">
+                      <span className="schedule-date">
+                        {formatDateDisplay(schedule.startDate)} - {formatDateDisplay(schedule.endDate)}
+                      </span>
+                      <span className={`schedule-type ${schedule.type.replace(/\s+/g, '-').toLowerCase()}`}>
+                        {schedule.type}
+                      </span>
+                      <span className="schedule-note">{schedule.note}</span>
+                      <button 
+                        className="delete-btn"
+                        onClick={() => onDeleteSpecialSchedule(schedule._id)}
+                        type="button"
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                  ))
+              ) : (
+                <p className="no-special-dates">Không có lịch đặc biệt</p>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="days-grid">
           {daysOfWeek.map((day, index) => (

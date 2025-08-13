@@ -47,6 +47,7 @@ const DepartmentManagement: React.FC = () => {
   const [selectedDepartment, setSelectedDepartment] = useState<string>("");
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>("");
   const [selectedSpecialtyId, setSelectedSpecialtyId] = useState("");
+  const [isContentManagement, setIsContentManagement] = useState(false)
   const [isMultipleSelectedSpecialty, setIsMultipleSelectedSpecialty] =
     useState(false);
 
@@ -117,32 +118,88 @@ const DepartmentManagement: React.FC = () => {
     fetchDoctors();
   }, [selectedDepartment]);
 
-  const handleAddDepartment = (department: Omit<Department, "_id">) => {
+  const handleAddDepartment = async (department: Omit<Department, "_id">) => {
     const newDepartment: Department = {
       ...department,
       _id: Date.now().toString(),
     };
+    try{
+      const res = await api.post('/department/create',department)
+      if(res.status === 201) {
+        setDepartments([...departments, newDepartment]);
+        Swal.fire({
+          title: 'Tạo chuyên khoa thành công',
+          text:'Chuyên khoa đã được tạo',
+          icon: 'success',
+          showConfirmButton: true,
+        })
+      }
+    }catch(error: any) {
+      if(error.response.status === 400) {
+        Swal.fire({
+          title: 'Lỗi khi tạo chuyên khoa',
+          text:'Chuyên khoa này đã tồn tại',
+          icon: 'error',
+          showCancelButton: true,
+        })
+      }
+    }
     setDepartments([...departments, newDepartment]);
+    
     setShowDepartmentForm(false);
   };
 
-  const handleUpdateDepartment = (
+  const handleUpdateDepartment = async (
     department: Department | Omit<Department, "_id">
   ) => {
     if ("_id" in department) {
+      const res = await api.put(
+        `/department/updateDepartment/${department._id}`,
+        department
+      );
+      if(res.status === 200)  {
+        Swal.fire({
+          title: 'Cập nhật chuyên khoa thành công',
+          text:'Chuyên khoa đã được cập nhật',
+          icon: 'success',
+          showConfirmButton: true,
+        })
+      }
       setDepartments(
         departments.map((d) =>
           d._id === department._id ? (department as Department) : d
         )
       );
     }
+    
     setEditingDepartment(null);
     setShowDepartmentForm(false);
   };
 
-  const handleDeleteDepartment = (id: string) => {
-    setDepartments(departments.filter((d) => d._id !== id));
+  const handleDeleteDepartment = async (id: string) => {
+    const result = await Swal.fire({
+    title: 'Xác nhận',
+    text: 'Bạn có muốn xoá chuyên khoa này không?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Đồng ý',
+    cancelButtonText: 'Hủy bỏ',
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+  });
+  if(!result.isConfirmed) return;
+    const res = await api.delete(`/department/delete/${id}`)
+    if(res.status === 200) {
+      Swal.fire({
+          title: 'Xoá chuyên khoa thành công',
+          text:'Chuyên khoa đã được xoá ra khỏi hệ thống',
+          icon: 'success',
+          showConfirmButton: true,
+        })
+        setDepartments(departments.filter((d) => d._id !== id));
     setSpecialties(specialties.filter((s) => s.departmentId !== id));
+    }
+    
   };
 
   const handleAddSpecialty = (specialty: Omit<Specialty, "_id">) => {
@@ -222,6 +279,7 @@ const DepartmentManagement: React.FC = () => {
   };
 
   const handleAddServiceToDepartment = async (serviceIds: string[]) => {
+
     // Kiểm tra nếu không có chuyên khoa được chọn
     if (!selectedDepartment) {
       await Swal.fire({
@@ -269,12 +327,10 @@ const DepartmentManagement: React.FC = () => {
     });
 
     try {
-      // Tạo danh sách serviceIds mới (loại bỏ trùng lặp)
       const existingServiceIds = departmentToUpdate.serviceIds || [];
       const uniqueServiceIds = [
-        ...new Set([...existingServiceIds, ...serviceIds]),
+        ...new Set([ ...serviceIds]),
       ];
-
       // Gọi API cập nhật
       const res = await api.put(
         `/department/updateDepartment/${selectedDepartment}`,
@@ -282,16 +338,13 @@ const DepartmentManagement: React.FC = () => {
           serviceIds: uniqueServiceIds,
         }
       );
-
-      // Đóng thông báo đang xử lý
       Swal.close();
 
       // Kiểm tra kết quả trả về
       if (res.status === 200) {
-        // Cập nhật state departments
         setDepartments(
           departments.map((dept) =>
-            dept._id === selectedDepartment ? res.data : dept
+            dept._id === res.data._id ? res.data : dept
           )
         );
 
@@ -328,9 +381,7 @@ const DepartmentManagement: React.FC = () => {
         error
       );
     } finally {
-      // Đóng modal và reset selectedDepartment
       setShowServiceModal(false);
-      setSelectedDepartment("");
     }
   };
 
@@ -368,20 +419,22 @@ const DepartmentManagement: React.FC = () => {
 
   return (
     <div className="department-management">
-      <div className="header">
-        <h1>Quản lý Khoa và Chuyên khoa</h1>
+      {!isContentManagement ? (
+        <>
+        <div className="header">
+        <h1>Quản lý Chuyên khoa</h1>
         <div className="tabs">
           <button
             className={`d-tab ${activeTab === "departments" ? "active" : ""}`}
             onClick={() => setActiveTab("departments")}
           >
-            Khoa
+            Chuyên khoa
           </button>
           <button
             className={`d-tab ${activeTab === "specialties" ? "active" : ""}`}
             onClick={() => setActiveTab("specialties")}
           >
-            Chuyên khoa
+            Lĩnh vực chuyên sâu
           </button>
           <button
             className={`d-tab ${activeTab === "doctors" ? "active" : ""}`}
@@ -573,6 +626,13 @@ const DepartmentManagement: React.FC = () => {
           onAddServices={handleAddServiceToDepartment}
           onClose={() => setShowServiceModal(false)}
         />
+      )}
+        </>
+      ) : (
+        <div className="header">
+          <h1>Chỉnh sửa nội dung</h1>
+
+        </div>
       )}
     </div>
   );

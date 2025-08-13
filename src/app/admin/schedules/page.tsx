@@ -7,6 +7,7 @@ import ScheduleManagementTab from '@/components/ManageScheduleComponents/Schedul
 import ShiftManagementTab from '@/components/ManageScheduleComponents/ShiftManagementTab';
 import {Location} from '@/interface/LocationInterface'
 import './styles.css'
+import SpecialScheduleTab from '@/components/ManageScheduleComponents/SpecialScheduleTab';
 interface Department {
   _id: string;
   name: string;
@@ -31,6 +32,8 @@ interface SpecialSchedule {
     _id: string;
     doctorId: string;
     date: Date,
+    startDate: Date,
+    endDate: Date;
     type: string,
     note: string,
 }
@@ -75,7 +78,7 @@ const SchedulesManagement = () => {
         if (deptRes.status === 200) {
           setDepartments(deptRes.data);
         }
-        if (locRes.status === 201) {
+        if (locRes.status === 200) {
           setLocations(locRes.data);
         }
       } catch (error) {
@@ -108,25 +111,29 @@ const SchedulesManagement = () => {
       </div>
 
       {activeTab === 'schedule' ? (
-        <ScheduleManagementTab
-          departments={departments}
-          doctors={doctors}
-          locations={locations}
-          shifts={shifts}
-          schedules={schedules}
-          daysOfWeek={daysOfWeek}
-          setDoctors={setDoctors}
-          setShifts={setShifts}
-          setSchedules={setSchedules}
-          
-        />
-      ) : (
-        <ShiftManagementTab
-          locations={locations}
-          shifts={shifts}
-          setShifts={setShifts}
-        />
-      )}
+      <ScheduleManagementTab
+        departments={departments}
+        doctors={doctors}
+        locations={locations}
+        shifts={shifts}
+        schedules={schedules}
+        daysOfWeek={daysOfWeek}
+        setDoctors={setDoctors}
+        setShifts={setShifts}
+        setSchedules={setSchedules}
+      />
+    ) : activeTab === 'shift' ? (
+      <ShiftManagementTab
+        locations={locations}
+      />
+    ) : (
+      <SpecialScheduleTab
+        departments={departments}
+        locations={locations}
+        specialSchedules={specialSchedules}
+        setSpecialSchedules={setSpecialSchedules}
+      />
+    )}
     </div>
   );
 };

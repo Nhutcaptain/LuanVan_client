@@ -259,6 +259,7 @@ button:disabled, input:disabled {
   align-items: center;
   padding: 10px 0;
   border-bottom: 1px solid #eee;
+  gap: 5px;
 }
 
 .patient-detail-row:last-child {
@@ -268,7 +269,6 @@ button:disabled, input:disabled {
 .patient-detail-label {
   font-weight: 600;
   color: #34495e;
-  min-width: 120px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -309,4 +309,28 @@ button:disabled, input:disabled {
 .patient-info-section:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.prescription-list {
+  display: grid;
+  gap: 15px;
+}
+
+.prescription-item {
+  background: #f5f5f5;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #3498db;
+}
+.prescription-row{
+  display: flex;
+  gap: 10px;
+}
+
+.prescription-item p {
+  margin: 5px 0;
+}
+
+.prescription-label{
+  font-weight: bold;
 }

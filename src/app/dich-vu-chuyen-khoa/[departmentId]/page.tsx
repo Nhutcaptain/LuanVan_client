@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/axios';
 import './styles.css';
+import TabContent from '@/components/TabContent/TabContentComponent';
 
 interface Doctor {
   fullName: string;
@@ -23,29 +24,10 @@ interface Department {
   name: string;
   introduction?: string;
   treatmentMethods?: string;
+  contentId: string;
 }
 
-interface TabContentProps {
-  content?: string;
-  loading: boolean;
-}
 
-const TabContent = ({ content, loading }: TabContentProps) => {
-  if (loading) {
-    return <div className="loading-spinner">Đang tải dữ liệu...</div>;
-  }
-
-  if (!content) {
-    return <div className="no-content">Nội dung đang được cập nhật</div>;
-  }
-
-  return (
-    <div 
-      className="tinymce-content" 
-      dangerouslySetInnerHTML={{ __html: content }} 
-    />
-  );
-};
 
 const DoctorList = () => {
   const params = useParams();
@@ -56,6 +38,7 @@ const DoctorList = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [currentDepartment, setCurrentDepartment] = useState<Department | null>(null);
+  const [introduction, setIntroduction] = useState('')
   const [searchTerm, setSearchTerm] = useState('');
   const [specializationFilter, setSpecializationFilter] = useState('');
   const [loading, setLoading] = useState(true);
@@ -85,8 +68,19 @@ const DoctorList = () => {
         setLoading(false);
       }
     };
+    const fetchIntroduction = async() => {
+      try{
+        const res = await api.get(`/department/getIntroduction/${departmentId}`)
+        if(res.status === 200) {
+          setIntroduction(res.data.content);
+        }
+      }catch(error) {
+
+      }
+    }
 
     fetchData();
+    fetchIntroduction();
   }, [departmentId]);
 
   // Get unique specializations
@@ -161,12 +155,12 @@ const DoctorList = () => {
         >
           Giới thiệu khoa
         </button>
-        <button
+        {/* <button
           className={`tab-button ${activeTab === 'treatment' ? 'active' : ''}`}
           onClick={() => setActiveTab('treatment')}
         >
           Bệnh lý & Phương pháp điều trị
-        </button>
+        </button> */}
         <button
           className={`tab-button ${activeTab === 'doctors' ? 'active' : ''}`}
           onClick={() => setActiveTab('doctors')}
@@ -179,17 +173,17 @@ const DoctorList = () => {
       <div className="tab-content">
         {activeTab === 'introduction' && (
           <TabContent 
-            content={currentDepartment?.introduction} 
+            content={introduction} 
             loading={loading} 
           />
         )}
 
-        {activeTab === 'treatment' && (
+        {/* {activeTab === 'treatment' && (
           <TabContent 
             content={currentDepartment?.treatmentMethods} 
             loading={loading} 
           />
-        )}
+        )} */}
 
         {activeTab === 'doctors' && (
           <>
@@ -249,7 +243,7 @@ const DoctorList = () => {
                   <Link 
                     className="doctor-item" 
                     key={index} 
-                    href={`/tim-bac-si/${doctor.nameSlug}`}
+                    href={`/thong-tin-bac-si/${doctor.nameSlug}`}
                   >
                     <div className="doctor-avatar-container">
                       <img

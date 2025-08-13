@@ -18,4 +18,5 @@ export interface Appointment {
   isOvertime: boolean;
   createdAt?: string;
   updatedAt?: string;
+  confirmStatus: string;
 }

@@ -46,6 +46,7 @@ export default function ScheduleCell({ day, shiftType }: ScheduleCellProps) {
 
   const getLocationName = (locationId: string) => {
     const location = locations.find(loc => loc._id === locationId);
+    console.log(locationId, location);
     return location ? location.name : 'Không xác định';
   }
 
@@ -55,7 +56,7 @@ export default function ScheduleCell({ day, shiftType }: ScheduleCellProps) {
         <div key={index} className="shift-info">
           <div className="shift-time">{shift.startTime}-{shift.endTime}</div>
           {shift.locationId && (
-            <div className="shift-location">{getLocationName(shift.locationId)}</div>
+            <div className="shift-location">{(shift.locationId as any).name}</div>
           )}
         </div>
       ))}

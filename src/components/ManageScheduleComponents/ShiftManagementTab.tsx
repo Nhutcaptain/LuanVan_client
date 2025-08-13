@@ -1,6 +1,6 @@
 // components/schedules/ShiftManagementTab.tsx
 'use client'
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {Location} from '@/interface/LocationInterface'
 import Swal from 'sweetalert2';
 import ShiftForm from './ShiftForm';
@@ -17,14 +17,10 @@ interface Shift {
 
 interface ShiftManagementTabProps {
   locations: Location[];
-  shifts: Shift[];
-  setShifts: (shifts: Shift[]) => void;
 }
 
 const ShiftManagementTab = ({
   locations,
-  shifts,
-  setShifts,
 }: ShiftManagementTabProps) => {
   const [shiftForm, setShiftForm] = useState({
     name: '',
@@ -34,6 +30,24 @@ const ShiftManagementTab = ({
     isEditing: false,
     editId: null as string | null,
   });
+  const [shifts, setShifts] = useState<Shift[]>([]);
+
+  useEffect(() => {
+    if (!shiftForm.locationId) return;
+    
+    const fetchShifts = async () => {
+      try {
+        const res = await api.get(`/schedule/getShiftByLocation/${shiftForm.locationId}`);
+        if (res.status === 200) {
+          setShifts(res.data);
+        }
+      } catch (error: any) {
+        
+      }
+    };
+
+    fetchShifts();
+  }, [shiftForm.locationId, setShifts]);
 
   const handleShiftSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

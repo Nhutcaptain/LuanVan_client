@@ -165,7 +165,7 @@ export default function Home() {
                       onClick={() => {
                         // Handle doctor selection logic here
                         setShowModal(false);
-                        router.push(`/tim-bac-si/${doctor.nameSlug}`);
+                        router.push(`/thong-tin-bac-si/${doctor.nameSlug}`);
                       }}
                     >
                       Xem thông tin

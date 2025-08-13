@@ -14,124 +14,140 @@ interface Props {
 
 interface AddressInterface {
     name: string;
-    code: number;
+    id: number;
 }
 
 const AddressSelector = (props: Props) => {
-    const { form, setForm, isEditing } = props;
+    const { form, setForm } = props;
     const [provinces, setProvinces] = useState<AddressInterface[]>([]);
     const [districts, setDistricts] = useState<AddressInterface[]>([]);
     const [wards, setWards] = useState<AddressInterface[]>([]);
 
+    // Lấy danh sách tỉnh
     useEffect(() => {
         const fetchProvinces = async () => {
             try {
-                const response = await axios.get('https://provinces.open-api.vn/api/?depth=1');
-                setProvinces(response.data);
+                const response = await axios.get('https://esgoo.net/api-tinhthanh-new/1/0.htm');
+                setProvinces(response.data.data);
+                console.log(response.data.data);
             } catch (error) {
                 console.error('Lỗi khi lấy danh sách tỉnh:', error);
             }
         };
-
         fetchProvinces();
-    },[])
+    }, []);
 
-    const handleProvinceChange = async (e:any) => {
-        const code = Number(e.target.value);
-        const selectedProvince = provinces.find((province:any) => province.code === code);
-        console.log('Selected Province:', selectedProvince);
+    // Khi chọn tỉnh
+    const handleProvinceChange = async (e: any) => {
+        const id = Number(e.target.value);
+        console.log(id);
+        const selectedProvince = provinces.find((province) => Number(province.id) === id);
+        console.log("Tỉnh: ",selectedProvince?.name)
         if (!selectedProvince) return;
-        
-        const res = await axios.get(`https://provinces.open-api.vn/api/p/${code}?depth=2`);
 
-        setDistricts(res.data.districts);
-        setWards([]); // Reset wards when province changes
-        setForm({...form, province: {
-            name: selectedProvince.name,
-            code: selectedProvince.code
-        }, district: {
-            name: '',
-            code: 0
-        }, ward: {
-            name: '',
-            code: 0
-        }});
-    }
+        try {
+            const res = await axios.get(`https://esgoo.net/api-tinhthanh-new/2/${id}.htm`);
+            setDistricts(res.data.data);
+            console.log(res.data);
+            setWards([]);
+            setForm({
+                ...form,
+                province: { name: selectedProvince.name, id: selectedProvince.id },
+                district: { name: '', id: 0 },
+                ward: { name: '', id: 0 }
+            });
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách huyện:', error);
+        }
+    };
 
-    const handleDistrictChange = async (e:any) => {
-        const code = Number(e.target.value);
-        const selectedDistrict = districts.find((district:any) => district.code === code);
+    // Khi chọn huyện
+    const handleDistrictChange = async (e: any) => {
+        const id = Number(e.target.value);
+        const selectedDistrict = districts.find((district) => Number(district.id) === id);
         if (!selectedDistrict) return;
-        const res = await axios.get(`https://provinces.open-api.vn/api/d/${code}?depth=2`);
-        setWards(res.data.wards);
-        setForm({...form, district: {
-            name: selectedDistrict.name,
-            code: selectedDistrict.code
-        }, ward: {
-            name: '',
-            code: 0
-        }});
-    }
+        setForm({
+                ...form,
+                district: { name: selectedDistrict.name, id: selectedDistrict.id },
+                ward: { name: '', id: 0 }
+            });
 
-    const handleWardChange = (e:any) => {
-        const code = Number(e.target.value);
-        const selectedWard = wards.find((ward:any) => ward.code === code);
+        // try {
+        //     const res = await axios.get(`https://esgoo.net/api-tinhthanh-new/3/${id}.htm`);
+        //     setWards(res.data.data);
+        //     setForm({
+        //         ...form,
+        //         district: { name: selectedDistrict.name, id: selectedDistrict.id },
+        //         ward: { name: '', id: 0 }
+        //     });
+        // } catch (error) {
+        //     console.error('Lỗi khi lấy danh sách xã:', error);
+        // }
+    };
+
+    // Khi chọn xã
+    const handleWardChange = (e: any) => {
+        const id = Number(e.target.value);
+        const selectedWard = wards.find((ward) => ward.id === id);
         if (!selectedWard) return;
-        setForm({...form, ward: {
-            name: selectedWard.name,
-            code: selectedWard.code
-        }});
-    }
+        setForm({
+            ...form,
+            ward: { name: selectedWard.name, id: selectedWard.id }
+        });
+    };
 
-  return (
-    <div className="address-selector-container">
-        <div className="selector-group w-full">
-            <SelectComponent
-                label="Tỉnh/Thành phố"
-                name="province"
-                value={String(form.province?.code) || ''}
-                onChange={handleProvinceChange}
-                options={provinces.map((province:any) => ({
-                    label: province.name,
-                    value: province.code
-                }))}
+    return (
+        <div className="address-selector-container">
+            <div className="selector-group w-full">
+                <SelectComponent
+                    label="Tỉnh/Thành phố"
+                    name="province"
+                    value={String(form.province?.id) || ''}
+                    onChange={handleProvinceChange}
+                    options={provinces.map((province: any) => ({
+                        label: province.name,
+                        value: province.id
+                    }))}
+                    required
+                />
+                <SelectComponent
+                    label="Phường/ Xã"
+                    name="district"
+                    value={String(form.district?.id) || ''}
+                    onChange={handleDistrictChange}
+                    options={districts.map((district: any) => ({
+                        label: district.name,
+                        value: district.id
+                    }))}
+                    required
+                    disabled={!form.province?.id}
+                />
+                {/* <SelectComponent
+                    label="Phường/Xã"
+                    name="ward"
+                    value={String(form.ward?.id) || ''}
+                    onChange={handleWardChange}
+                    options={wards.map((ward: any) => ({
+                        label: ward.name,
+                        value: ward.id
+                    }))}
+                    required
+                    disabled={!form.district?.id}
+                /> */}
+                <div className="house-number">
+                    <InputComponent
+                label="Số nhà/Đường"
+                name="street"
+                value={form.houseNumber || ''}
+                onChange={(e) => setForm({ ...form, houseNumber: e.target.value })}
+                placeholder="Nhập số nhà hoặc tên đường"
                 required
             />
-            <SelectComponent
-                label="Quận/Huyện"
-                name="district"
-                value={String(form.district?.code) || ''}
-                onChange={handleDistrictChange}
-                options={districts.map((district:any) => ({
-                    label: district.name,
-                    value: district.code
-                }))}
-                required
-                disabled={!form.province} // Disable if no province selected
-            />
-            <SelectComponent
-                label="Phường/Xã"
-                name="ward"
-                value={String(form.ward?.code) || ''}
-                onChange={handleWardChange}
-                options={wards.map((ward:any) => ({
-                    label: ward.name,
-                    value: ward.code
-                }))}
-                required
-                disabled={!form.district} // Disable if no district selected
-            />
+                </div>
+            </div>
+            
         </div>
-        <InputComponent
-            label="Số nhà/Đường"
-            name="street"
-            value={form.houseNumber || ''}
-            onChange={(e) => setForm({ ...form, houseNumber: e.target.value })}
-            placeholder="Nhập số nhà hoặc tên đường"
-            required
-        />
-    </div>
-  )
-}
+    );
+};
 
-export default AddressSelector
+export default AddressSelector;

@@ -200,12 +200,12 @@ export default function XemBenhAnPage() {
             </p>
           </div>
 
-          <div className="detail-section">
+          {/* <div className="detail-section">
             <h3>Triệu chứng khách quan</h3>
             <p className="detail-content">
               {selectedRecord.objective || "Không có thông tin"}
             </p>
-          </div>
+          </div> */}
 
           <div className="detail-section">
             <h3>Chẩn đoán</h3>
@@ -238,9 +238,6 @@ export default function XemBenhAnPage() {
                     <p>
                       <strong>Số lượng:</strong> {prescription.quantity}{" "}
                       {prescription.unit}
-                    </p>
-                    <p>
-                      <strong>Tần suất:</strong> {prescription.frequency}
                     </p>
                     <p>
                       <strong>Thời gian:</strong> {prescription.duration} ngày

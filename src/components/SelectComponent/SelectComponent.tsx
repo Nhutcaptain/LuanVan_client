@@ -13,6 +13,7 @@ interface SelectComponentProps {
   name?: string;
   disabled?: boolean;
   required?: boolean;
+  error?: String;
 }
 
 const SelectComponent: React.FC<SelectComponentProps> = ({
@@ -23,6 +24,7 @@ const SelectComponent: React.FC<SelectComponentProps> = ({
   name,
   disabled = false,
   required = false,
+  error,
 }) => {
   return (
     <div className="mb-4">

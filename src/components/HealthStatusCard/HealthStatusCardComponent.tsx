@@ -42,9 +42,9 @@ const HealthStatusCard: React.FC<HealthStatusCardProps> = ({
           let bmiStatus = "";
 
           if (bmiNumber < 18.5) bmiStatus = " (Thiếu cân)";
-          else if (bmiNumber < 23) bmiStatus = " (Bình thường)";
-          else if (bmiNumber < 25) bmiStatus = " (Tiền béo phì)";
-          else if (bmiNumber < 30) bmiStatus = " (Béo phì độ I)";
+          else if (bmiNumber < 25) bmiStatus = " (Bình thường)";
+          else if (bmiNumber < 29) bmiStatus = " (Thừa cân)";
+          else if (bmiNumber >= 30) bmiStatus = " (Béo phì)";
           else bmiStatus = " (Béo phì độ II)";
 
           return {

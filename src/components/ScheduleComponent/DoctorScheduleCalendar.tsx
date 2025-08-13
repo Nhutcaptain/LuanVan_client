@@ -36,6 +36,19 @@ export default function DoctorScheduleCalendar({
     setDoctorShifts(shiftsMap);
   }, [shifts]);
 
+  const isDateInSpecialSchedule = (date: Date, schedule: SpecialSchedule) => {
+    const checkDate = new Date(date);
+    const startDate = new Date(schedule.startDate);
+    const endDate = new Date(schedule.endDate);
+    
+    // Reset time components to compare only dates
+    checkDate.setHours(0, 0, 0, 0);
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(0, 0, 0, 0);
+    
+    return checkDate >= startDate && checkDate <= endDate;
+  };
+
   // Get the current week's schedule
   const getWeeklySchedule = () => {
     const dayOfWeek = currentDate.getDay(); // 0 (Sunday) to 6 (Saturday)
@@ -54,7 +67,7 @@ export default function DoctorScheduleCalendar({
       const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay(); // Convert to 0-6 (Monday-Sunday)
 
       const specialSchedule = Array.isArray(specialSchedules)
-        ? specialSchedules.find(ss => new Date(ss.date).toDateString() === date.toDateString())
+        ? specialSchedules.find(ss => isDateInSpecialSchedule(date, ss))
         : null;
 
       if (specialSchedule) {
@@ -97,8 +110,8 @@ export default function DoctorScheduleCalendar({
     const isToday = currentDate.toDateString() === today.toDateString(); 
     const dayOfWeek = currentDate.getDay() === 0 ? 6 : currentDate.getDay() - 1; // Convert to 0-6 (Monday-Sunday)
 
-    const specialSchedule = specialSchedules.find(ss => 
-      new Date(ss.date).toDateString() === currentDate.toDateString()
+     const specialSchedule = specialSchedules.find(ss => 
+      isDateInSpecialSchedule(currentDate, ss)
     );
 
     if (specialSchedule) {
@@ -138,7 +151,6 @@ export default function DoctorScheduleCalendar({
   return (
     <div className="schedule-container">
       <div className="schedule-header">
-        <h2>Lịch làm việc của bác sĩ {weeklySchedule?.doctorName}</h2>
         <div className="view-controls">
           <button 
             onClick={() => setViewMode('weekly')} 
@@ -174,3 +186,4 @@ export default function DoctorScheduleCalendar({
     </div>
   );
 }
+

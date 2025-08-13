@@ -199,10 +199,12 @@ const HomePage = () => {
                       </p>
                     </ButtonCardComponent>
                   </Link>
+                  <Link href={"/tim-bac-si2"}>
                   <ButtonCardComponent>
                     <FaUserDoctor size={80} color="#0065F8"></FaUserDoctor>
                     <p className="text-[#0065F8] font-bold">Tìm bác sĩ</p>
                   </ButtonCardComponent>
+                  </Link>
                   <Link href={"/quan-ly/dat-lich-kham"}>
                     <ButtonCardComponent>
                       <FaCalendarDays

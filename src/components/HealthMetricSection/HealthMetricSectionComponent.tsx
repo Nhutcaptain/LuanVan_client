@@ -14,7 +14,7 @@ interface MetricData {
 
 interface Props {
   title: string;
-  metrics: KidneyFunction | LiverFunction | Cholesterol | Glucose;
+  metrics: KidneyFunction | LiverFunction | Cholesterol | Glucose | undefined;
   onUpdate?: (updatedMetrics: any) => void;
 }
 
@@ -27,11 +27,11 @@ const HealthMetricSection = (props: Props) => {
   const handleEditClick = () => {
     const initialValues: Record<string, string> = {};
     Object.entries(metricData).forEach(([key, metric]) => {
-      if (metric?.value) {
-        initialValues[key] = typeof metric.value === 'string' 
+      initialValues[key] = metric?.value !== undefined && metric?.value !== null
+        ? typeof metric.value === 'string' 
           ? metric.value 
-          : metric.value.toString();
-      }
+          : metric.value.toString()
+        : '';
     });
     setEditValues(initialValues);
     setEditing(true);
@@ -42,7 +42,7 @@ const HealthMetricSection = (props: Props) => {
       const updatedMetrics: any = {};
       Object.entries(editValues).forEach(([key, value]) => {
         updatedMetrics[key] = {
-          value: isNaN(Number(value)) ? value : Number(value),
+          value: value.trim() === '' ? undefined : (isNaN(Number(value)) ? value : Number(value)),
           testedAt: new Date().toISOString()
         };
       });
@@ -60,6 +60,13 @@ const HealthMetricSection = (props: Props) => {
       ...prev,
       [key]: value
     }));
+  };
+
+  const renderMetricValue = (value: number | string | undefined) => {
+    if (value === undefined || value === null) {
+      return <span className="text-gray-500 text-sm italic">Chưa cập nhật</span>;
+    }
+    return typeof value === 'number' ? value.toLocaleString() : value;
   };
 
   return (
@@ -87,13 +94,14 @@ const HealthMetricSection = (props: Props) => {
       </div>
       <div className="health-metrics-grid">
         {Object.entries(metricData).map(([key, metric]) => {
-          if (!metric?.value) return null;
+          const numericValue = metric?.value !== undefined && metric?.value !== null
+            ? typeof metric.value === 'string' 
+              ? parseFloat(metric.value.replace(/[^0-9.]/g,''))
+              : metric.value
+            : undefined;
           
-          const numericValue = typeof metric.value === 'string' 
-            ? parseFloat(metric.value.replace(/[^0-9.]/g,''))
-            : metric.value;
-          const status = getHealthRangeStatus(key, numericValue);
-          const recommendation = getRecommendation(key, numericValue);
+          const status = numericValue !== undefined ? getHealthRangeStatus(key, numericValue) : 'normal';
+          const recommendation = numericValue !== undefined ? getRecommendation(key, numericValue) : undefined;
           const tooltipId = `tooltip-${key}`;
           const tooltipContent = renderToStaticMarkup(
             <>
@@ -122,6 +130,7 @@ const HealthMetricSection = (props: Props) => {
                       className="health-metric-edit-input"
                       value={editValues[key] || ''}
                       onChange={(e) => handleValueChange(key, e.target.value)}
+                      placeholder="Nhập giá trị..."
                     />
                     <span className="health-metric-unit">{getUnit(key)}</span>
                   </div>
@@ -135,7 +144,7 @@ const HealthMetricSection = (props: Props) => {
                     data-tooltip-class-name='custom-tooltip'
                   >
                     <span className="health-metric-name">{formatMetricName(key)}</span>
-                    {metric.testedAt && (
+                    {metric?.testedAt && (
                       <span className="health-metric-date">
                         {format(new Date(metric.testedAt), 'dd/MM/yyyy')}
                       </span>
@@ -147,17 +156,17 @@ const HealthMetricSection = (props: Props) => {
                     data-tooltip-html={tooltipContent}
                     data-tooltip-class-name='custom-tooltip'
                   >
-                    {typeof metric.value === 'number' 
-                      ? metric.value.toLocaleString() 
-                      : metric.value}
-                    <span className="health-metric-unit">{getUnit(key)}</span>
+                    {renderMetricValue(metric?.value)}
+                    {metric?.value !== undefined && metric?.value !== null && (
+                      <span className="health-metric-unit">{getUnit(key)}</span>
+                    )}
                   </div>
                   <Tooltip
                     id={tooltipId}
                     place="top"
                     style={{fontSize: 18}}
                   />
-                  {status !== 'normal' && (
+                  {status !== 'normal' && numericValue !== undefined && (
                     <div className={`status-indicator ${status}`}></div>
                   )}
                 </>

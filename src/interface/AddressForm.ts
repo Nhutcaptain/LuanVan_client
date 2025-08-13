@@ -1,15 +1,15 @@
 export interface AddressForm {
     province: {
         name: string;
-        code: number;
+        id: number;
     };
     district: {
         name: string;
-        code: number;
+        id: number;
     };
     ward: {
         name: string;
-        code: number;
+        id: number;
     };
     houseNumber: string;
 }

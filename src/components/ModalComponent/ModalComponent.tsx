@@ -6,11 +6,14 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  isOpen: boolean;
 }
 
-const Modal = ({ onClose, title, children }: ModalProps) => {
+const Modal = ({ onClose, title, children, isOpen }: ModalProps) => {
   return (
-    <div className="modal-overlay">
+    <div>
+      {isOpen && (
+      <div className="modal-overlay">
       <div className="modal-container">
         <div className="modal-header">
           <h3>{title}</h3>
@@ -24,6 +27,8 @@ const Modal = ({ onClose, title, children }: ModalProps) => {
           {children}
         </div>
       </div>
+    </div>
+    )} 
     </div>
   );
 };

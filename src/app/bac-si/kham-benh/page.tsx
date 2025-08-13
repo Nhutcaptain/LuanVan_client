@@ -142,7 +142,7 @@ const ExaminationPage = () => {
     setIsSubmitting(true);
     const payload = {
       ...data,
-      isOvertime,
+      isOvertimeAppointment: isOvertime,
       status: "completed", // đảm bảo luôn là giá trị này
     };
     if (tempExamination) {
@@ -172,7 +172,7 @@ const ExaminationPage = () => {
         const response = await api.put(
           `/appointment/${selectedAppointment}/status`,
           {
-            examination: res.data._id,
+            examinationId: res.data._id,
             status: "completed",
           }
         );

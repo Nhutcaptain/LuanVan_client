@@ -34,6 +34,9 @@ interface PatientInfo {
   gender: string
   dateOfBirth: string
   address: Address
+  phone: string;
+  patientCode: string;
+  email: string;
 }
 
 interface ExaminationDetail {
@@ -238,6 +241,18 @@ const ExaminationDetail = () => {
             </span>
             <span className="patient-detail-value">{formatAddress(data.patientId.address)}</span>
           </div>
+          <div className="patient-detail-row">
+            <span className="patient-detail-label">
+              <FaMapMarkerAlt /> Số điện thoại:
+            </span>
+            <span className="patient-detail-value">{data.patientId.phone}</span>
+          </div>
+          <div className="patient-detail-row">
+            <span className="patient-detail-label">
+              <FaMapMarkerAlt /> Email:
+            </span>
+            <span className="patient-detail-value">{data.patientId.email}</span>
+          </div>
         </div>
       </div>
 
@@ -288,10 +303,6 @@ const ExaminationDetail = () => {
                   <div className="prescription-row">
                     <span className="prescription-label">Số lượng:</span>
                     <span className="prescription-value">{prescription.quantity} {prescription.unit}</span>
-                  </div>
-                  <div className="prescription-row">
-                    <span className="prescription-label">Tần suất:</span>
-                    <span className="prescription-value">{prescription.frequency}</span>
                   </div>
                   <div className="prescription-row">
                     <span className="prescription-label">Thời gian:</span>

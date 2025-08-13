@@ -78,7 +78,7 @@ const ScheduleList = ({
             return (
               <div key={schedule._id} className={`schedule-card ${!schedule.isActive ? 'inactive' : ''}`} 
               onClick={() => {
-                onSelectDoctor(schedule.doctorId, schedule.schedule)
+                onEdit(schedule)
               }}>
                 <div className="card-header">
                   <div>

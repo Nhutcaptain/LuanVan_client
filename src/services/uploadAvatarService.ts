@@ -23,7 +23,7 @@ export const uploadImageToCloudinary = async (file: File): Promise<{ url: string
 export const deleteImageFromCloudinary = async (publicId: string) => {
   const token = localStorage.getItem('token');
   console.log(publicId);
-  if (!token) throw new Error('Chưa đăng nhập');
+  // if (!token) throw new Error('Chưa đăng nhập');
 
   const res = await api.delete('/images/delete', { data: {publicId} })
 

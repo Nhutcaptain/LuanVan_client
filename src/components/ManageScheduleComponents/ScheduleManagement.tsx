@@ -32,6 +32,8 @@ interface SpecialSchedule {
   _id: string;
   doctorId: string;
   date: Date;
+  startDate: Date;
+  endDate: Date;
   type: string;
   note: string;
 }
@@ -226,7 +228,7 @@ const ScheduleManagementTab = ({
         if (existingSchedule && existingSchedule.length > 0) {
           setSelectedShifts(existingSchedule);
         }
-        const firstLocation = existingSchedule[0]?.shiftIds[0].locationId;
+        const firstLocation = (existingSchedule[0]?.shiftIds[0].locationId as any)._id;
         if (firstLocation) {
           setSelectedLocationId(firstLocation);
         }
@@ -359,45 +361,66 @@ const ScheduleManagementTab = ({
   };
 
   // Special schedule handlers
-  const handleAddSpecialSchedule = async (doctorId: string) => {
-    const { value: formValues } = await Swal.fire({
-      title: 'Thêm ngày đặc biệt',
-      html: `
-        <select id="swal-type" class="swal2-select">
-          <option value="Nghỉ phép">Nghỉ phép</option>
-          <option value="Công tác">Công tác</option>
-          <option value="Họp">Họp</option>
-          <option value="Khác">Khác</option>
-        </select>
-        <input id="swal-date" type="date" class="swal2-input" placeholder="Ngày">
-        <input id="swal-note" class="swal2-input" placeholder="Ghi chú">
-      `,
-      focusConfirm: false,
-      preConfirm: () => {
-        return {
-          type: (document.getElementById('swal-type') as HTMLSelectElement).value,
-          date: (document.getElementById('swal-date') as HTMLInputElement).value,
-          note: (document.getElementById('swal-note') as HTMLInputElement).value
-        };
+ const handleAddSpecialSchedule = async (doctorId: string) => {
+  const { value: formValues } = await Swal.fire({
+    title: 'Thêm ngày đặc biệt',
+    html: `
+      <select id="swal-type" class="swal2-select">
+        <option value="Nghỉ phép">Nghỉ phép</option>
+        <option value="Công tác">Công tác</option>
+        <option value="Họp">Họp</option>
+        <option value="Khác">Khác</option>
+      </select>
+      <label for="swal-start-date">Từ ngày:</label>
+      <input id="swal-start-date" type="date" class="swal2-input" placeholder="Từ ngày">
+      <label for="swal-end-date">Đến ngày:</label>
+      <input id="swal-end-date" type="date" class="swal2-input" placeholder="Đến ngày">
+      <input id="swal-note" class="swal2-input" placeholder="Ghi chú">
+    `,
+    focusConfirm: false,
+    preConfirm: () => {
+      const startDate = (document.getElementById('swal-start-date') as HTMLInputElement).value;
+      const endDate = (document.getElementById('swal-end-date') as HTMLInputElement).value;
+      
+      if (!startDate || !endDate) {
+        Swal.showValidationMessage('Vui lòng nhập đầy đủ ngày bắt đầu và kết thúc');
+        return false;
       }
-    });
+      
+      if (new Date(startDate) > new Date(endDate)) {
+        Swal.showValidationMessage('Ngày kết thúc phải sau ngày bắt đầu');
+        return false;
+      }
 
-    if (formValues) {
-      try {
-        const newSchedule = await api.post('/schedule/createSpecialSchedule', {
-          doctorId,
-          date: new Date(formValues.date),
-          type: formValues.type,
-          note: formValues.note,
-          isActive: true
-        });
-        setSpecialSchedules([...specialSchedules, newSchedule.data]);
-        Swal.fire('Thành công', 'Đã thêm ngày đặc biệt', 'success');
-      } catch (error) {
-        Swal.fire('Lỗi', 'Thêm ngày đặc biệt thất bại', 'error');
-      }
+      return {
+        type: (document.getElementById('swal-type') as HTMLSelectElement).value,
+        startDate,
+        endDate,
+        note: (document.getElementById('swal-note') as HTMLInputElement).value
+      };
     }
-  };
+  });
+
+  if (formValues) {
+    try {
+      const newSchedule = await api.post('/schedule/createSpecialSchedule', {
+        doctorId,
+        startDate: new Date(formValues.startDate),
+        endDate: new Date(formValues.endDate),
+        type: formValues.type,
+        note: formValues.note,
+        isActive: true
+      });
+      if(newSchedule.status === 200) {
+        setSpecialSchedules([...specialSchedules, newSchedule.data]);
+      }
+
+      Swal.fire('Thành công', 'Đã thêm ngày đặc biệt', 'success');
+    } catch (error: any) {
+      Swal.fire('Lỗi', `${error.response.data.message}`, 'error');
+    }
+  }
+};
 
   const handleDeleteSpecialSchedule = async (id: string) => {
     const result = await Swal.fire({
@@ -411,7 +434,9 @@ const ScheduleManagementTab = ({
 
     if (result.isConfirmed) {
       try {
-        await api.delete(`/schedule/special/${id}`);
+        await api.delete(`/schedule/deleteSpecial`,{
+          data: {specialScheduleId: id}
+        });
         setSpecialSchedules(specialSchedules.filter(s => s._id !== id));
         Swal.fire('Thành công', 'Đã xóa ngày đặc biệt', 'success');
       } catch (error) {
@@ -428,7 +453,7 @@ const ScheduleManagementTab = ({
     setSelectedDepartmentId(doctor.departmentId);
     setSelectedDoctors([schedule.doctorId]);
     setSelectedDoctorId(schedule.doctorId);
-    setSelectedLocationId(schedule.schedule[0]?.shiftIds[0]?.locationId || '');
+    setSelectedLocationId((schedule.schedule[0]?.shiftIds[0]?.locationId as any)._id || '');
     setSelectedShifts(schedule.schedule);
     setIsActive(schedule.isActive);
     setIsEditing(true);
@@ -481,7 +506,7 @@ const ScheduleManagementTab = ({
   const handleSelectDoctor = (id: string, schedule: ScheduleDay[]) => {
     const doctorId = id;
     setSelectedDoctorId(doctorId);
-    setSelectedLocationId(schedule[0].shiftIds[0].locationId);
+    setSelectedLocationId((schedule[0].shiftIds[0].locationId as any)._id);
     setSelectedShifts(schedule);
   };
 

@@ -275,7 +275,7 @@ const Chatbot = () => {
                         onClick={() => {
                           // Handle doctor selection logic here
                           setShowDoctorModal(false);
-                          router.push(`/tim-bac-si/${doctor.nameSlug}`)
+                          router.push(`/thong-tin-bac-si/${doctor.nameSlug}`)
                         }}
                       >
                         Xem thông tin

@@ -1,139 +1,215 @@
-/* Reset và font chung */
-/* * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* Reset và base styles */
+.vaccination-booking-container {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-} */
-
-body {
-  background-color: #f8f9fa;
-  color: #2c3e50;
-  line-height: 1.6;
-}
-
-/* Container chính */
-.booking-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  color: #333;
 }
 
-/* Header */
 .booking-header {
   text-align: center;
   margin-bottom: 30px;
-  padding: 25px 0;
-  background-color: #1a73e8;
-  color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .booking-header h1 {
+  color: #2c3e50;
   font-size: 28px;
-  font-weight: 600;
+  margin-bottom: 10px;
 }
 
-/* Phần tìm kiếm */
+.booking-subtitle {
+  color: #7f8c8d;
+  font-size: 16px;
+}
+
+.section-title {
+  color: #2c3e50;
+  font-size: 20px;
+  margin: 25px 0 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* Thông tin bệnh nhân */
+.patient-info-section {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.patient-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.info-item {
+  margin-bottom: 10px;
+}
+
+.info-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #555;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.info-value {
+  color: #2c3e50;
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.address-details {
+  color: #2c3e50;
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+/* Tìm kiếm dịch vụ */
 .booking-search {
-  margin-bottom: 25px;
+  margin-bottom: 20px;
 }
 
 .booking-search-input {
   width: 100%;
   padding: 12px 15px;
-  border: 1px solid #dfe1e5;
-  border-radius: 24px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
   font-size: 16px;
-  transition: all 0.3s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.3s;
 }
 
 .booking-search-input:focus {
-  border-color: #1a73e8;
+  border-color: #3498db;
   outline: none;
-  box-shadow: 0 1px 6px rgba(32, 33, 36, 0.2);
 }
 
-/* Grid dịch vụ */
+/* Danh sách dịch vụ */
 .services-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
   margin-bottom: 30px;
 }
 
 .service-item {
-  background-color: white;
+  background: #fff;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
-  padding: 20px;
+  padding: 15px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 2px solid transparent;
 }
 
 .service-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #3498db;
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.1);
 }
 
 .service-item.active {
-  border-color: #1a73e8;
-  background-color: #e8f0fe;
+  border-color: #3498db;
+  background-color: #f0f7fd;
 }
 
 .service-item h3 {
-  color: #1a73e8;
-  margin-bottom: 12px;
+  color: #2c3e50;
+  margin-bottom: 10px;
   font-size: 18px;
 }
 
-.service-price {
-  font-weight: bold;
-  color: #34a853;
-  margin-bottom: 8px;
-  font-size: 16px;
+.service-description {
+  color: #7f8c8d;
+  font-size: 14px;
+  margin-bottom: 10px;
+  line-height: 1.4;
 }
 
-.service-time {
-  color: #5f6368;
+.service-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.service-price {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+.service-duration {
+  color: #3498db;
   font-size: 14px;
 }
 
-/* Thông tin dịch vụ đã chọn */
-.service-details {
-  background-color: white;
-  border-radius: 8px;
-  padding: 25px;
+.no-results {
+  text-align: center;
+  padding: 20px;
+  color: #7f8c8d;
+  grid-column: 1 / -1;
+}
+
+/* Dịch vụ đã chọn */
+.selected-service-section {
   margin-bottom: 30px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid #1a73e8;
 }
 
-.service-details h3 {
-  color: #1a73e8;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e0e0e0;
+.selected-service-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-.service-details p {
+.selected-service-card h3 {
+  color: #2c3e50;
   margin-bottom: 10px;
-  line-height: 1.7;
 }
 
-.service-details strong {
-  color: #202124;
+.service-details {
+  margin-top: 15px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #eee;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #555;
+}
+
+.detail-value {
+  color: #2c3e50;
 }
 
 /* Form đặt lịch */
 .booking-form {
-  background-color: white;
+  background: #fff;
   border-radius: 8px;
-  padding: 30px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.form-section {
+  margin-bottom: 25px;
 }
 
 .form-field {
@@ -143,98 +219,230 @@ body {
 .form-field label {
   display: block;
   margin-bottom: 8px;
-  font-weight: 500;
-  color: #3c4043;
+  font-weight: 600;
+  color: #555;
 }
 
 .form-field input[type="date"] {
   width: 100%;
   padding: 12px 15px;
-  border: 1px solid #dadce0;
-  border-radius: 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
   font-size: 16px;
-  color: #3c4043;
 }
 
-.form-field input[type="date"]:focus {
-  border-color: #1a73e8;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+.time-slots-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.time-slot {
+  padding: 10px;
+  text-align: center;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.time-slot:hover {
+  background: #e9f5ff;
+  border-color: #3498db;
+}
+
+.time-slot.selected {
+  background: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.time-slot.disabled {
+  background: #f5f5f5;
+  color: #bbb;
+  cursor: not-allowed;
+  border-color: #eee;
+}
+
+.slot-status {
+  display: block;
+  font-size: 11px;
+  margin-top: 3px;
+}
+
+.no-slots {
+  text-align: center;
+  padding: 15px;
+  color: #7f8c8d;
+}
+
+/* Điều khoản */
+.terms-section {
+  margin: 25px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 4px;
 }
 
 .form-checkbox {
   display: flex;
-  align-items: center;
-  margin-bottom: 25px;
+  align-items: flex-start;
 }
 
 .form-checkbox input {
   margin-right: 10px;
-  width: 18px;
-  height: 18px;
-  accent-color: #1a73e8;
+  margin-top: 3px;
 }
 
 .form-checkbox label {
-  color: #3c4043;
-  font-size: 15px;
+  line-height: 1.5;
 }
 
-.booking-submit {
-  background-color: #1a73e8;
+.form-checkbox a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+.form-checkbox a:hover {
+  text-decoration: underline;
+}
+
+/* Nút submit */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.submit-button, .cancel-button {
+  padding: 12px 25px;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.submit-button {
+  background-color: #3498db;
   color: white;
   border: none;
-  padding: 14px 20px;
-  font-size: 16px;
-  font-weight: 500;
-  border-radius: 6px;
-  cursor: pointer;
-  width: 100%;
-  transition: background-color 0.3s, box-shadow 0.3s;
 }
 
-.booking-submit:hover {
-  background-color: #1765cc;
-  box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
+.submit-button:hover {
+  background-color: #2980b9;
 }
 
-.booking-submit:disabled {
-  background-color: #9e9e9e;
+.submit-button:disabled {
+  background-color: #bdc3c7;
   cursor: not-allowed;
-  box-shadow: none;
+}
+
+.cancel-button {
+  background-color: #f8f9fa;
+  color: #555;
+  border: 1px solid #ddd;
+}
+
+.cancel-button:hover {
+  background-color: #e9ecef;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Thông báo thành công */
 .booking-success {
   text-align: center;
-  padding: 50px 30px;
-  background-color: white;
+  padding: 40px 20px;
+  background: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.success-icon {
+  font-size: 60px;
+  color: #2ecc71;
+  margin-bottom: 20px;
 }
 
 .booking-success h2 {
-  color: #1a73e8;
+  color: #2c3e50;
   margin-bottom: 15px;
-  font-size: 24px;
 }
 
 .booking-success p {
-  color: #5f6368;
+  color: #7f8c8d;
   font-size: 16px;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
+  .patient-info-grid {
+    grid-template-columns: 1fr;
+  }
+  
   .services-container {
     grid-template-columns: 1fr;
   }
   
-  .booking-header h1 {
-    font-size: 24px;
+  .time-slots-container {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   }
   
-  .booking-form {
-    padding: 20px;
+  .form-actions {
+    flex-direction: column;
   }
+  
+  .submit-button, .cancel-button {
+    width: 100%;
+  }
+}
+/* Thêm vào styles.css */
+.lunch-notice {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+  color: #856404;
+  border-radius: 4px;
+}
+
+.lunch-notice p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Cập nhật time-slots-container */
+.time-slots-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.time-slot {
+  padding: 10px;
+  text-align: center;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
 }

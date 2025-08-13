@@ -1,216 +1,170 @@
 'use client'
 import { useState, useEffect } from 'react';
-import "./styles.css";
 import api from '@/lib/axios';
 import { ExaminationFormData } from '@/interface/ExaminationInterface';
 import { useRouter } from 'next/navigation';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend
+} from 'recharts';
+import './styles.css';
 
-const ExaminationList = () => {
+const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#00c49f'];
+
+export default function ExaminationList() {
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().substring(0, 7));
+  const [statsData, setStatsData] = useState<any[]>([]);
+  const [diseaseStats, setDiseaseStats] = useState<any[]>([]);
+  const [showDiseaseChart, setShowDiseaseChart] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [examinations, setExaminations] = useState<ExaminationFormData[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().substring(0, 7));
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [viewMode, setViewMode] = useState<'day' | 'month'>('day');
-  const [stats, setStats] = useState<{total: number, examining: number, waiting_result: number, completed: number} | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showChart, setShowChart] = useState<boolean>(false);
-  const [dailyData, setDailyData] = useState<{date: string, count: number}[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const router = useRouter();
 
-  useEffect(() => {
-    const doctorId = localStorage.getItem('doctorId');
-    if (!doctorId) {
-      router.push('/login');
-      return;
-    }
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const doctorId = localStorage.getItem('doctorId');
+      if (!doctorId) return router.push('/login');
 
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        if (viewMode === 'day') {
-          const res = await api.get(`/examination/getExaminationByDate/${doctorId}`, {
-            params: { date: selectedDate }
-          });
-          setExaminations(res.data);
-        } else {
-          const res = await api.get(`/examination/getExaminationByMonth/${doctorId}`, {
-            params: { month: selectedMonth }
-          });
-          setExaminations(res.data.examinations);
-          setStats(res.data.stats);
-          
-          // Chuẩn bị dữ liệu biểu đồ theo ngày
-          const dailyCounts: Record<string, number> = {};
-          res.data.examinations.forEach((exam: ExaminationFormData) => {
-            const date = new Date(exam.date).toISOString().split('T')[0];
-            dailyCounts[date] = (dailyCounts[date] || 0) + 1;
-          });
-          
-          const formattedData = Object.keys(dailyCounts).map(date => ({
-            date: new Date(date).toLocaleDateString('vi-VN'),
-            count: dailyCounts[date]
-          }));
-          
-          setDailyData(formattedData);
-        }
-        setError(null);
-      } catch (err) {
-        setError('Không thể tải dữ liệu khám bệnh');
-        console.error(err);
-      } finally {
-        setLoading(false);
+      const params: any = { type: viewMode };
+      if (viewMode === 'day' || viewMode === 'week') params.date = selectedDate;
+      if (viewMode === 'month') params.month = selectedMonth;
+
+      // Lấy thống kê tổng số ca
+      const resStats = await api.get(`/examination/stats/${doctorId}`, { params });
+      setStatsData(resStats.data);
+
+      // Lấy thống kê theo bệnh nếu bật chế độ
+      if (showDiseaseChart) {
+        const resDisease = await api.get(`/examination/stats/${doctorId}`, {
+          params: { ...params, byDisease: true }
+        });
+        setDiseaseStats(resDisease.data);
       }
-    };
 
+      // Lấy danh sách bệnh án
+      const resList = await api.get(`/examination/list/${doctorId}`, { params });
+      setExaminations(resList.data);
+
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
-  }, [selectedDate, selectedMonth, viewMode, router]);
+  }, [viewMode, selectedDate, selectedMonth, showDiseaseChart]);
 
-  const filteredExaminations = examinations.filter(exam => 
-    (exam.patientId as any).fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredExaminations = examinations.filter(exam =>
+    (exam.patientId as any)?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     exam.provisional?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedDate(e.target.value);
-  };
-
-  const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedMonth(e.target.value);
-  };
-
-  const toggleViewMode = () => {
-    setViewMode(prev => prev === 'day' ? 'month' : 'day');
-    setShowChart(false); // Ẩn biểu đồ khi chuyển chế độ xem
-  };
-
-  const toggleChart = () => {
-    setShowChart(prev => !prev);
-  };
-
   return (
     <div className="examination-container">
-      <h1>Danh Sách Khám Bệnh</h1>
-      
+      <h1>Thống kê & Danh Sách Khám Bệnh</h1>
+
+      {/* Bộ lọc */}
       <div className="controls">
-        <div className="search-box">
-          <input
-            type="text"
-            placeholder="Tìm kiếm theo tên bệnh nhân hoặc chẩn đoán..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+        <select value={viewMode} onChange={(e) => setViewMode(e.target.value as any)}>
+          <option value="day">Theo ngày</option>
+          <option value="week">Theo tuần</option>
+          <option value="month">Theo tháng</option>
+        </select>
 
-        <button onClick={toggleViewMode} className="toggle-button">
-          Chuyển sang {viewMode === 'day' ? 'Xem Theo Tháng' : 'Xem Theo Ngày'}
-        </button>
-
-        {viewMode === 'day' ? (
-          <div className="date-picker">
-            <label htmlFor="date">Chọn Ngày:</label>
-            <input
-              type="date"
-              id="date"
-              value={selectedDate}
-              onChange={handleDateChange}
-            />
-          </div>
+        {viewMode === 'day' || viewMode === 'week' ? (
+          <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
         ) : (
-          <div className="month-picker">
-            <label htmlFor="month">Chọn Tháng:</label>
-            <input
-              type="month"
-              id="month"
-              value={selectedMonth}
-              onChange={handleMonthChange}
-            />
-            <button onClick={toggleChart} className="chart-button">
-              {showChart ? 'Ẩn Biểu Đồ' : 'Xem Biểu Đồ'}
-            </button>
-          </div>
+          <input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} />
         )}
+
+        <input
+          type="text"
+          placeholder="Tìm kiếm tên bệnh nhân hoặc chẩn đoán..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+
+        <button onClick={() => setShowDiseaseChart(!showDiseaseChart)}>
+          {showDiseaseChart ? 'Ẩn thống kê bệnh' : 'Xem thống kê theo bệnh'}
+        </button>
       </div>
 
-      {loading && <div className="loading">Đang tải...</div>}
-      {error && <div className="error">{error}</div>}
+      {/* Loading */}
+      {loading && <p>Đang tải...</p>}
 
-      {viewMode === 'month' && stats && (
-        <div className="stats-container">
-          <h2>Thống Kê Tháng</h2>
-          <div className="stats-grid">
-            <div className="stat-card">
-              <h3>Tổng Số Ca</h3>
-              <p>{stats.total}</p>
-            </div>
-            <div className="stat-card">
-              <h3>Đang Khám</h3>
-              <p>{stats.examining}</p>
-            </div>
-            <div className="stat-card">
-              <h3>Chờ Kết Quả</h3>
-              <p>{stats.waiting_result}</p>
-            </div>
-            <div className="stat-card">
-              <h3>Đã Hoàn Thành</h3>
-              <p>{stats.completed}</p>
-            </div>
-          </div>
-          
-          {showChart && dailyData.length > 0 && (
-            <div className="chart-container">
-              <h3>Số lượng bệnh nhân theo ngày</h3>
-              <div style={{ width: '100%', height: 400 }}>
-                <ResponsiveContainer>
-                  <BarChart
-                    data={dailyData}
-                    margin={{
-                      top: 20,
-                      right: 30,
-                      left: 20,
-                      bottom: 60,
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" angle={-45} textAnchor="end" height={70} />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#8884d8" name="Số bệnh nhân" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
+      {/* Biểu đồ theo thời gian */}
+      {!loading && statsData.length > 0 && (
+        <div className="chart-container">
+          <h2>Số lượng bệnh nhân ({viewMode})</h2>
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={statsData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="_id" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="count" fill="#8884d8" name="Số bệnh nhân" />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       )}
 
-      <div className="examination-list">
-        <h2>{viewMode === 'day' ? `Danh sách khám ngày ${selectedDate}` : `Danh sách khám tháng ${selectedMonth}`}</h2>
-        
-        {filteredExaminations.length === 0 && !loading && (
-          <div className="no-results">Không tìm thấy dữ liệu khám bệnh</div>
-        )}
+      {/* Biểu đồ theo bệnh */}
+      {showDiseaseChart && diseaseStats.length > 0 && (
+        <div className="chart-container">
+          <h2>Top bệnh phổ biến</h2>
+          <ResponsiveContainer width="100%" height={400}>
+            <PieChart>
+              <Pie
+                data={diseaseStats}
+                dataKey="count"
+                nameKey="_id"
+                cx="50%"
+                cy="50%"
+                outerRadius={150}
+                label
+              >
+                {diseaseStats.map((_, index) => (
+                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
+      {/* Danh sách bệnh án */}
+      <div className="examination-list">
+        <h2>Danh sách bệnh án</h2>
+        {filteredExaminations.length === 0 && !loading && (
+          <div className="no-results">Không tìm thấy dữ liệu</div>
+        )}
         {filteredExaminations.map((exam, index) => (
           <div key={exam._id} className="examination-card">
             <div className="card-header">
               <span className="index">#{index + 1}</span>
               <span className="status" data-status={exam.status}>
-                {exam.status === 'completed' ? 'Đã hoàn thành' : 
-                 exam.status === 'examining' ? 'Đang khám' : 
-                 exam.status === 'waiting_result' ? 'Chờ kết quả' : exam.status}
+                {exam.status === 'completed' ? 'Đã hoàn thành' :
+                  exam.status === 'examining' ? 'Đang khám' :
+                    exam.status === 'waiting_result' ? 'Chờ kết quả' : exam.status}
               </span>
             </div>
             <div className="card-body">
               <div className="patient-info">
-                <h3>{(exam.patientId as any).fullName || 'Bệnh nhân không tên'}</h3>
+                <h3>{(exam.patientId as any)?.fullName || 'Bệnh nhân không tên'}</h3>
                 <p>Mã bệnh nhân: {exam.patientCode || 'N/A'}</p>
               </div>
               <div className="diagnosis">
                 <h4>Chẩn đoán tạm thời:</h4>
-                <p>{exam.provisional || 'Chưa có chẩn đoán'}</p>
+                <p>{exam.assessment || 'Chưa có chẩn đoán'}</p>
               </div>
               <div className="time-info">
                 <p>Ngày: {new Date(exam.date).toLocaleString('vi-VN')}</p>
@@ -218,7 +172,7 @@ const ExaminationList = () => {
               </div>
             </div>
             <div className="card-footer">
-              <button 
+              <button
                 className="details-button"
                 onClick={() => router.push(`lich-su-kham-chua-benh/chi-tiet?id=${exam._id}`)}
               >
@@ -230,6 +184,4 @@ const ExaminationList = () => {
       </div>
     </div>
   );
-};
-
-export default ExaminationList;
+}

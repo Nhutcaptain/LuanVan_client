@@ -1,14 +1,17 @@
-'use client';
-import { SetStateAction, useEffect, useState } from 'react';
-import api from '@/lib/axios';
-import { PencilIcon, CameraIcon } from '@heroicons/react/24/outline';
-import AddressSelector from '@/components/AddressSelectorComponent/AddressSelector';
-import { AddressForm } from '@/interface/AddressForm';
-import Swal from 'sweetalert2';
-import withReactContent from 'sweetalert2-react-content';
-import UploadImageComponent from '@/components/UploadImage/UploadImageComponent';
-import { deleteImageFromCloudinary, uploadImageToCloudinary } from '@/services/uploadAvatarService';
-import './styles.css';
+"use client";
+import { SetStateAction, useEffect, useState } from "react";
+import api from "@/lib/axios";
+import { PencilIcon, CameraIcon } from "@heroicons/react/24/outline";
+import AddressSelector from "@/components/AddressSelectorComponent/AddressSelector";
+import { AddressForm } from "@/interface/AddressForm";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import UploadImageComponent from "@/components/UploadImage/UploadImageComponent";
+import {
+  deleteImageFromCloudinary,
+  uploadImageToCloudinary,
+} from "@/services/uploadAvatarService";
+import "./styles.css";
 
 interface OptionType {
   value: string;
@@ -21,70 +24,72 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    dateOfBirth: '',
-    gender: '',
-    occupation: '',
+    fullName: "",
+    email: "",
+    phone: "",
+    dateOfBirth: "",
+    gender: "",
+    occupation: "",
     address: {
-      houseNumber: '',
+      houseNumber: "",
       ward: {
-        name: '',
-        code: 0
+        name: "",
+        id: 0,
       },
       district: {
-        name: '',
-        code: 0
+        name: "",
+        id: 0,
       },
       province: {
-        name: '',
-        code: 0
-      }
+        name: "",
+        id: 0,
+      },
     },
     avatar: {
-      publicId: '',
-      url: '',
+      publicId: "",
+      url: "",
     },
-    ethnicity: '',
-    idType: '',
-    idNumber: '',
-    healthInsuranceNumber: ''
+    ethnicity: "",
+    idType: "",
+    idNumber: "",
+    healthInsuranceNumber: "",
   });
   const MySwal = withReactContent(Swal);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         if (!token) return;
-        const res = await api.get('/auth/me', {
-          headers: { Authorization: `Bearer ${token}` }
+        const res = await api.get("/auth/me", {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        
+
         const userData = res.data.user || res.data;
         setProfile(userData);
         setFormData({
-          occupation: '',
-          fullName: userData.fullName || '',
-          email: userData.email || '',
-          phone: userData.phone || '',
-          dateOfBirth: userData.dateOfBirth ? new Date(userData.dateOfBirth).toISOString().split('T')[0] : '',
-          gender: userData.gender || '',
+          occupation: "",
+          fullName: userData.fullName || "",
+          email: userData.email || "",
+          phone: userData.phone || "",
+          dateOfBirth: userData.dateOfBirth
+            ? new Date(userData.dateOfBirth).toISOString().split("T")[0]
+            : "",
+          gender: userData.gender || "",
           address: {
-            houseNumber: userData.address?.houseNumber || '',
-            ward: userData.address?.ward || '',
-            district: userData.address?.district || '',
-            province: userData.address?.province || ''
+            houseNumber: userData.address?.houseNumber || "",
+            ward: userData.address?.ward || "",
+            district: userData.address?.district || "",
+            province: userData.address?.province || "",
           },
           avatar: {
             publicId: userData.avatar.publicId,
             url: userData.avatar.url,
           },
-          ethnicity: userData.ethnicity ||'',
-          idType: userData.idType || '',
-          idNumber: userData.idNumber || '',
-          healthInsuranceNumber: userData.healthInsuranceNumber || '',
+          ethnicity: userData.ethnicity || "",
+          idType: userData.idType || "",
+          idNumber: userData.idNumber || "",
+          healthInsuranceNumber: userData.healthInsuranceNumber || "",
         });
       } catch (error) {
         setProfile(null);
@@ -96,120 +101,143 @@ const ProfilePage = () => {
   }, []);
 
   const idTypeOptions: OptionType[] = [
-    { value: '', label: 'Chọn loại giấy tờ' },
-    { value: 'Căn cước công dân', label: 'Căn cước công dân' },
-    { value: 'Chứng minh nhân dân', label: 'Chứng minh nhân dân' },
-    { value: 'Hộ chiếu', label: 'Hộ chiếu' },
-    { value: 'Giấy phép lái xe', label: 'Giấy phép lái xe' }
+    { value: "", label: "Chọn loại giấy tờ" },
+    { value: "citizenId", label: "Căn cước công dân" },
+    { value: "Chứng minh nhân dân", label: "Chứng minh nhân dân" },
+    { value: "Hộ chiếu", label: "Hộ chiếu" },
+    { value: "Giấy phép lái xe", label: "Giấy phép lái xe" },
   ];
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    if (name.includes('address.')) {
-      const addressField = name.split('.')[1];
-      setFormData(prev => ({
+    if (name.includes("address.")) {
+      const addressField = name.split(".")[1];
+      setFormData((prev) => ({
         ...prev,
         address: {
           ...prev.address,
-          [addressField]: value
-        }
+          [addressField]: value,
+        },
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       if (!token) return;
-      const res = await api.put('/users/update', formData, {
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await api.put("/users/update", formData, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      if(res.status == 200) {
-          MySwal.fire({
-            title: <strong className="text-2xl">Thông tin cá nhân</strong>,
-            html: <i className="text-xl">Đã tải thông tin cá nhân thành công</i>,
-            icon: 'success',
-            showConfirmButton: true
-          });
-        }
+      if (res.status == 200) {
+        MySwal.fire({
+          title: <strong className="text-2xl">Thông tin cá nhân</strong>,
+          html: <i className="text-xl">Đã tải thông tin cá nhân thành công</i>,
+          icon: "success",
+          showConfirmButton: true,
+        });
+      }
       setProfile(res.data.user || res.data);
       setIsEditing(false);
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error("Error updating profile:", error);
     }
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-   if (e.target.files && e.target.files[0]) {
-      const uploadData = {...formData}
+    if (e.target.files && e.target.files[0]) {
+      const uploadData = { ...formData };
       MySwal.fire({
         title: <strong className="text-2xl">Đang xử lý...</strong>,
         html: <i className="text-xl">Vui lòng chờ trong giây lát</i>,
-        icon: 'info',
+        icon: "info",
         showConfirmButton: false,
         allowOutsideClick: false,
         didOpen: () => {
           MySwal.showLoading();
-        }
+        },
       });
-      
+
       try {
-        if(uploadData.avatar.publicId) {
-          await deleteImageFromCloudinary(uploadData.avatar.publicId)
+        if (uploadData.avatar.publicId) {
+          await deleteImageFromCloudinary(uploadData.avatar.publicId);
         }
-        const {publicId, url} = await uploadImageToCloudinary(e.target.files[0]);
+        const { publicId, url } = await uploadImageToCloudinary(
+          e.target.files[0]
+        );
         uploadData.avatar.publicId = publicId;
         uploadData.avatar.url = url;
-       const token = localStorage.getItem('token');
-      if (!token) return;
-      const res = await api.put('/users/update', uploadData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-       MySwal.close();
-      if(res.status == 200) {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+        const res = await api.put("/users/update", uploadData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        MySwal.close();
+        if (res.status == 200) {
           MySwal.fire({
             title: <strong className="text-2xl">Cập nhật hình ảnh</strong>,
-            html: <i className="text-xl">Đã cập nhật ảnh đại diện thành công</i>,
-            icon: 'success',
-            showConfirmButton: true
+            html: (
+              <i className="text-xl">Đã cập nhật ảnh đại diện thành công</i>
+            ),
+            icon: "success",
+            showConfirmButton: true,
           });
         }
-      setProfile(res.data.user || res.data);
-      setIsEditing(false);
+        setProfile(res.data.user || res.data);
+        setIsEditing(false);
       } catch (error) {
-        console.error('Error uploading avatar:', error);
+        console.error("Error uploading avatar:", error);
       }
     }
   };
 
-  const setAddressWrapper: React.Dispatch<React.SetStateAction<AddressForm>> = (value) => {
-      setFormData((prev) => ({
-        ...prev,
-        address: typeof value === 'function' ? value(prev.address) : value,
-      }));
+  const setAddressWrapper: React.Dispatch<React.SetStateAction<AddressForm>> = (
+    value
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      address: typeof value === "function" ? value(prev.address) : value,
+    }));
+  };
+  const formatIdType = (idType: string) => {
+    const idTypeMap: Record<string, string> = {
+      citizenId: "Căn cước công dân",
+      identityCard: "Chứng minh nhân dân",
+      passport: "Hộ chiếu",
+      driverLicense: "Giấy phép lái xe",
+      militaryId: "Chứng minh quân đội",
+      studentId: "Thẻ sinh viên",
     };
+    return idTypeMap[idType] || 'Loại giấy tờ khác'
+  };
 
-  if (loading) return (
-    <div className="loading-container">
-      <div className="loading-spinner"></div>
-    </div>
-  );
-
-  if (!profile) return (
-    <div className="error-container">
-      <div className="error-card">
-        <h2 className="error-title">Không tìm thấy thông tin cá nhân</h2>
-        <p className="error-message">Vui lòng đăng nhập để xem thông tin cá nhân</p>
+  if (loading)
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
       </div>
-    </div>
-  );
+    );
+
+  if (!profile)
+    return (
+      <div className="error-container">
+        <div className="error-card">
+          <h2 className="error-title">Không tìm thấy thông tin cá nhân</h2>
+          <p className="error-message">
+            Vui lòng đăng nhập để xem thông tin cá nhân
+          </p>
+        </div>
+      </div>
+    );
 
   return (
     <div className="profile-container">
@@ -235,10 +263,7 @@ const ProfilePage = () => {
                   >
                     Hủy
                   </button>
-                  <button
-                    onClick={handleSubmit}
-                    className="save-button"
-                  >
+                  <button onClick={handleSubmit} className="save-button">
                     Lưu thay đổi
                   </button>
                 </div>
@@ -251,9 +276,9 @@ const ProfilePage = () => {
             <div className="profile-layout">
               {/* Avatar Section */}
               <div className="avatar-section">
-                <div className="avatar-container">
+                <div className="avatar-container-patient">
                   <img
-                    src={profile.avatar.url || '/default-avatar.png'}
+                    src={profile.avatar.url || "/default-avatar.png"}
                     alt="Avatar"
                     className="avatar-image"
                   />
@@ -269,7 +294,6 @@ const ProfilePage = () => {
                 </div>
                 <div className="user-info">
                   <h3 className="user-name">{profile.fullName}</h3>
-                  <p className="user-role">{profile.role}</p>
                 </div>
               </div>
 
@@ -334,7 +358,7 @@ const ProfilePage = () => {
                         </select>
                       </div>
                     </div>
-                     <div className="additional-info-grid">
+                    <div className="additional-info-grid">
                       <div className="form-group">
                         <label className="form-label">Nghề nghiệp</label>
                         <input
@@ -370,7 +394,7 @@ const ProfilePage = () => {
                             onChange={handleInputChange}
                             className="form-select"
                           >
-                            {idTypeOptions.map(option => (
+                            {idTypeOptions.map((option) => (
                               <option key={option.value} value={option.value}>
                                 {option.label}
                               </option>
@@ -408,7 +432,10 @@ const ProfilePage = () => {
 
                     <div className="address-section">
                       <h4 className="address-title">Địa chỉ</h4>
-                      <AddressSelector form={formData.address} setForm={setAddressWrapper}></AddressSelector>
+                      <AddressSelector
+                        form={formData.address}
+                        setForm={setAddressWrapper}
+                      ></AddressSelector>
                     </div>
                   </form>
                 ) : (
@@ -423,28 +450,46 @@ const ProfilePage = () => {
                     </div>
                     <div className="detail-item">
                       <h4 className="detail-label">Số điện thoại</h4>
-                      <p className="detail-value">{profile.phone || 'Chưa cập nhật'}</p>
+                      <p className="detail-value">
+                        {profile.phone || "Chưa cập nhật"}
+                      </p>
                     </div>
                     <div className="detail-item">
                       <h4 className="detail-label">Ngày sinh</h4>
                       <p className="detail-value">
-                        {profile.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString() : 'Chưa cập nhật'}
+                        {profile.dateOfBirth
+                          ? new Date(profile.dateOfBirth).toLocaleDateString()
+                          : "Chưa cập nhật"}
                       </p>
                     </div>
                     <div className="detail-item">
                       <h4 className="detail-label">Giới tính</h4>
-                      <p className="detail-value">{profile.gender || 'Chưa cập nhật'}</p>
+                      <p className="detail-value">
+                        {profile.gender && (profile.gender === 'male' ? "Nam" : 'Nữ') || 'Chưa cập nhật'}
+                      </p>
                     </div>
 
                     <div className="address-section">
                       <h4 className="address-title">Địa chỉ</h4>
                       <p className="detail-value">
                         {profile.address
-                          ? `${profile.address.houseNumber ? profile.address.houseNumber + ', ' : ''}
-                             ${profile.address.ward ? profile.address.ward.name + ', ' : ''}
-                             ${profile.address.district ? profile.address.district.name + ', ' : ''}
-                             ${profile.address.province.name || ''}`
-                          : 'Chưa cập nhật địa chỉ'}
+                          ? `${
+                              profile.address.houseNumber
+                                ? profile.address.houseNumber + ", "
+                                : ""
+                            }
+                             ${
+                               profile.address.ward
+                                 ? profile.address.ward.name + ", "
+                                 : ""
+                             }
+                             ${
+                               profile.address.district
+                                 ? profile.address.district.name + ", "
+                                 : ""
+                             }
+                             ${profile.address.province.name || ""}`
+                          : "Chưa cập nhật địa chỉ"}
                       </p>
                     </div>
                     <div className="detail-section">
@@ -452,11 +497,15 @@ const ProfilePage = () => {
                       <div className="additional-info-grid">
                         <div className="detail-item">
                           <h4 className="detail-label">Nghề nghiệp</h4>
-                          <p className="detail-value">{profile.occupation || 'Chưa cập nhật'}</p>
+                          <p className="detail-value">
+                            {profile.occupation || "Chưa cập nhật"}
+                          </p>
                         </div>
                         <div className="detail-item">
                           <h4 className="detail-label">Dân tộc</h4>
-                          <p className="detail-value">{profile.ethnicity || 'Chưa cập nhật'}</p>
+                          <p className="detail-value">
+                            {profile.ethnicity || "Chưa cập nhật"}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -466,11 +515,15 @@ const ProfilePage = () => {
                       <div className="detail-row">
                         <div className="detail-item">
                           <h4 className="detail-label">Loại giấy tờ</h4>
-                          <p className="detail-value">{profile.idType || 'Chưa cập nhật'}</p>
+                          <p className="detail-value">
+                            {formatIdType(profile.idType) || "Chưa cập nhật"}
+                          </p>
                         </div>
                         <div className="detail-item">
                           <h4 className="detail-label">Số giấy tờ</h4>
-                          <p className="detail-value">{profile.idNumber || 'Chưa cập nhật'}</p>
+                          <p className="detail-value">
+                            {profile.idNumber || "Chưa cập nhật"}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -480,7 +533,7 @@ const ProfilePage = () => {
                       <div className="detail-item">
                         <h4 className="detail-label">Mã số BHYT</h4>
                         <p className="detail-value">
-                          {profile.healthInsuranceNumber || 'Chưa cập nhật'}
+                          {profile.healthInsuranceNumber || "Chưa cập nhật"}
                         </p>
                       </div>
                     </div>

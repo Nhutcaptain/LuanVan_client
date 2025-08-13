@@ -21,6 +21,7 @@ const AccountManagementPage: React.FC = () => {
   const initialPatients: IPatient[] = [
     {
       _id: "p1",
+      patientCode: '',
       userId: {
         _id: "u2",
         email: "patient1@example.com",
@@ -31,15 +32,15 @@ const AccountManagementPage: React.FC = () => {
         address: {
           province: {
             name: "",
-            code: 0,
+            id: 0,
           },
           district: {
             name: "",
-            code: 0,
+            id: 0,
           },
           ward: {
             name: "",
-            code: 0,
+            id: 0,
           },
           houseNumber: "",
         },
@@ -85,15 +86,15 @@ const AccountManagementPage: React.FC = () => {
       address: {
         province: {
           name: "",
-          code: 0,
+          id: 0,
         },
         district: {
           name: "",
-          code: 0,
+          id: 0,
         },
         ward: {
           name: "",
-          code: 0,
+          id: 0,
         },
         houseNumber: "",
       },
@@ -106,6 +107,7 @@ const AccountManagementPage: React.FC = () => {
       },
     },
     departmentId: "",
+    description: '',
     specialtyId: "",
     specialization: "",
     certificate: [],
@@ -115,6 +117,8 @@ const AccountManagementPage: React.FC = () => {
       time: "",
       shifts: [],
     },
+    overtimeExaminationPrice: 0,
+    officeExaminationPrice: 0,
     examinationPrice:0,
   });
 
@@ -238,15 +242,15 @@ const AccountManagementPage: React.FC = () => {
         address: {
           province: {
             name: "",
-            code: 0,
+            id: 0,
           },
           district: {
             name: "",
-            code: 0,
+            id: 0,
           },
           ward: {
             name: "",
-            code: 0,
+            id: 0,
           },
           houseNumber: "",
         },
@@ -262,6 +266,7 @@ const AccountManagementPage: React.FC = () => {
       departmentId: "",
       specialtyId: "",
       specialization: "",
+      description: '',
       certificate: [],
       experience: [],
       schedule: {
@@ -269,6 +274,8 @@ const AccountManagementPage: React.FC = () => {
         time: "",
         shifts: [],
       },
+      overtimeExaminationPrice: 0,
+      officeExaminationPrice: 0,
       examinationPrice: 0,
     });
   };
@@ -276,6 +283,7 @@ const AccountManagementPage: React.FC = () => {
   const handleEdit = (id: string) => {
     if (activeTab === "doctor") {
       const doctor = doctors.find((d) => d._id === id);
+      console.log(doctor);
       if (doctor) {
         setDoctorForm({
           userId: {
@@ -297,7 +305,10 @@ const AccountManagementPage: React.FC = () => {
           certificate: doctor.certificate,
           experience: doctor.experience,
           schedule: doctor.schedule,
-          examinationPrice: doctor.examinationPrice
+          examinationPrice: doctor.examinationPrice,
+          overtimeExaminationPrice: doctor.overtimeExaminationPrice,
+          officeExaminationPrice: doctor.officeExaminationPrice,
+          description: doctor.description,
         });
         setEditingId(id);
         setIsCreating(false);
@@ -365,10 +376,11 @@ const AccountManagementPage: React.FC = () => {
         );
         setEditingId(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       Swal.close();
       Swal.fire({
         title: "Email đã tồn tại",
+        text: `${error || "Vui lòng thử lại"}`,
         icon: "error",
         showCloseButton: true,
       });
@@ -555,7 +567,7 @@ const AccountManagementPage: React.FC = () => {
               required
             />
             <SelectComponent
-              label="Khoa"
+              label="Chuyên khoa"
               value={doctorForm.departmentId ?? ""}
               onChange={handleUserInputChange}
               options={departmentOptions}
@@ -564,7 +576,7 @@ const AccountManagementPage: React.FC = () => {
             />
 
             <SelectComponent
-              label="Chuyên khoa"
+              label="Lĩnh vực chuyên môn"
               value={doctorForm.specialtyId ?? ""}
               onChange={handleUserInputChange}
               options={specialtyOptions}
@@ -572,24 +584,40 @@ const AccountManagementPage: React.FC = () => {
               required
             />
 
-            <SelectComponent
+            {/* <SelectComponent
               label="Trạng thái"
               value={doctorForm.userId.isActive.toString()}
               onChange={handleUserInputChange}
               options={statusOptions}
               name="user.isActive"
               required
-            />
+            /> */}
             <InputComponent
               label="Giá tiền khám ngoài giờ *VNĐ*"
-              value={doctorForm.examinationPrice ?? 0}
+              value={doctorForm.overtimeExaminationPrice ?? 0}
+              onChange={handleUserInputChange}
+              name="examinationPrice"
+              required
+            />
+            <InputComponent
+              label="Giá tiền khám trong giờ hành chính *VNĐ*"
+              value={doctorForm.officeExaminationPrice ?? 0}
               onChange={handleUserInputChange}
               name="examinationPrice"
               required
             />
           </div>
+          
           <div className="bottom-form w-full">
             {/* Certificates Section */}
+            <InputComponent
+            label="Thông tin giới thiệu"
+            type="text-area"
+            value={doctorForm.description ?? ''}
+            onChange={handleUserInputChange}
+            name="description"
+            placeholder="Mô tả về bác sĩ, ví dụ: Bác sĩ chuyên khoa Tim mạch với 10 năm kinh nghiệm"
+          ></InputComponent>
             <div className="form-section">
               <div
                 className="section-header"

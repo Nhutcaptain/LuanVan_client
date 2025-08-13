@@ -10,15 +10,16 @@ import InputComponent from "@/components/InputComponent/InputComponent";
 import {
   OvertimeSchedule,
   OvertimeSlot,
+  SpecialSchedule,
   WeeklySchedule,
 } from "@/interface/Shifts";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { get } from "http";
 import Swal from "sweetalert2";
 import { Service } from "@/interface/ServiceInterface";
 import ServiceList from "./Services/ServiceList";
 import { validatePatientInfo } from "@/utils/validatePatientInfo";
+import moment from "moment";
 
 interface Department {
   _id: string;
@@ -59,6 +60,10 @@ const AppointmentPage = () => {
   const [consultationService, setConsultationService] = useState("");
   const [weeklySchedule, setWeeklySchedule] = useState<WeeklySchedule>();
   const [allowDayOfWeek, setAllowDayOfWeek] = useState<number[] | null>(null);
+  const [specialSchedules, setSpecialSchedules] = useState<SpecialSchedule[]>(
+    []
+  );
+  const [disabledDates, setDisabledDates] = useState<Date[]>([]);
 
   const [formData, setFormData] = useState({
     departmentId: "",
@@ -97,6 +102,20 @@ const AppointmentPage = () => {
         toast.error("Không tìm thấy thông tin người dùng này");
       }
     };
+    const fetchSpecialSchedules = async () => {
+      if (!doctorId) return;
+      try {
+        const res = await api.get(`/schedule/getSpecialSchedule/${doctorId}`);
+        if (res.status === 200) {
+          setSpecialSchedules(res.data);
+        } else {
+          throw new Error("Không tìm thấy lịch đặc biệt cho bác sĩ này");
+        }
+      } catch (error) {
+        alert(error);
+      }
+    };
+    fetchSpecialSchedules();
     fetchUserId();
 
     setFormData((prev) => ({
@@ -212,8 +231,8 @@ const AppointmentPage = () => {
   // }, [formData.departmentId, formData.specialtyId]);
 
   useEffect(() => {
-    if(!formData.departmentId) return;
-     const fetchDoctors = async () => {
+    if (!formData.departmentId) return;
+    const fetchDoctors = async () => {
       try {
         setLoading((prev) => ({ ...prev, doctors: true }));
         const res = await api.get(
@@ -234,7 +253,7 @@ const AppointmentPage = () => {
     };
 
     fetchDoctors();
-  },[formData.departmentId])
+  }, [formData.departmentId]);
 
   useEffect(() => {
     if (!formData.doctorId) {
@@ -279,47 +298,114 @@ const AppointmentPage = () => {
         toast.error("Không thể tải giờ làm việc của bác sĩ");
       }
     };
+    const fetchSpecialSchedules = async () => {
+      if (!formData.doctorId) return;
+      try {
+        const res = await api.get(
+          `/schedule/getSpecialSchedule/${formData.doctorId}`
+        );
+        if (res.status === 200) {
+          setSpecialSchedules(res.data);
+        } else {
+          throw new Error("Không tìm thấy lịch đặc biệt cho bác sĩ này");
+        }
+      } catch (error) {
+        alert(error);
+      }
+    };
+    fetchSpecialSchedules();
     fetchWeeklySchedule();
 
     fetchOvertimeSchedule();
-  }, [formData.appointmentDate, formData.doctorId]);
+  }, [ formData.doctorId]);
+
+  // useEffect(() => {
+  //   if (!formData.appointmentDate || !overtimeSchedule) {
+  //     setAvailableTimeSlots([]);
+  //     setFormData((prev) => ({ ...prev, session: "" }));
+  //     return;
+  //   }
+
+  //   const selectedDate = new Date(formData.appointmentDate);
+  //   const dayOfWeek = selectedDate.getDay(); // 0 (Sunday) to 6 (Saturday)
+
+  //   const weeklySlot = overtimeSchedule.weeklySchedule.find(
+  //     (slot) => slot.dayOfWeek === dayOfWeek && slot.isActive
+  //   );
+
+  //   if (weeklySlot) {
+  //     setAvailableTimeSlots(weeklySlot.slots);
+  //   } else {
+  //     setAvailableTimeSlots([]);
+  //     toast.warning("Bác sĩ không có lịch khám ngoài giờ vào ngày này");
+  //   }
+  // }, [overtimeSchedule]);
 
   useEffect(() => {
-    if (!formData.appointmentDate || !overtimeSchedule) {
-      setAvailableTimeSlots([]);
-      setFormData((prev) => ({ ...prev, session: "" }));
-      return;
-    }
+  let availableDays: number[] = [];
 
-    const selectedDate = new Date(formData.appointmentDate);
-    const dayOfWeek = selectedDate.getDay(); // 0 (Sunday) to 6 (Saturday)
-
-    const weeklySlot = overtimeSchedule.weeklySchedule.find(
-      (slot) => slot.dayOfWeek === dayOfWeek && slot.isActive
+  if (consultationService === "officeConsultation" && weeklySchedule) {
+    availableDays = weeklySchedule.schedule.map((s) => s.dayOfWeek);
+  } else if (
+    consultationService === "overtimeConsultation" &&
+    overtimeSchedule
+  ) {
+    availableDays = overtimeSchedule.weeklySchedule.map(
+      (item) => item.dayOfWeek
     );
+  }
 
-    if (weeklySlot) {
-      setAvailableTimeSlots(weeklySlot.slots);
-    } else {
-      setAvailableTimeSlots([]);
-      toast.warning("Bác sĩ không có lịch khám ngoài giờ vào ngày này");
-    }
-  }, [overtimeSchedule]);
+  setAllowDayOfWeek(availableDays);
 
-  useEffect(() => {
-    if (consultationService === "officeConsultation" && weeklySchedule) {
-      const availableDays = weeklySchedule.schedule.map((s) => s.dayOfWeek);
-      setAllowDayOfWeek(availableDays);
-    } else if (
-      consultationService === "overtimeConsultation" &&
-      overtimeSchedule
-    ) {
-      const availableDays = overtimeSchedule?.weeklySchedule.map(
-        (item) => item.dayOfWeek
-      );
-      setAllowDayOfWeek(availableDays);
-    }
-  }, [consultationService, weeklySchedule, overtimeSchedule]);
+  // 👉 Tạo danh sách ngày bị vô hiệu hóa
+  const disabled: Date[] = [];
+
+  // 1. Vô hiệu hóa từ specialSchedules
+  if (specialSchedules && specialSchedules.length > 0) {
+    specialSchedules.forEach((special) => {
+      const start = moment(special.startDate);
+      const end = moment(special.endDate);
+      const current = start.clone();
+
+      while (current.isSameOrBefore(end, "day")) {
+        disabled.push(current.toDate());
+        current.add(1, "day");
+      }
+    });
+  }
+
+  // 2. Vô hiệu hóa từ pausePeriods trong overtimeSchedule
+  if (
+    consultationService === "overtimeConsultation" &&
+    overtimeSchedule &&
+    overtimeSchedule.weeklySchedule
+  ) {
+    overtimeSchedule.weeklySchedule.forEach((day) => {
+      const { pausePeriods, dayOfWeek } = day;
+
+      pausePeriods?.forEach((period) => {
+        const start = moment(period.startDate);
+        const end = moment(period.endDate);
+        const current = start.clone();
+
+        while (current.isSameOrBefore(end, "day")) {
+          if (current.day() === dayOfWeek) {
+            disabled.push(current.toDate());
+          }
+          current.add(1, "day");
+        }
+      });
+    });
+  }
+
+  setDisabledDates(disabled);
+}, [
+  consultationService,
+  weeklySchedule,
+  overtimeSchedule,
+  specialSchedules,
+]);
+
 
   const isDateDisabled = (date: Date) => {
     if (!overtimeSchedule) return true;
@@ -403,7 +489,8 @@ const AppointmentPage = () => {
         session: formData.session,
         reason: formData.reason,
         location: formData.location,
-        isOvertime: consultationService === 'overtimeConsultation' ? true : false,
+        isOvertime:
+          consultationService === "overtimeConsultation" ? true : false,
       });
 
       Swal.close();
@@ -476,14 +563,45 @@ const AppointmentPage = () => {
   }
 
   const getSelectedLocation = () => {
-    const selectedDayOfWeek = formData.appointmentDate
-      ? new Date(formData.appointmentDate).getDay()
-      : null;
-    const selectedSchedule = overtimeSchedule?.weeklySchedule.find(
+  const selectedDayOfWeek = formData.appointmentDate
+    ? new Date(formData.appointmentDate).getDay()
+    : null;
+  if (selectedDayOfWeek === null) return "";
+  const sessionTime = formData.session.trim(); // Ví dụ: "07:00 - 12:00"
+
+  if (consultationService === "officeConsultation" && weeklySchedule) {
+    const scheduleDay = weeklySchedule.schedule.find(
       (item) => item.dayOfWeek === selectedDayOfWeek
     );
-    return selectedSchedule ? (selectedSchedule.locationId as any).name : "";
-  };
+
+    if (scheduleDay) {
+      const matchedShift = scheduleDay.shiftIds.find((shift) => {
+        const shiftTime = `${shift.startTime}-${shift.endTime}`;
+        return shiftTime === sessionTime;
+      });
+
+      return matchedShift ? (matchedShift.locationId as any).name : "";
+    }
+  }
+
+  if (overtimeSchedule) {
+    const overtimeDay = overtimeSchedule.weeklySchedule.find(
+      (item) => item.dayOfWeek === selectedDayOfWeek
+    );
+
+    if (overtimeDay) {
+      const matchedSlot = overtimeDay.slots.find((slot) => {
+        const slotTime = `${slot.startTime}-${slot.endTime}`;
+        return slotTime === sessionTime;
+      });
+
+      return matchedSlot ? (overtimeDay.locationId as any).name : "";
+    }
+  }
+
+  return "";
+};
+
 
   const getAvailableTimeSlots = () => {
     if (!formData.appointmentDate || !consultationService) return;
@@ -527,7 +645,7 @@ const AppointmentPage = () => {
   const selectedDepartment = departments.find(
     (d) => d._id === formData.departmentId
   );
-  const services = selectedDepartment?.serviceIds
+  const services = selectedDepartment?.serviceIds;
 
   return (
     <div className="container">
@@ -591,10 +709,7 @@ const AppointmentPage = () => {
                 label: doctor.name,
                 value: doctor._id,
               }))}
-              disabled={
-                (!formData.departmentId) ||
-                loading.doctors
-              }
+              disabled={!formData.departmentId || loading.doctors}
               required
             />
           </div>
@@ -648,9 +763,14 @@ const AppointmentPage = () => {
               }}
               minDate={new Date()}
               placeholderText="Chọn ngày khám"
-              filterDate={(date: Date) =>
-                (allowDayOfWeek ?? []).includes(date.getDay())
-              }
+              filterDate={(date) => {
+                if (!allowDayOfWeek || allowDayOfWeek.length === 0) return false;
+                const isAllowedDay = allowDayOfWeek.includes(date.getDay());
+                const isDisabled = disabledDates.some((d) =>
+                  moment(d).isSame(date, "day")
+                );
+                return isAllowedDay && !isDisabled;
+              }}
               dateFormat="yyyy-MM-dd"
               className="form-input"
             />

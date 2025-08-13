@@ -247,18 +247,18 @@ export default function ExaminationForm({
     const hasPendingTests = formData.testOrders?.some(
       (order: any) => order.status !== "completed"
     );
-    if (hasPendingTests) {
-      toast.warning("Đang chờ kết quả xét nghiệm", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
-      return; 
-    }
+    // if (hasPendingTests) {
+    //   toast.warning("Đang chờ kết quả xét nghiệm", {
+    //     position: "top-right",
+    //     autoClose: 5000,
+    //     hideProgressBar: false,
+    //     closeOnClick: true,
+    //     pauseOnHover: true,
+    //     draggable: true,
+    //     progress: undefined,
+    //   });
+    //   return; 
+    // }
 
     const requiredFields = [
       "date",

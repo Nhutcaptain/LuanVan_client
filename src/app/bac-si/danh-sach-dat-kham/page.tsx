@@ -4,22 +4,22 @@ import "./styles.css";
 import { Appointment } from "@/interface/AppointmentInterface";
 import { toast, ToastContainer } from "react-toastify";
 import api from "@/lib/axios";
+import Swal from "sweetalert2";
 
 const DoctorAppointmentsList = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [selectedAppointment, setSelectedAppointment] =
-    useState<Appointment | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [showDetail, setShowDetail] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
-  const [showType, setShowType] = useState<"all" | "regular" | "overtime">(
-    "all"
-  );
+  const [showType, setShowType] = useState<"all" | "regular" | "overtime">("all");
   const [isStopModalOpen, setIsStopModalOpen] = useState(false);
-  const [stopType, setStopType] = useState<"day" | "session" | "overtime">(
-    "session"
-  );
+  const [stopType, setStopType] = useState<"day" | "session" | "overtime">("session");
+  const [selectedAppointments, setSelectedAppointments] = useState<string[]>([]);
+  const [isBulkActionModalOpen, setIsBulkActionModalOpen] = useState(false);
+  const [bulkActionType, setBulkActionType] = useState<"confirm" | "reject">("confirm");
+  const [rejectReason, setRejectReason] = useState("");
 
   useEffect(() => {
     const fetchAppointments = async () => {
@@ -38,7 +38,6 @@ const DoctorAppointmentsList = () => {
         );
 
         if (res.status === 200) {
-          // Sắp xếp lịch hẹn theo thời gian
           const sortedAppointments = res.data.sort(
             (a: Appointment, b: Appointment) => {
               const dateA = new Date(
@@ -51,6 +50,8 @@ const DoctorAppointmentsList = () => {
             }
           );
           setAppointments(sortedAppointments);
+          console.log(sortedAppointments);
+          setSelectedAppointments([]); // Reset selected appointments when data changes
         }
       } catch (error) {
         toast.error("Lỗi khi tải danh sách lịch khám");
@@ -60,7 +61,6 @@ const DoctorAppointmentsList = () => {
     fetchAppointments();
   }, [selectedDate, showType]);
 
-  // Hàm lấy giờ bắt đầu từ session
   const getStartTime = (session: string) => {
     const timeMatch = session.match(/(\d+)(?:AM|PM)/i);
     if (timeMatch) {
@@ -70,7 +70,6 @@ const DoctorAppointmentsList = () => {
     return "00:00:00";
   };
 
-  // Định dạng ngày tháng
   const formatDate = (dateString: string) => {
     const today = new Date();
     const appointmentDate = new Date(dateString);
@@ -91,9 +90,7 @@ const DoctorAppointmentsList = () => {
     });
   };
 
-  // Định dạng session
   const formatSession = (session: string) => {
-    // Chuyển đổi từ dạng "9AM-12PM" sang "09:00 - 12:00"
     const formatted = session
       .replace(/(\d+)(AM|PM)/gi, (match, hour, period) => {
         const h = parseInt(hour);
@@ -116,6 +113,15 @@ const DoctorAppointmentsList = () => {
     return statusClasses[status] || "";
   };
 
+  const getConfirmStatusClass = (status: string) => {
+    const confirmStatusClasses: Record<string, string> = {
+      pending: "confirm-status-pending",
+      confirmed: "confirm-status-confirmed",
+      rejected: "confirm-status-rejected",
+    };
+    return confirmStatusClasses[status] || "";
+  };
+
   const openAppointmentDetail = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
     setShowDetail(true);
@@ -135,28 +141,42 @@ const DoctorAppointmentsList = () => {
     try {
       const doctorId = localStorage.getItem("doctorId");
       if (!doctorId) return;
+      Swal.fire({
+        title: 'Đang cập dừng tất cả lịch khám',
+        icon: 'info',
+        didOpen: () => Swal.showLoading()
+      })
 
       const payload = {
         date: selectedDate,
         type: stopType,
-        reason: "Bác sĩ bận đột xuất",
+        cancelReason: "Bác sĩ bận đột xuất",
       };
 
       const res = await api.post(`/appointment/stopAppointments/${doctorId}`, payload);
 
       if (res.status === 200) {
-        toast.success("Đã dừng lịch hẹn thành công");
         setIsStopModalOpen(false);
-        // Refresh danh sách lịch hẹn
         setSelectedDate(selectedDate); // Trigger useEffect
+        Swal.close();
+        Swal.fire({
+          title: 'Đã dừng tất cả lịch khám thành công',
+          icon: 'success',
+          showConfirmButton: true,
+        })
       }
     } catch (error) {
       toast.error("Lỗi khi dừng lịch hẹn");
+      Swal.close();
+      Swal.fire({
+          title: 'Lỗi khi dừng lịch hẹn',
+          icon: 'error',
+          showConfirmButton: true,
+        })
     }
   };
 
   const isRegularHours = (session: string) => {
-    // Kiểm tra xem session có phải là giờ hành chính (8AM-5PM) không
     const timeMatch = session.match(/(\d+)(AM|PM)/i);
     if (timeMatch) {
       const hour = parseInt(timeMatch[1]);
@@ -164,6 +184,193 @@ const DoctorAppointmentsList = () => {
       return (hour >= 8 && period === "am") || (hour < 5 && period === "pm");
     }
     return false;
+  };
+
+  const toggleAppointmentSelection = (appointmentId: string) => {
+    setSelectedAppointments(prev => 
+      prev.includes(appointmentId)
+        ? prev.filter(id => id !== appointmentId)
+        : [...prev, appointmentId]
+    );
+  };
+
+  const selectAllAppointments = () => {
+    if (selectedAppointments.length === appointments.length) {
+      setSelectedAppointments([]);
+    } else {
+      setSelectedAppointments(appointments.map(app => app._id || ""));
+    }
+  };
+
+  const confirmAppointment = async (appointmentId: string) => {
+    try {
+      Swal.fire({
+        title: 'Đang xác nhận lịch hẹn',
+        icon: 'info',
+        didOpen: () => Swal.showLoading()
+      });
+
+      const res = await api.patch(`/appointment/confirm/${appointmentId}`, {
+        status: "confirmed"
+      });
+
+      if (res.status === 200) {
+        setAppointments(prev => prev.map(app => 
+          app._id === appointmentId ? { ...app, confirmStatus: "confirmed" } : app
+        ));
+        
+        Swal.close();
+        Swal.fire({
+          title: 'Xác nhận lịch hẹn thành công',
+          icon: 'success',
+          showConfirmButton: true,
+        });
+      }
+    } catch (error) {
+      Swal.close();
+      Swal.fire({
+        title: 'Lỗi khi xác nhận lịch hẹn',
+        icon: 'error',
+        showConfirmButton: true,
+      });
+    }
+  };
+
+  const rejectAppointment = async (appointmentId: string, reason: string) => {
+    try {
+      Swal.fire({
+        title: 'Đang từ chối lịch hẹn',
+        icon: 'info',
+        didOpen: () => Swal.showLoading()
+      });
+
+      const res = await api.patch(`/appointment/confirm/${appointmentId}`, {
+        status: "rejected",
+        rejectReason: reason
+      });
+
+      if (res.status === 200) {
+        setAppointments(prev => prev.map(app => 
+          app._id === appointmentId ? { ...app, confirmStatus: "rejected" } : app
+        ));
+        
+        Swal.close();
+        Swal.fire({
+          title: 'Từ chối lịch hẹn thành công',
+          icon: 'success',
+          showConfirmButton: true,
+        });
+      }
+    } catch (error) {
+      Swal.close();
+      Swal.fire({
+        title: 'Lỗi khi từ chối lịch hẹn',
+        icon: 'error',
+        showConfirmButton: true,
+      });
+    }
+  };
+
+  const confirmAllSelected = async () => {
+    if (selectedAppointments.length === 0) {
+      toast.warning("Vui lòng chọn ít nhất một lịch hẹn");
+      return;
+    }
+
+    try {
+      Swal.fire({
+        title: `Đang xác nhận ${selectedAppointments.length} lịch hẹn`,
+        icon: 'info',
+        didOpen: () => Swal.showLoading()
+      });
+
+      const payload = {
+        appointmentIds: selectedAppointments,
+        action: "confirm"
+      };
+
+      const res = await api.post('/appointment/bulkConfirm', payload);
+
+      if (res.status === 200) {
+        setAppointments(prev => prev.map(app => 
+          selectedAppointments.includes(app._id || "") 
+            ? { ...app, confirmStatus: "confirmed" } 
+            : app
+        ));
+        
+        setSelectedAppointments([]);
+        Swal.close();
+        Swal.fire({
+          title: 'Xác nhận lịch hẹn thành công',
+          icon: 'success',
+          showConfirmButton: true,
+        });
+      }
+    } catch (error) {
+      Swal.close();
+      Swal.fire({
+        title: 'Lỗi khi xác nhận lịch hẹn',
+        icon: 'error',
+        showConfirmButton: true,
+      });
+    }
+  };
+
+  const rejectAllSelected = async () => {
+    if (selectedAppointments.length === 0) {
+      toast.warning("Vui lòng chọn ít nhất một lịch hẹn");
+      return;
+    }
+
+    Swal.fire({
+      title: 'Lý do từ chối',
+      input: 'text',
+      inputPlaceholder: 'Nhập lý do từ chối...',
+      showCancelButton: true,
+      confirmButtonText: 'Xác nhận',
+      cancelButtonText: 'Hủy',
+    }).then(async (result) => {
+      if (result.isConfirmed && result.value) {
+        try {
+          Swal.fire({
+            title: `Đang từ chối ${selectedAppointments.length} lịch hẹn`,
+            icon: 'info',
+            didOpen: () => Swal.showLoading()
+          });
+
+          const payload = {
+            appointmentIds: selectedAppointments,
+            action: "reject",
+            reason: result.value
+          };
+
+          const res = await api.post('/appointment/bulkConfirm', payload);
+
+          if (res.status === 200) {
+            setAppointments(prev => prev.map(app => 
+              selectedAppointments.includes(app._id || "") 
+                ? { ...app, confirmStatus: "rejected" } 
+                : app
+            ));
+            
+            setSelectedAppointments([]);
+            Swal.close();
+            Swal.fire({
+              title: 'Từ chối lịch hẹn thành công',
+              icon: 'success',
+              showConfirmButton: true,
+            });
+          }
+        } catch (error) {
+          Swal.close();
+          Swal.fire({
+            title: 'Lỗi khi từ chối lịch hẹn',
+            icon: 'error',
+            showConfirmButton: true,
+          });
+        }
+      }
+    });
   };
 
   return (
@@ -215,22 +422,58 @@ const DoctorAppointmentsList = () => {
           </div>
         </div>
 
-        <button
-          className="stop-appointments-btn"
-          onClick={() => setIsStopModalOpen(true)}
-        >
-          Dừng lịch hẹn
-        </button>
+        <div className="control-group">
+          {/* <button
+            className="stop-appointments-btn"
+            onClick={() => setIsStopModalOpen(true)}
+          >
+            Dừng lịch hẹn
+          </button> */}
+        </div>
       </div>
+
+      {/* Bulk Actions */}
+      {selectedAppointments.length > 0 && (
+        <div className="bulk-actions-container">
+          <div className="bulk-actions-info">
+            Đã chọn {selectedAppointments.length} lịch hẹn
+          </div>
+          <div className="bulk-actions-buttons">
+            <button
+              className="btn-confirm-all"
+              onClick={confirmAllSelected}
+            >
+              Xác nhận tất cả
+            </button>
+            <button
+              className="btn-reject-all"
+              onClick={rejectAllSelected}
+            >
+              Từ chối tất cả
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Appointments List */}
       {appointments.length === 0 ? (
         <p className="no-appointments">Không có lịch hẹn nào trong ngày này</p>
       ) : (
         <div className="appointments-list-container">
-          <h3 className="appointments-date-header">
-            {formatDate(selectedDate)}
-          </h3>
+          <div className="appointments-list-header">
+            <h3 className="appointments-date-header">
+              {formatDate(selectedDate)}
+            </h3>
+            
+            <div className="select-all-checkbox">
+              <input
+                type="checkbox"
+                checked={selectedAppointments.length === appointments.length && appointments.length > 0}
+                onChange={selectAllAppointments}
+              />
+              <span>Chọn tất cả</span>
+            </div>
+          </div>
 
           <ul className="appointments-list">
             {appointments.map((appointment) => (
@@ -239,53 +482,109 @@ const DoctorAppointmentsList = () => {
                 className={`appointment-card ${
                   appointment.isOvertime ? "overtime" : ""
                 }`}
-                onClick={() => openAppointmentDetail(appointment)}
               >
-                <div className="appointment-header">
-                  <span
-                    className={`appointment-status ${getStatusClass(
-                      appointment.status || "scheduled"
-                    )}`}
-                  >
-                    {appointment.status === "scheduled"
-                      ? "Đã đặt"
-                      : appointment.status === "completed"
-                      ? "Hoàn thành"
-                      : appointment.status === "examining"
-                      ? "Đang khám"
-                      : appointment.status === "waiting_result"
-                      ? "Chờ kết quả"
-                      : "Đã hủy"}
-                  </span>
-                  <span className="appointment-time">
-                    {formatSession(appointment.session)}
-                  </span>
-                  {appointment.isOvertime && (
-                    <span className="overtime-badge">Ngoài giờ</span>
-                  )}
+                <div className="appointment-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={selectedAppointments.includes(appointment._id || "")}
+                    onChange={() => toggleAppointmentSelection(appointment._id || "")}
+                  />
                 </div>
+                
+                <div className="appointment-content" onClick={() => openAppointmentDetail(appointment)}>
+                  <div className="appointment-header">
+                    <span
+                      className={`appointment-status ${getStatusClass(
+                        appointment.status || "scheduled"
+                      )}`}
+                    >
+                      {appointment.status === "scheduled"
+                        ? "Đã đặt"
+                        : appointment.status === "completed"
+                        ? "Hoàn thành"
+                        : appointment.status === "examining"
+                        ? "Đang khám"
+                        : appointment.status === "waiting_result"
+                        ? "Chờ kết quả"
+                        : "Đã hủy"}
+                    </span>
+                    
+                    <span
+                      className={`appointment-confirm-status ${getConfirmStatusClass(
+                        appointment.confirmStatus || "pending"
+                      )}`}
+                    >
+                      {appointment.confirmStatus === "pending"
+                        ? "Chờ xác nhận"
+                        : appointment.confirmStatus === "confirmed"
+                        ? "Đã xác nhận"
+                        : "Đã từ chối"}
+                    </span>
+                    
+                    <span className="appointment-time">
+                      {formatSession(appointment.session)}
+                    </span>
+                    {appointment.isOvertime && (
+                      <span className="overtime-badge">Ngoài giờ</span>
+                    )}
+                  </div>
 
-                <div className="appointment-body">
-                  <p className="appointment-patient">
-                    <strong>Bệnh nhân:</strong>{" "}
-                    {(appointment.patientId as any)?.fullName ||
-                      "Không có thông tin"}
-                  </p>
-
-                  {appointment.queueNumber && (
-                    <p className="appointment-queue">
-                      <strong>Số thứ tự:</strong> {appointment.queueNumber}
+                  <div className="appointment-body">
+                    <p className="appointment-patient">
+                      <strong>Bệnh nhân:</strong>{" "}
+                      {(appointment.patientId as any)?.fullName ||
+                        "Không có thông tin"}
                     </p>
-                  )}
 
-                  {appointment.reason && (
-                    <p className="appointment-reason">
-                      <strong>Lý do:</strong>{" "}
-                      {appointment.reason.substring(0, 50)}
-                      {appointment.reason.length > 50 ? "..." : ""}
-                    </p>
-                  )}
+                    {appointment.queueNumber && (
+                      <p className="appointment-queue">
+                        <strong>Số thứ tự:</strong> {appointment.queueNumber}
+                      </p>
+                    )}
+
+                    {appointment.reason && (
+                      <p className="appointment-reason">
+                        <strong>Lý do:</strong>{" "}
+                        {appointment.reason.substring(0, 50)}
+                        {appointment.reason.length > 50 ? "..." : ""}
+                      </p>
+                    )}
+                  </div>
                 </div>
+                
+                {appointment.confirmStatus === "pending" && (
+                  <div className="appointment-actions">
+                    <button
+                      className="btn-confirm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        confirmAppointment(appointment._id || "");
+                      }}
+                    >
+                      Xác nhận
+                    </button>
+                    <button
+                      className="btn-reject"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        Swal.fire({
+                          title: 'Lý do từ chối',
+                          input: 'text',
+                          inputPlaceholder: 'Nhập lý do từ chối...',
+                          showCancelButton: true,
+                          confirmButtonText: 'Xác nhận',
+                          cancelButtonText: 'Hủy',
+                        }).then((result) => {
+                          if (result.isConfirmed && result.value) {
+                            rejectAppointment(appointment._id || "", result.value);
+                          }
+                        });
+                      }}
+                    >
+                      Từ chối
+                    </button>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -319,6 +618,19 @@ const DoctorAppointmentsList = () => {
                     ? "Chờ kết quả"
                     : "Đã hủy"}
                 </span>
+                
+                <span
+                  className={`appointment-confirm-status ${getConfirmStatusClass(
+                    selectedAppointment.confirmStatus || "pending"
+                  )}`}
+                >
+                  {selectedAppointment.confirmStatus === "pending"
+                    ? "Chờ xác nhận"
+                    : selectedAppointment.confirmStatus === "confirmed"
+                    ? "Đã xác nhận"
+                    : "Đã từ chối"}
+                </span>
+                
                 {selectedAppointment.isOvertime && (
                   <span className="overtime-badge">Ngoài giờ</span>
                 )}
@@ -487,9 +799,40 @@ const DoctorAppointmentsList = () => {
                 >
                   Đóng
                 </button>
-                {/* {selectedAppointment.status === "scheduled" && (
-                  <button className="btn btn-primary">Bắt đầu khám</button>
-                )} */}
+                
+                {selectedAppointment.confirmStatus === "pending" && (
+                  <>
+                    <button 
+                      className="btn btn-reject"
+                      onClick={() => {
+                        Swal.fire({
+                          title: 'Lý do từ chối',
+                          input: 'text',
+                          inputPlaceholder: 'Nhập lý do từ chối...',
+                          showCancelButton: true,
+                          confirmButtonText: 'Xác nhận',
+                          cancelButtonText: 'Hủy',
+                        }).then((result) => {
+                          if (result.isConfirmed && result.value) {
+                            rejectAppointment(selectedAppointment._id || "", result.value);
+                            closeAppointmentDetail();
+                          }
+                        });
+                      }}
+                    >
+                      Từ chối
+                    </button>
+                    <button 
+                      className="btn btn-primary"
+                      onClick={() => {
+                        confirmAppointment(selectedAppointment._id || "");
+                        closeAppointmentDetail();
+                      }}
+                    >
+                      Xác nhận
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -566,7 +909,8 @@ const DoctorAppointmentsList = () => {
           </div>
         </div>
       )}
-      <ToastContainer></ToastContainer>
+      
+      <ToastContainer />
     </div>
   );
 };
