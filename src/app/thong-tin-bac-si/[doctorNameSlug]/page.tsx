@@ -172,7 +172,7 @@ const DoctorProfile = () => {
   if (loading) {
     return (
       <div className="doctor-profile-container">
-        <div className="profile-header">
+        <div className="profile-header-info">
           <Skeleton height={40} width={300} />
         </div>
         <div className="profile-content">
@@ -217,7 +217,7 @@ const DoctorProfile = () => {
 
   return (
     <div className="doctor-profile-container">
-      <div className="profile-header">
+      <div className="profile-header-info">
         <h1>
           <FaUserMd className="header-icon" />
           Thông tin Bác sĩ

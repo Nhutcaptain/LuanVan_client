@@ -274,11 +274,6 @@ export default function ExaminationForm({
       invoiceNumber = formData.invoiceNumber;
     }
     if (!validateForm(requiredFields)) return;
-    onSubmit({
-      ...formData,
-      invoiceNumber,
-      prescriptions,
-    });
     setFormData({
       date: new Date().toISOString().split("T")[0],
       subjective: "",
@@ -307,6 +302,12 @@ export default function ExaminationForm({
       quantity: 0,
       unit: '',
     });
+    onSubmit({
+      ...formData,
+      invoiceNumber,
+      prescriptions,
+    });
+    
     setPrescriptions([]);
     setPdfData({ ...formData, invoiceNumber, prescriptions });
     setShowPDFExportDialog(true);

@@ -162,14 +162,14 @@
   padding: 1.5rem;
 }
 
-.info-grid {
+.info-grid-patient {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
 
-.info-item {
+.info-item-patient {
   display: flex;
   align-items: center;
 }

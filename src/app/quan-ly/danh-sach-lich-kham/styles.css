@@ -157,7 +157,7 @@
   z-index: 1000;
 }
 
-.modal-content {
+.modal-content-appointment {
   background: white;
   padding: 25px;
   border-radius: 8px;
@@ -179,7 +179,7 @@
   color: #7f8c8d;
 }
 
-.modal-content h2 {
+.modal-content-appointment h2 {
   margin-top: 0;
   color: #2c3e50;
   text-align: center;
@@ -370,6 +370,11 @@
 
 .status-badge.confirmed {
   background-color: #17a2b8;
+  color: #fff;
+}
+
+.status-badge.rejected {
+  background-color: #cc06fd;
   color: #fff;
 }
 

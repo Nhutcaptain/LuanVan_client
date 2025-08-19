@@ -255,32 +255,32 @@ const PatientInfoLookup = ({ onPatientSelect, onPatientUpdate, onSubmit, patient
               </div>
             )}
           <div className="patient-info-card">
-            <div className="info-grid">
-              <div className="info-item">
+            <div className="info-grid-patient">
+              <div className="info-item-patient">
                 <span className="info-label">Họ tên:</span>
                 <span className="info-value">
                   {(selectedPatient || patients[0]).userId.fullName}
                 </span>
               </div>
-              <div className="info-item">
+              <div className="info-item-patient">
                 <span className="info-label">Mã bệnh nhân: </span>
                 <span className="info-value">
                   {(selectedPatient || patients[0]).patientCode}
                 </span>
               </div>
-              <div className="info-item">
+              <div className="info-item-patient">
                 <span className="info-label">Ngày sinh:</span>
                 <span className="info-value">
-                  {new Date((selectedPatient || patients[0]).userId.dateOfBirth).toLocaleDateString()}
+                  {new Date((selectedPatient || patients[0]).userId.dateOfBirth).toLocaleDateString("vi-VN")}
                 </span>
               </div>
-              <div className="info-item">
+              <div className="info-item-patient">
                 <span className="info-label">Giới tính:</span>
                 <span className="info-value">
                   {(selectedPatient || patients[0]).userId.gender === 'male' ? 'Nam' : 'Nữ'}
                 </span>
               </div>
-              <div className="info-item">
+              <div className="info-item-patient">
                 <span className="info-label">Số điện thoại:</span>
                 <span className="info-value">
                   {(selectedPatient || patients[0]).userId.phone}

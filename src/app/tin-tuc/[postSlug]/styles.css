@@ -23,7 +23,8 @@
 /* Paragraph */
 .tinymce-content p {
   margin: 0 0 1.2em;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  text-align: justify;
 }
 
 /* Lists */
@@ -101,4 +102,64 @@
   padding: 0.2em 0.4em;
   border-radius: 3px;
   font-size: 0.9em;
+}
+
+.tinymce-content figure {
+  margin: 1.5em 0;
+  text-align: center;
+}
+
+.tinymce-content figure img {
+  display: inline-block;
+}
+
+.tinymce-content figcaption {
+  font-size: 1em;
+  color: #6a6a6a;
+  margin-top: 0.5em;
+}
+
+.tinymce-content ul {
+  list-style: none; /* bỏ dấu mặc định */
+  margin: 1em 0;
+  padding-left: 1.5em;
+}
+
+.tinymce-content ul li {
+  position: relative;
+  margin-bottom: 0.6em;
+  padding-left: 1.2em;
+}
+
+.tinymce-content ul li::before {
+  content: "•"; /* có thể đổi thành ✓, →, — */
+  position: absolute;
+  left: 0;
+  color: #2563eb; /* màu xanh */
+  font-weight: bold;
+  font-size: 1.1em;
+  line-height: 1;
+  top: 0.2em;
+}
+
+/* OL list decor */
+.tinymce-content ol {
+  counter-reset: list-counter;
+  margin: 1em 0;
+  padding-left: 1.5em;
+}
+
+.tinymce-content ol li {
+  position: relative;
+  margin-bottom: 0.6em;
+  padding-left: 1.5em;
+  counter-increment: list-counter;
+}
+
+.tinymce-content ol li::before {
+  content: counter(list-counter) ".";
+  position: absolute;
+  left: 0;
+  color: #2563eb;
+  font-weight: 600;
 }

@@ -35,18 +35,18 @@
   cursor: pointer;
 }
 
-.filters {
+.filters-service {
   display: flex;
   gap: 10px;
 }
 
-.filters select {
+.filters-service select {
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
 }
 
-.add-button {
+.add-button-service {
   padding: 8px 16px;
   background: #4CAF50;
   color: white;
@@ -55,7 +55,7 @@
   cursor: pointer;
 }
 
-.add-button:hover {
+.add-button-service:hover {
   background: #45a049;
 }
 
@@ -361,7 +361,7 @@
     align-items: stretch;
   }
   
-  .filters {
+  .filters-service {
     flex-direction: column;
   }
   

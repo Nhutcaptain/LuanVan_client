@@ -24,15 +24,6 @@ interface Doctor {
   departmentId: string;
 }
 
-interface SpecialSchedule {
-  _id: string;
-  doctorId: string;
-  startDate: Date;
-  endDate: Date;
-  type: string;
-  note: string;
-}
-
 interface ScheduleDay {
   dayOfWeek: number;
   shiftIds: Shift[];
@@ -59,21 +50,11 @@ interface ScheduleFormProps {
   onSubmit: (e: React.FormEvent) => void;
   onReset: () => void;
   isShiftSelected: (dayIndex: number, shiftId: string) => boolean;
-  // New props for the moved functionality
+  // Simplified props
   selectedDoctors: string[];
   multiSelectMode: boolean;
-  fromDate: Date;
-  toDate: Date;
-  showSpecialDates: string | null;
-  specialSchedules: SpecialSchedule[];
   onToggleMultiSelectMode: () => void;
   onDoctorSelection: (doctorId: string) => void;
-  onSetShowSpecialDates: (doctorId: string | null) => void;
-  onAddSpecialSchedule: (doctorId: string) => void;
-  onDeleteSpecialSchedule: (id: string) => void;
-  onFromDateChange: (date: Date) => void;
-  onToDateChange: (date: Date) => void;
-  getDoctorName: (id: string) => string;
   getDepartmentName: (id: string) => string;
 }
 
@@ -98,242 +79,174 @@ const ScheduleForm = ({
   onSubmit,
   onReset,
   isShiftSelected,
-  // New props
+  // Simplified props
   selectedDoctors,
   multiSelectMode,
-  fromDate,
-  toDate,
-  showSpecialDates,
-  specialSchedules,
   onToggleMultiSelectMode,
   onDoctorSelection,
-  onSetShowSpecialDates,
-  onAddSpecialSchedule,
-  onDeleteSpecialSchedule,
-  onFromDateChange,
-  onToDateChange,
-  getDoctorName,
   getDepartmentName,
 }: ScheduleFormProps) => {
-  const formatDateString = (date: Date) => date.toISOString().split('T')[0];
-  const formatDateDisplay = (date: Date) => new Date(date).toLocaleDateString('vi-VN');
-
   const filteredDoctors: Doctor[] = doctors.filter(doctor => {
      return doctor.fullName.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   return (
-    <>
-      <h2>{isEditing ? 'Chỉnh sửa' : 'Thêm mới'} Lịch Làm Việc</h2>
+    <div className="schedule-form-container">
+      <h2 className="form-title">{isEditing ? 'Chỉnh sửa' : 'Thêm mới'} Lịch Làm Việc</h2>
       
-      {/* Multi-select toggle and date range */}
-      <div className="multi-select-toggle">
+      {/* Multi-select toggle */}
+      <div className="multi-select-toggle mb-4">
         <button 
           onClick={onToggleMultiSelectMode}
-          className={`toggle-btn ${multiSelectMode ? 'active' : ''}`}
+          className={`btn ${multiSelectMode ? 'btn-primary' : 'btn-outline-primary'}`}
           type="button"
         >
           {multiSelectMode ? 'Đang chọn nhiều bác sĩ' : 'Xếp lịch cho nhiều bác sĩ'}
         </button>
-        {multiSelectMode && (
-          <div className="date-range-picker">
-            <input 
-              type="date" 
-              value={formatDateString(fromDate)} 
-              onChange={(e) => onFromDateChange(new Date(e.target.value))} 
-            />
-            <span>đến</span>
-            <input 
-              type="date" 
-              value={formatDateString(toDate)} 
-              onChange={(e) => onToDateChange(new Date(e.target.value))} 
-              min={formatDateString(fromDate)}
-            />
-          </div>
-        )}
       </div>
 
-      <form onSubmit={onSubmit}>
-        <div className="form-group">
-          <label>Khoa:</label>
-          <select
-            value={selectedDepartmentId}
-            onChange={onDepartmentChange}
-            required
-          >
-            <option value="">-- Chọn khoa --</option>
-            {departments.map(dept => (
-              <option key={dept._id} value={dept._id}>{dept.name}</option>
-            ))}
-          </select>
-        </div>
-
-        {selectedDepartmentId && (
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="form-group">
-            <label>Địa điểm làm việc:</label>
+            <label className="block mb-2 font-medium">Khoa:</label>
             <select
-              value={selectedLocationId}
-              onChange={onLocationChange}
+              value={selectedDepartmentId}
+              onChange={onDepartmentChange}
               required
-              disabled={!selectedDoctorId}
+              className="w-full p-2 border rounded"
             >
-              <option value="">-- Chọn địa điểm --</option>
-              {locations.map(location => (
-                <option key={location._id} value={location._id}>{location.name}</option>
+              <option value="">-- Chọn khoa --</option>
+              {departments.map(dept => (
+                <option key={dept._id} value={dept._id}>{dept.name}</option>
               ))}
             </select>
           </div>
-        )}
+
+          {selectedDepartmentId && (
+            <div className="form-group">
+              <label className="block mb-2 font-medium">Địa điểm làm việc:</label>
+              <select
+                value={selectedLocationId}
+                onChange={onLocationChange}
+                required
+                // disabled={!selectedDoctorId}
+                className="w-full p-2 border rounded"
+              >
+                <option value="">-- Chọn địa điểm --</option>
+                {locations.map(location => (
+                  <option key={location._id} value={location._id}>{location.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
 
         {selectedDepartmentId && (
-          <div className="search-box">
-            <label>Tìm bác sĩ:</label>
-            <input
-              type="text"
-              placeholder="Tìm kiếm bác sĩ..."
-              value={searchTerm}
-              onChange={onSearchTermChange}
-            />
-            <span className="search-icon">🔍</span>
+          <div className="search-box relative">
+            <label className="block mb-2 font-medium">Tìm bác sĩ:</label>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Tìm kiếm bác sĩ..."
+                value={searchTerm}
+                onChange={onSearchTermChange}
+                className="w-full p-2 pl-10 border rounded"
+              />
+              <span className="absolute left-3 top-3 text-gray-400">🔍</span>
+            </div>
           </div>
         )}
 
-        <div className="doctor-selection">
-          <h3>{multiSelectMode ? 'Chọn nhiều bác sĩ' : 'Chọn bác sĩ'}</h3>
-          <div className="doctor-grid">
-            {filteredDoctors.map(doctor => (
-              <div 
-                key={doctor._id}
-                className={`doctor-card-schedule ${selectedDoctors.includes(doctor._id) ? 'selected' : ''}`}
-                onClick={() => onDoctorSelection(doctor._id)}
-              >
-                <div className="doctor-info">
-                  <span className="doctor-name">{doctor.fullName}</span>
-                  <span className="doctor-department">{getDepartmentName(doctor.departmentId)}</span>
+        {selectedDepartmentId && (
+          <div className="doctor-selection">
+            <h3 className="text-lg font-semibold mb-3">{multiSelectMode ? 'Chọn nhiều bác sĩ' : 'Chọn bác sĩ'}</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredDoctors.map(doctor => (
+                <div 
+                  key={doctor._id}
+                  className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                    selectedDoctors.includes(doctor._id) 
+                      ? 'bg-blue-50 border-blue-300' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => onDoctorSelection(doctor._id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{doctor.fullName}</p>
+                      <p className="text-sm text-gray-600">{getDepartmentName(doctor.departmentId)}</p>
+                    </div>
+                    {multiSelectMode && (
+                      <input 
+                        type="checkbox" 
+                        checked={selectedDoctors.includes(doctor._id)} 
+                        readOnly 
+                        className="h-5 w-5 text-blue-600 rounded"
+                      />
+                    )}
+                  </div>
                 </div>
-                <div className="doctor-actions">
-                  <button 
-                    className="special-schedule-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSetShowSpecialDates(showSpecialDates === doctor._id ? null : doctor._id);
-                    }}
-                    type="button"
-                  >
-                    Xem lịch đặc biệt
-                  </button>
-                  <button 
-                    className="add-special-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAddSpecialSchedule(doctor._id);
-                    }}
-                    type="button"
-                  >
-                    + Thêm ngày đặc biệt
-                  </button>
-                </div>
-                {multiSelectMode && (
-                  <input 
-                    type="checkbox" 
-                    checked={selectedDoctors.includes(doctor._id)} 
-                    readOnly 
-                    className="doctor-checkbox"
-                  />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {selectedLocationId && (
+          <div className="days-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 mt-4">
+            {daysOfWeek.map((day, index) => (
+              <div key={index} className="day-card p-3 border rounded-lg">
+                <h4 className="font-medium text-center mb-3">{day}</h4>
+                {shifts.length > 0 ? (
+                  <div className="space-y-2">
+                    {shifts.map(shift => (
+                      <label key={shift._id} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={isShiftSelected(index, shift._id)}
+                          onChange={(e) => onShiftSelection(index, shift, e.target.checked)}
+                          className="h-4 w-4 text-blue-600 rounded"
+                        />
+                        <span className="text-sm">
+                          {shift.name} ({shift.startTime} - {shift.endTime})
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 text-center">Không có ca nào tại địa điểm này</p>
                 )}
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Special dates modal */}
-        {showSpecialDates && (
-          <div className="special-dates-modal">
-            <div className="modal-header">
-              <h3>Lịch đặc biệt của {getDoctorName(showSpecialDates)}</h3>
-              <button onClick={() => onSetShowSpecialDates(null)} type="button">×</button>
-            </div>
-            <div className="modal-content">
-              {specialSchedules.filter(s => s.doctorId === showSpecialDates).length > 0 ? (
-                specialSchedules
-                  .filter(s => s.doctorId === showSpecialDates)
-                  .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
-                  .map(schedule => (
-                    <div key={schedule._id} className="special-schedule-item">
-                      <span className="schedule-date">
-                        {formatDateDisplay(schedule.startDate)} - {formatDateDisplay(schedule.endDate)}
-                      </span>
-                      <span className={`schedule-type ${schedule.type.replace(/\s+/g, '-').toLowerCase()}`}>
-                        {schedule.type}
-                      </span>
-                      <span className="schedule-note">{schedule.note}</span>
-                      <button 
-                        className="delete-btn"
-                        onClick={() => onDeleteSpecialSchedule(schedule._id)}
-                        type="button"
-                      >
-                        Xóa
-                      </button>
-                    </div>
-                  ))
-              ) : (
-                <p className="no-special-dates">Không có lịch đặc biệt</p>
-              )}
-            </div>
-          </div>
         )}
 
-        <div className="days-grid">
-          {daysOfWeek.map((day, index) => (
-            <div key={index} className="day-card">
-              <h4>{day}</h4>
-              {shifts.length > 0 ? (
-                <div className="shifts-selection">
-                  {shifts.map(shift => (
-                    <label key={shift._id} className="shift-option">
-                      <input
-                        type="checkbox"
-                        checked={isShiftSelected(index, shift._id)}
-                        onChange={(e) => onShiftSelection(index, shift, e.target.checked)}
-                      />
-                      <span className="shift-info">
-                        {shift.name} ({shift.startTime} - {shift.endTime})
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              ) : (
-                <p className="no-shifts">Không có ca nào tại địa điểm này</p>
-              )}
-            </div>
-          ))}
+        <div className="form-group flex items-center space-x-2">
+          <input
+            type="checkbox"
+            checked={isActive}
+            onChange={onActiveChange}
+            className="h-4 w-4 text-blue-600 rounded"
+          />
+          <label>Kích hoạt lịch làm việc</label>
         </div>
 
-        <div className="form-group">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={isActive}
-              onChange={onActiveChange}
-            />
-            <span>Kích hoạt lịch làm việc</span>
-          </label>
-        </div>
-
-        <div className="form-actions">
-          <button type="submit" className="submit-btn">
-            {isEditing ? 'Cập nhật' : 'Thêm mới'}
-          </button>
+        <div className="form-actions flex justify-end space-x-3 pt-4">
           <button
             type="button"
-            className="cancel-btn"
             onClick={onReset}
+            className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
           >
             Hủy
           </button>
+          <button 
+            type="submit" 
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Cập nhật
+          </button>
         </div>
       </form>
-    </>
+    </div>
   );
 };
 

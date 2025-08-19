@@ -1,48 +1,61 @@
-/* styles.css */
-.doctor-detail-container {
+/* Base Styles */
+:root {
+  --primary-color: #3498db;
+  --secondary-color: #2ecc71;
+  --danger-color: #e74c3c;
+  --text-color: #333;
+  --light-gray: #f5f5f5;
+  --border-color: #ddd;
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+
+/* Utility Classes */
+.loading-container, .error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.error-container {
+  color: var(--danger-color);
+}
+
+/* Doctor Profile Container */
+.doctor-profile-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333;
-  background-color: #f9f9f9;
-  border-radius: 10px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 }
 
-/* Header section */
-.doctor-header {
+/* Profile Header */
+.profile-header {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 2rem;
+  background: white;
   padding: 2rem;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
   border-radius: 10px;
+  box-shadow: var(--shadow);
   margin-bottom: 2rem;
 }
 
-@media (min-width: 768px) {
-  .doctor-header {
-    flex-direction: row;
-    align-items: flex-start;
-  }
-}
-
-.avatar-container {
+.avatar-section {
+  flex: 0 0 200px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
 }
 
 .doctor-avatar {
-  width: 200px;
-  height: 200px;
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
   object-fit: cover;
-  border: 5px solid #fff;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  border: 5px solid var(--light-gray);
   transition: transform 0.3s ease;
 }
 
@@ -50,248 +63,216 @@
   transform: scale(1.05);
 }
 
-.doctor-info {
+.profile-info {
   flex: 1;
-  text-align: center;
+  min-width: 300px;
 }
 
-@media (min-width: 768px) {
-  .doctor-info {
-    text-align: left;
-  }
-}
-
-.doctor-info h1 {
+.doctor-name {
   font-size: 2.2rem;
   margin-bottom: 0.5rem;
-  color: #2c3e50;
+  color: var(--primary-color);
 }
 
 .specialization {
   font-size: 1.4rem;
-  color: #7f8c8d;
+  color: #666;
   margin-bottom: 1.5rem;
-  font-weight: 500;
+  font-style: italic;
 }
 
 .contact-info {
-  background-color: #fff;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.contact-info p {
-  margin: 0.8rem 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 1.5rem;
 }
 
-.contact-info strong {
-  color: #2c3e50;
-  min-width: 100px;
+.contact-item {
+  font-size: 1.1rem;
+  min-width: 250px;
 }
 
-/* Action buttons */
+.label {
+  font-weight: bold;
+  margin-right: 0.5rem;
+  color: #555;
+}
+
+/* Action Buttons */
 .action-buttons {
   display: flex;
+  justify-content: flex-end;
   gap: 1rem;
-  justify-content: center;
-  margin: 2rem 0;
+  margin-bottom: 2rem;
 }
 
-button {
-  padding: 0.8rem 1.8rem;
+.btn {
+  padding: 0.8rem 1.5rem;
   border: none;
-  border-radius: 50px;
-  font-size: 1.1rem;
+  border-radius: 5px;
+  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 600;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  justify-content: center;
   gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.btn i {
+  font-size: 1rem;
 }
 
 .edit-btn {
-  background-color: #3498db;
+  background-color: var(--primary-color);
   color: white;
 }
 
 .edit-btn:hover {
   background-color: #2980b9;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
 }
 
 .save-btn {
-  background-color: #2ecc71;
+  background-color: var(--secondary-color);
   color: white;
 }
 
 .save-btn:hover {
   background-color: #27ae60;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(46, 204, 113, 0.3);
 }
 
 .cancel-btn {
-  background-color: #e74c3c;
+  background-color: var(--danger-color);
   color: white;
 }
 
 .cancel-btn:hover {
   background-color: #c0392b;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
 }
 
-.change-avatar-btn {
-  background-color: #9b59b6;
-  color: white;
-  padding: 0.6rem 1.2rem;
-  font-size: 1rem;
-}
-
-.change-avatar-btn:hover {
-  background-color: #8e44ad;
-}
-
-/* Doctor details sections */
-.doctor-details {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-.personal-info,
-.professional-info,
-.schedule-section {
-  background-color: #fff;
+/* Info Sections */
+.info-section {
+  background: white;
   padding: 2rem;
   border-radius: 10px;
-  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
 }
 
-.personal-info h2,
-.professional-info h2,
-.schedule-section h2 {
+.section-title {
   font-size: 1.8rem;
+  color: var(--primary-color);
   margin-bottom: 1.5rem;
-  color: #2c3e50;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid #ecf0f1;
+  border-bottom: 2px solid var(--light-gray);
 }
 
 .info-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-}
-
-@media (min-width: 768px) {
-  .info-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.info-grid div {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 2rem;
 }
 
-.professional-info h3,
-.schedule-section h3 {
-  font-size: 1.5rem;
-  margin: 1.5rem 0 1rem;
-  color: #34495e;
+.info-column {
+  flex: 1;
+  min-width: 300px;
 }
 
-ul {
-  list-style-type: none;
-  padding-left: 0;
+.info-item {
+  margin-bottom: 1.2rem;
+  font-size: 1.1rem;
 }
 
-ul li {
-  position: relative;
-  padding-left: 1.5rem;
+.address-value {
+  margin-top: 0.5rem;
+  line-height: 1.6;
+}
+
+/* Professional Sections */
+.professional-section {
+  margin-bottom: 2rem;
+}
+
+.subsection-title {
+  font-size: 1.4rem;
+  color: #444;
+  margin-bottom: 1rem;
+}
+
+.professional-list {
+  list-style: none;
+  padding-left: 1rem;
+}
+
+.professional-item {
   margin-bottom: 0.8rem;
+  position: relative;
+  padding-left: 1.8rem;
 }
 
-ul li::before {
-  content: "•";
-  color: #3498db;
-  font-size: 1.5rem;
+.professional-item i {
   position: absolute;
   left: 0;
-  top: -0.2rem;
+  top: 0.2rem;
+  color: var(--secondary-color);
 }
 
-.shifts-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-}
-
-.shifts-list li {
-  background-color: #f8f9fa;
-  border-radius: 5px;
-  padding: 0.8rem 1.2rem;
-  font-size: 1.1rem;
-  border-left: 3px solid #3498db;
-}
-
-/* Edit mode styles */
+/* Form Elements */
 .edit-input {
   width: 100%;
   padding: 0.8rem;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 1.1rem;
-  transition: border 0.3s ease;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 1rem;
+  margin-top: 0.3rem;
 }
 
 .edit-input:focus {
   outline: none;
-  border-color: #3498db;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
 }
 
-/* Loading and error states */
-.loading,
-.error {
-  text-align: center;
-  padding: 2rem;
-  font-size: 1.5rem;
-  color: #7f8c8d;
+.name-input {
+  font-size: 1.8rem;
+  font-weight: bold;
+  padding: 0.5rem;
+  border: none;
+  border-bottom: 2px solid var(--border-color);
+  border-radius: 0;
 }
 
-.error {
-  color: #e74c3c;
+.name-input:focus {
+  border-bottom-color: var(--primary-color);
+  box-shadow: none;
 }
 
-/* Responsive adjustments */
-@media (max-width: 600px) {
-  .doctor-detail-container {
-    padding: 1rem;
+.form-group {
+  margin-bottom: 1.2rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-weight: bold;
+  color: #555;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .profile-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
   }
   
-  .doctor-header,
-  .personal-info,
-  .professional-info,
-  .schedule-section {
-    padding: 1.5rem;
+  .contact-info {
+    justify-content: center;
   }
   
   .action-buttons {
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  button {
-    width: 100%;
+    justify-content: center;
   }
 }

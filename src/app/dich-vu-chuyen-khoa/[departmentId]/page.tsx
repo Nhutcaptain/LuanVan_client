@@ -24,7 +24,7 @@ interface Department {
   name: string;
   introduction?: string;
   treatmentMethods?: string;
-  contentId: string;
+  content: string;
 }
 
 
@@ -173,7 +173,7 @@ const DoctorList = () => {
       <div className="tab-content">
         {activeTab === 'introduction' && (
           <TabContent 
-            content={introduction} 
+            content={currentDepartment?.content} 
             loading={loading} 
           />
         )}
@@ -230,7 +230,7 @@ const DoctorList = () => {
               <span>Tìm thấy {filteredDoctors.length} bác sĩ</span>
               {specializationFilter && (
                 <span className="filter-tag">
-                  Chuyên khoa: {specializationFilter}
+                  Lĩnh vự chuyên sâu: {specializationFilter}
                   <button onClick={() => setSpecializationFilter('')}>×</button>
                 </span>
               )}
@@ -260,11 +260,11 @@ const DoctorList = () => {
                       <h3 className="doctor-name">{getPrefixTitle(doctor.academicTitle, doctor.degree)} {doctor.fullName}</h3>
                       <div className="doctor-meta">
                         <div className="meta-item">
-                          <span className="meta-label">KHOA:</span>
+                          <span className="meta-label">CHUYÊN KHOA:</span>
                           <span className="meta-value">{doctor.department || 'N/A'}</span>
                         </div>
                         <div className="meta-item">
-                          <span className="meta-label">CHUYÊN KHOA:</span>
+                          <span className="meta-label">LĨNH VỰC CHUYÊN SÂU:</span>
                           <span className="meta-value">{doctor.specialization}</span>
                         </div>
                       </div>

@@ -317,7 +317,7 @@ const AppointmentPage = () => {
     fetchWeeklySchedule();
 
     fetchOvertimeSchedule();
-  }, [ formData.doctorId]);
+  }, [formData.doctorId]);
 
   // useEffect(() => {
   //   if (!formData.appointmentDate || !overtimeSchedule) {
@@ -342,70 +342,64 @@ const AppointmentPage = () => {
   // }, [overtimeSchedule]);
 
   useEffect(() => {
-  let availableDays: number[] = [];
+    let availableDays: number[] = [];
 
-  if (consultationService === "officeConsultation" && weeklySchedule) {
-    availableDays = weeklySchedule.schedule.map((s) => s.dayOfWeek);
-  } else if (
-    consultationService === "overtimeConsultation" &&
-    overtimeSchedule
-  ) {
-    availableDays = overtimeSchedule.weeklySchedule.map(
-      (item) => item.dayOfWeek
-    );
-  }
+    if (consultationService === "officeConsultation" && weeklySchedule) {
+      availableDays = weeklySchedule.schedule.map((s) => s.dayOfWeek);
+    } else if (
+      consultationService === "overtimeConsultation" &&
+      overtimeSchedule
+    ) {
+      availableDays = overtimeSchedule.weeklySchedule.map(
+        (item) => item.dayOfWeek
+      );
+    }
 
-  setAllowDayOfWeek(availableDays);
+    setAllowDayOfWeek(availableDays);
 
-  // 👉 Tạo danh sách ngày bị vô hiệu hóa
-  const disabled: Date[] = [];
+    // 👉 Tạo danh sách ngày bị vô hiệu hóa
+    const disabled: Date[] = [];
 
-  // 1. Vô hiệu hóa từ specialSchedules
-  if (specialSchedules && specialSchedules.length > 0) {
-    specialSchedules.forEach((special) => {
-      const start = moment(special.startDate);
-      const end = moment(special.endDate);
-      const current = start.clone();
-
-      while (current.isSameOrBefore(end, "day")) {
-        disabled.push(current.toDate());
-        current.add(1, "day");
-      }
-    });
-  }
-
-  // 2. Vô hiệu hóa từ pausePeriods trong overtimeSchedule
-  if (
-    consultationService === "overtimeConsultation" &&
-    overtimeSchedule &&
-    overtimeSchedule.weeklySchedule
-  ) {
-    overtimeSchedule.weeklySchedule.forEach((day) => {
-      const { pausePeriods, dayOfWeek } = day;
-
-      pausePeriods?.forEach((period) => {
-        const start = moment(period.startDate);
-        const end = moment(period.endDate);
+    // 1. Vô hiệu hóa từ specialSchedules
+    if (specialSchedules && specialSchedules.length > 0) {
+      specialSchedules.forEach((special) => {
+        const start = moment(special.startDate);
+        const end = moment(special.endDate);
         const current = start.clone();
 
         while (current.isSameOrBefore(end, "day")) {
-          if (current.day() === dayOfWeek) {
-            disabled.push(current.toDate());
-          }
+          disabled.push(current.toDate());
           current.add(1, "day");
         }
       });
-    });
-  }
+    }
 
-  setDisabledDates(disabled);
-}, [
-  consultationService,
-  weeklySchedule,
-  overtimeSchedule,
-  specialSchedules,
-]);
+    // 2. Vô hiệu hóa từ pausePeriods trong overtimeSchedule
+    if (
+      consultationService === "overtimeConsultation" &&
+      overtimeSchedule &&
+      overtimeSchedule.weeklySchedule
+    ) {
+      overtimeSchedule.weeklySchedule.forEach((day) => {
+        const { pausePeriods, dayOfWeek } = day;
 
+        pausePeriods?.forEach((period) => {
+          const start = moment(period.startDate);
+          const end = moment(period.endDate);
+          const current = start.clone();
+
+          while (current.isSameOrBefore(end, "day")) {
+            if (current.day() === dayOfWeek) {
+              disabled.push(current.toDate());
+            }
+            current.add(1, "day");
+          }
+        });
+      });
+    }
+
+    setDisabledDates(disabled);
+  }, [consultationService, weeklySchedule, overtimeSchedule, specialSchedules]);
 
   const isDateDisabled = (date: Date) => {
     if (!overtimeSchedule) return true;
@@ -563,45 +557,44 @@ const AppointmentPage = () => {
   }
 
   const getSelectedLocation = () => {
-  const selectedDayOfWeek = formData.appointmentDate
-    ? new Date(formData.appointmentDate).getDay()
-    : null;
-  if (selectedDayOfWeek === null) return "";
-  const sessionTime = formData.session.trim(); // Ví dụ: "07:00 - 12:00"
+    const selectedDayOfWeek = formData.appointmentDate
+      ? new Date(formData.appointmentDate).getDay()
+      : null;
+    if (selectedDayOfWeek === null) return "";
+    const sessionTime = formData.session.trim(); // Ví dụ: "07:00 - 12:00"
 
-  if (consultationService === "officeConsultation" && weeklySchedule) {
-    const scheduleDay = weeklySchedule.schedule.find(
-      (item) => item.dayOfWeek === selectedDayOfWeek
-    );
+    if (consultationService === "officeConsultation" && weeklySchedule) {
+      const scheduleDay = weeklySchedule.schedule.find(
+        (item) => item.dayOfWeek === selectedDayOfWeek
+      );
 
-    if (scheduleDay) {
-      const matchedShift = scheduleDay.shiftIds.find((shift) => {
-        const shiftTime = `${shift.startTime}-${shift.endTime}`;
-        return shiftTime === sessionTime;
-      });
+      if (scheduleDay) {
+        const matchedShift = scheduleDay.shiftIds.find((shift) => {
+          const shiftTime = `${shift.startTime}-${shift.endTime}`;
+          return shiftTime === sessionTime;
+        });
 
-      return matchedShift ? (matchedShift.locationId as any).name : "";
+        return matchedShift ? (matchedShift.locationId as any).name : "";
+      }
     }
-  }
 
-  if (overtimeSchedule) {
-    const overtimeDay = overtimeSchedule.weeklySchedule.find(
-      (item) => item.dayOfWeek === selectedDayOfWeek
-    );
+    if (overtimeSchedule) {
+      const overtimeDay = overtimeSchedule.weeklySchedule.find(
+        (item) => item.dayOfWeek === selectedDayOfWeek
+      );
 
-    if (overtimeDay) {
-      const matchedSlot = overtimeDay.slots.find((slot) => {
-        const slotTime = `${slot.startTime}-${slot.endTime}`;
-        return slotTime === sessionTime;
-      });
+      if (overtimeDay) {
+        const matchedSlot = overtimeDay.slots.find((slot) => {
+          const slotTime = `${slot.startTime}-${slot.endTime}`;
+          return slotTime === sessionTime;
+        });
 
-      return matchedSlot ? (overtimeDay.locationId as any).name : "";
+        return matchedSlot ? (overtimeDay.locationId as any).name : "";
+      }
     }
-  }
 
-  return "";
-};
-
+    return "";
+  };
 
   const getAvailableTimeSlots = () => {
     if (!formData.appointmentDate || !consultationService) return;
@@ -758,13 +751,16 @@ const AppointmentPage = () => {
               onChange={(date: Date | null) => {
                 setFormData((prev) => ({
                   ...prev,
-                  appointmentDate: date ? date.toISOString().split("T")[0] : "",
+                  appointmentDate: date
+                    ? moment(date).format("YYYY-MM-DD")
+                    : "",
                 }));
               }}
               minDate={new Date()}
               placeholderText="Chọn ngày khám"
               filterDate={(date) => {
-                if (!allowDayOfWeek || allowDayOfWeek.length === 0) return false;
+                if (!allowDayOfWeek || allowDayOfWeek.length === 0)
+                  return false;
                 const isAllowedDay = allowDayOfWeek.includes(date.getDay());
                 const isDisabled = disabledDates.some((d) =>
                   moment(d).isSame(date, "day")

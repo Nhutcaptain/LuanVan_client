@@ -81,14 +81,14 @@ const DoctorSearchPage = () => {
 
   const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      router.push(`/tim-bac-si2/?title=${encodeURIComponent(searchTerm)}`);
+      router.push(`/tim-bac-si/?title=${encodeURIComponent(searchTerm)}`);
     }
   };
 
   const clearSearch = () => {
     setSearchTerm('');
     setDoctors([]);
-    router.push('/tim-bac-si2');
+    router.push('/tim-bac-si');
   };
 
   return (
@@ -118,7 +118,7 @@ const DoctorSearchPage = () => {
           </div>
           <button
             className="search-button"
-            onClick={() => router.push(`/tim-bac-si2/?title=${encodeURIComponent(searchTerm)}`)}
+            onClick={() => router.push(`/tim-bac-si/?title=${encodeURIComponent(searchTerm)}`)}
             disabled={!searchTerm.trim()}
           >
             Tìm kiếm

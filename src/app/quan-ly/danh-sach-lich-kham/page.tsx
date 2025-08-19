@@ -206,26 +206,33 @@ const AppointmentsPage = () => {
     router.push(`/quan-ly/xem-benh-an?examinationId=${id}`)
   }
 
-  const getStatusBadge = (status: string, confirmStatus: string) => {
-    if (status === 'pending' || confirmStatus === 'pending') {
-      return { text: 'Chờ xác nhận', class: 'pending' };
-    }
-    if (status === 'scheduled' && confirmStatus === 'confirmed') {
-      return { text: 'Đã xác nhận', class: 'confirmed' };
-    }
-    if (status === 'scheduled') {
-      return { text: 'Đã đặt', class: 'scheduled' };
-    }
-    if (status === 'waiting_result') {
-      return { text: 'Đang khám', class: 'waiting' };
-    }
-    if (status === 'completed') {
-      return { text: 'Hoàn thành', class: 'completed' };
-    }
-    if (status === 'cancelled') {
+  const getStatusBadge = (appointment: Appointment) => {
+    // Ưu tiên hiển thị trạng thái hủy trước
+    if (appointment.status === 'cancelled') {
       return { text: 'Đã hủy', class: 'cancelled' };
     }
-    return { text: status, class: status };
+    
+    // Tiếp theo là các trạng thái khác
+    if (appointment.status === 'pending' || appointment.confirmStatus === 'pending') {
+      return { text: 'Chờ xác nhận', class: 'pending' };
+    }
+    if (appointment.status === 'scheduled' && appointment.confirmStatus === 'confirmed') {
+      return { text: 'Đã xác nhận', class: 'confirmed' };
+    }
+    if(appointment.confirmStatus === 'rejected') {
+      return { text: 'Đã từ chối', class: 'rejected' };
+    }
+    if (appointment.status === 'scheduled') {
+      return { text: 'Đã đặt', class: 'scheduled' };
+    }
+    if (appointment.status === 'waiting_result') {
+      return { text: 'Đang khám', class: 'waiting' };
+    }
+    if (appointment.status === 'completed') {
+      return { text: 'Hoàn thành', class: 'completed' };
+    }
+    
+    return { text: appointment.status, class: appointment.status };
   };
 
   return (
@@ -246,7 +253,7 @@ const AppointmentsPage = () => {
         <div className="appointments-list">
           {appointments.map(appointment => {
             const daysRemaining = calculateDaysRemaining(appointment.appointmentDate);
-            const statusBadge = getStatusBadge(appointment.status, appointment.confirmStatus);
+            const statusBadge = getStatusBadge(appointment);
             
             return (
               <div 
@@ -254,7 +261,8 @@ const AppointmentsPage = () => {
                 className={`appointment-card ${statusBadge.class}`}
                 onClick={() => handleAppointmentClick(appointment)}
               >
-                <button 
+                {appointment.status === 'cancelled' && (
+                  <button 
                   className="delete-btn"
                   onClick={(e) => handleDeleteAppointment(appointment._id, e)}
                   disabled={appointment.status !== 'cancelled'}
@@ -262,6 +270,7 @@ const AppointmentsPage = () => {
                 >
                   <FaTimes />
                 </button>
+                )}
                 
                 <div className="card-header">
                   <h3>
@@ -295,7 +304,7 @@ const AppointmentsPage = () => {
 
       {selectedAppointment && (
         <div className="appointment-detail-modal">
-          <div className="modal-content">
+          <div className="modal-content-appointment">
             <button className="close-button" onClick={handleCloseDetail}>×</button>
             
             <h2>CHI TIẾT LỊCH HẸN</h2>
@@ -323,8 +332,8 @@ const AppointmentsPage = () => {
               </div>
               <div className="detail-row">
                 <span className="detail-label">Trạng thái:</span>
-                <span className={`detail-value status ${getStatusBadge(selectedAppointment.status, selectedAppointment.confirmStatus).class}`}>
-                  {getStatusBadge(selectedAppointment.status, selectedAppointment.confirmStatus).text}
+                <span className={`detail-value status ${getStatusBadge(selectedAppointment).class}`}>
+                  {getStatusBadge(selectedAppointment).text}
                   {selectedAppointment.status === 'completed' && (
                     <FaCheckCircle className="completed-icon" />
                   )}

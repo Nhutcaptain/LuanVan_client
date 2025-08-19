@@ -190,3 +190,55 @@
   height: 1em;
   margin: 0;
 }
+
+.content-block.image-text-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px; /* khoảng cách giữa ảnh và text */
+  margin: 20px 0;
+}
+
+/* Ảnh */
+.content-block.image-text-left .image-wrapper {
+  flex: 0 0 40%; /* chiếm 40% chiều ngang */
+  max-width: 400px;
+}
+.content-block.image-text-left .image-wrapper img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px; /* bo góc ảnh */
+  object-fit: cover;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Text */
+.content-block.image-text-left .text-wrapper {
+  flex: 1;
+  font-family: "Inter", sans-serif;
+  color: #333;
+}
+.content-block.image-text-left .text-wrapper h4 {
+  font-size: 1.25rem;
+  margin-bottom: 10px;
+  color: #2a7c4f; /* xanh lá nhạt */
+}
+.content-block.image-text-left .text-wrapper p {
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+.content-block.image-text-left .text-wrapper ul {
+  padding-left: 20px;
+  list-style: disc;
+  margin: 10px 0;
+}
+
+/* Responsive: ảnh và text xếp dọc khi màn hình nhỏ */
+@media (max-width: 768px) {
+  .content-block.image-text-left {
+    flex-direction: column;
+  }
+  .content-block.image-text-left .image-wrapper {
+    flex: 0 0 auto;
+    max-width: 100%;
+  }
+}

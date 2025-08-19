@@ -421,7 +421,7 @@ const DepartmentManagement: React.FC = () => {
     <div className="department-management">
       {!isContentManagement ? (
         <>
-        <div className="header">
+        <div className="department-header">
         <h1>Quản lý Chuyên khoa</h1>
         <div className="tabs">
           <button

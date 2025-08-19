@@ -50,8 +50,10 @@ const LoginPage = () => {
         localStorage.setItem('role', res.data.role || '');
         if (res.data.role === 'doctor') {
           localStorage.setItem('doctorId', res.data.doctorId);
+          window.location.href = '/bac-si/thong-tin';
+          return;
         }
-        window.location.href = '/'; // Redirect to home page
+        window.location.href = '/';
       } else {
         setErrorMsg('Đăng nhập thất bại!');
       }

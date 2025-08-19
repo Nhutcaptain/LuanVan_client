@@ -72,7 +72,7 @@ const DoctorSchedulePage = () => {
         setOvertimeSchedules(res.data);
       }
     } catch (error) {
-      console.error("Lỗi khi lấy lịch khám ngoài giờ:", error);
+      
     }
   };
 
@@ -133,10 +133,10 @@ const DoctorSchedulePage = () => {
 
       if (!scheduleToUpdate) return;
       Swal.fire({
-        title: 'Đang cập nhật',
-        icon: 'info',
+        title: "Đang cập nhật",
+        icon: "info",
         didOpen: () => Swal.showLoading(),
-      })
+      });
 
       let updatedSchedule;
 
@@ -174,10 +174,10 @@ const DoctorSchedulePage = () => {
       if (response.status === 200) {
         Swal.close();
         Swal.fire({
-          title: 'Đã ngừng lịch thành công',
-          icon: 'success',
+          title: "Đã ngừng lịch thành công",
+          icon: "success",
           showCancelButton: true,
-        })
+        });
         fetchOvertimeSchedules();
         setShowPauseModal(false);
         setPauseForm({
@@ -199,7 +199,7 @@ const DoctorSchedulePage = () => {
     dayOfWeek: number,
     pauseIndex: number
   ) => {
-     const result = await Swal.fire({
+    const result = await Swal.fire({
       title: "Xác nhận xoá ngừng lịch !",
       text: "Bạn có chắc muốn xoá khoảng thời gian ngừng lịch này?",
       icon: "question",
@@ -210,7 +210,7 @@ const DoctorSchedulePage = () => {
       cancelButtonColor: "#d33",
     });
 
-    if(!result.isConfirmed) return;
+    if (!result.isConfirmed) return;
 
     try {
       const scheduleToUpdate = overtimeSchedules?.weeklySchedule.find(
@@ -324,53 +324,54 @@ const DoctorSchedulePage = () => {
 
   // Kiểm tra và cập nhật trạng thái isActive dựa trên pausePeriods
   useEffect(() => {
-  if (!overtimeSchedules) return;
+    if (!overtimeSchedules) return;
 
-  const now = new Date();
+    const now = new Date();
 
-  overtimeSchedules.weeklySchedule.forEach((schedule) => {
-    let isActive = schedule.isActive;
-    let needsUpdate = false;
+    overtimeSchedules.weeklySchedule.forEach((schedule) => {
+      let isActive = schedule.isActive;
+      let needsUpdate = false;
 
-    // Kiểm tra pausePeriods
-    if (schedule.pausePeriods && schedule.pausePeriods.length > 0) {
-      const activePauses = schedule.pausePeriods.filter(
-        (pause) =>
-          new Date(pause.startDate) <= now && now <= new Date(pause.endDate)
-      );
+      // Kiểm tra pausePeriods
+      if (schedule.pausePeriods && schedule.pausePeriods.length > 0) {
+        const activePauses = schedule.pausePeriods.filter(
+          (pause) =>
+            new Date(pause.startDate) <= now && now <= new Date(pause.endDate)
+        );
 
-      // Nếu đang có pause active → set isActive = false
-      if (activePauses.length > 0 && isActive) {
-        isActive = false;
-        needsUpdate = true;
+        // Nếu đang có pause active → set isActive = false
+        if (activePauses.length > 0 && isActive) {
+          isActive = false;
+          needsUpdate = true;
+        }
+        // Nếu không có pause active nhưng isActive = false → bật lại
+        else if (activePauses.length === 0 && !isActive) {
+          isActive = true;
+          needsUpdate = true;
+        }
       }
-      // Nếu không có pause active nhưng isActive = false → bật lại
-      else if (activePauses.length === 0 && !isActive) {
-        isActive = true;
-        needsUpdate = true;
+
+      if (needsUpdate) {
+        api
+          .put(`/schedule/updateOvertimeSchedule/${overtimeSchedules._id}`, {
+            dayOfWeek: schedule.dayOfWeek,
+            slots: schedule.slots || [], // giữ nguyên slots
+            isActive,
+            locationId: schedule.locationId,
+            pausePeriods: schedule.pausePeriods || [],
+          })
+          .then(() => {
+            console.log(
+              `Đã cập nhật trạng thái cho ngày ${schedule.dayOfWeek}`
+            );
+            fetchOvertimeSchedules();
+          })
+          .catch((error) => {
+            console.error("Lỗi khi cập nhật trạng thái tự động:", error);
+          });
       }
-    }
-
-    if (needsUpdate) {
-      api
-        .put(`/schedule/updateOvertimeSchedule/${overtimeSchedules._id}`, {
-          dayOfWeek: schedule.dayOfWeek,
-          slots: schedule.slots || [], // giữ nguyên slots
-          isActive,
-          locationId: schedule.locationId,
-          pausePeriods: schedule.pausePeriods || [],
-        })
-        .then(() => {
-          console.log(`Đã cập nhật trạng thái cho ngày ${schedule.dayOfWeek}`);
-          fetchOvertimeSchedules();
-        })
-        .catch((error) => {
-          console.error("Lỗi khi cập nhật trạng thái tự động:", error);
-        });
-    }
-  });
-}, [overtimeSchedules]);
-
+    });
+  }, [overtimeSchedules]);
 
   return (
     <div className="doctor-schedule-page-container">
@@ -409,76 +410,36 @@ const DoctorSchedulePage = () => {
           <h3>Lịch khám ngoài giờ hiện tại</h3>
           {overtimeSchedules ? (
             <div className="schedule-grid">
-              {overtimeSchedules.weeklySchedule.map((weeklySchedule, index) => (
-                <div
-                  key={`${overtimeSchedules._id}-${index}`}
-                  className={`schedule-item ${
-                    weeklySchedule.isActive ? "active" : "paused"
-                  }`}
-                >
-                  <div className="schedule-header">
-                    <h4>
-                      {
-                        [
-                          "Chủ nhật",
-                          "Thứ 2",
-                          "Thứ 3",
-                          "Thứ 4",
-                          "Thứ 5",
-                          "Thứ 6",
-                          "Thứ 7",
-                        ][weeklySchedule.dayOfWeek]
-                      }
-                    </h4>
-                    <div className="schedule-actions">
-                      <button
-                        onClick={() =>
-                          handleToggleActive(
-                            overtimeSchedules._id ?? "",
-                            weeklySchedule
-                          )
+              {/* Sắp xếp mảng weeklySchedule theo thứ tự từ Thứ 2 (1) đến Chủ nhật (0) */}
+              {[...overtimeSchedules.weeklySchedule]
+                .sort((a, b) => {
+                  // Xử lý Chủ nhật (0) để xuất hiện cuối cùng
+                  if (a.dayOfWeek === 0) return 1;
+                  if (b.dayOfWeek === 0) return -1;
+                  return a.dayOfWeek - b.dayOfWeek;
+                })
+                .map((weeklySchedule, index) => (
+                  <div
+                    key={`${overtimeSchedules._id}-${index}`}
+                    className={`schedule-item ${
+                      weeklySchedule.isActive ? "active" : "paused"
+                    }`}
+                  >
+                    <div className="schedule-header">
+                      <h4>
+                        {
+                          [
+                            "Chủ nhật",
+                            "Thứ 2",
+                            "Thứ 3",
+                            "Thứ 4",
+                            "Thứ 5",
+                            "Thứ 6",
+                            "Thứ 7",
+                          ][weeklySchedule.dayOfWeek]
                         }
-                        className={`btn-toggle ${
-                          weeklySchedule.isActive ? "active" : "paused"
-                        }`}
-                      >
-                        {weeklySchedule.isActive ? "Ngừng" : "Bật lại"}
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleEditSchedule(
-                            weeklySchedule,
-                            overtimeSchedules._id ?? ""
-                          )
-                        }
-                        className="btn-edit"
-                      >
-                        Sửa
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleDeleteSchedule(weeklySchedule.dayOfWeek)
-                        }
-                        className="btn-delete"
-                      >
-                        Xóa
-                      </button>
-                    </div>
-                  </div>
-                  <p>Địa điểm: {(weeklySchedule.locationId as any).name}</p>
-                  <ul>
-                    {weeklySchedule.slots.map((slot, slotIndex) => (
-                      <li key={slotIndex}>
-                        {slot.startTime} - {slot.endTime}
-                      </li>
-                    ))}
-                  </ul>
-
-                  {/* Hiển thị các khoảng tạm ngừng */}
-                  {!weeklySchedule.isActive &&
-                    weeklySchedule.pausePeriods?.length === 0 && (
-                      <div className="pause-info">
-                        <span>Đã ngừng hoạt động (vô thời hạn)</span>
+                      </h4>
+                      <div className="schedule-actions">
                         <button
                           onClick={() =>
                             handleToggleActive(
@@ -486,52 +447,100 @@ const DoctorSchedulePage = () => {
                               weeklySchedule
                             )
                           }
-                          className="btn-resume"
+                          className={`btn-toggle ${
+                            weeklySchedule.isActive ? "active" : "paused"
+                          }`}
                         >
-                          Bật lại
+                          {weeklySchedule.isActive ? "Ngừng" : "Bật lại"}
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleEditSchedule(
+                              weeklySchedule,
+                              overtimeSchedules._id ?? ""
+                            )
+                          }
+                          className="btn-edit"
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleDeleteSchedule(weeklySchedule.dayOfWeek)
+                          }
+                          className="btn-delete"
+                        >
+                          Xóa
                         </button>
                       </div>
-                    )}
+                    </div>
+                    <p>Địa điểm: {(weeklySchedule.locationId as any).name}</p>
+                    <ul>
+                      {weeklySchedule.slots.map((slot, slotIndex) => (
+                        <li key={slotIndex}>
+                          {slot.startTime} - {slot.endTime}
+                        </li>
+                      ))}
+                    </ul>
 
-                  {weeklySchedule.pausePeriods &&
-                    weeklySchedule.pausePeriods.length > 0 && (
-                      <div className="pause-periods">
-                        <h5>Thời gian tạm ngừng:</h5>
-                        <ul>
-                          {weeklySchedule.pausePeriods.map(
-                            (pause, pauseIndex) => (
-                              <li key={pauseIndex}>
-                                <span>
-                                  Ngừng từ{" "}
-                                  {new Date(pause.startDate).toLocaleDateString(
-                                    "vi-VN"
-                                  )}{" "}
-                                  đến{" "}
-                                  {new Date(pause.endDate).toLocaleDateString(
-                                    "vi-VN"
-                                  )}
-                                  : {pause.reason}
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    handleDeletePausePeriod(
-                                      overtimeSchedules._id ?? "",
-                                      weeklySchedule.dayOfWeek,
-                                      pauseIndex
-                                    )
-                                  }
-                                  className="btn-delete-pause"
-                                >
-                                  Xóa
-                                </button>
-                              </li>
-                            )
-                          )}
-                        </ul>
-                      </div>
-                    )}
-                </div>
-              ))}
+                    {/* Hiển thị các khoảng tạm ngừng */}
+                    {!weeklySchedule.isActive &&
+                      weeklySchedule.pausePeriods?.length === 0 && (
+                        <div className="pause-info">
+                          <span>Đã ngừng hoạt động (vô thời hạn)</span>
+                          <button
+                            onClick={() =>
+                              handleToggleActive(
+                                overtimeSchedules._id ?? "",
+                                weeklySchedule
+                              )
+                            }
+                            className="btn-resume"
+                          >
+                            Bật lại
+                          </button>
+                        </div>
+                      )}
+
+                    {weeklySchedule.pausePeriods &&
+                      weeklySchedule.pausePeriods.length > 0 && (
+                        <div className="pause-periods">
+                          <h5>Thời gian tạm ngừng:</h5>
+                          <ul>
+                            {weeklySchedule.pausePeriods.map(
+                              (pause, pauseIndex) => (
+                                <li key={pauseIndex}>
+                                  <span>
+                                    Ngừng từ{" "}
+                                    {new Date(
+                                      pause.startDate
+                                    ).toLocaleDateString("vi-VN")}{" "}
+                                    đến{" "}
+                                    {new Date(pause.endDate).toLocaleDateString(
+                                      "vi-VN"
+                                    )}
+                                    : {pause.reason}
+                                  </span>
+                                  <button
+                                    onClick={() =>
+                                      handleDeletePausePeriod(
+                                        overtimeSchedules._id ?? "",
+                                        weeklySchedule.dayOfWeek,
+                                        pauseIndex
+                                      )
+                                    }
+                                    className="btn-delete-pause"
+                                  >
+                                    Xóa
+                                  </button>
+                                </li>
+                              )
+                            )}
+                          </ul>
+                        </div>
+                      )}
+                  </div>
+                ))}
             </div>
           ) : (
             <p>Chưa có lịch khám ngoài giờ</p>
@@ -542,7 +551,7 @@ const DoctorSchedulePage = () => {
       {/* Modal tạm ngừng lịch */}
       {showPauseModal && (
         <Modal
-        isOpen={showPauseModal}
+          isOpen={showPauseModal}
           title={"Tạm ngừng lịch khám"}
           onClose={() => setShowPauseModal(false)}
         >

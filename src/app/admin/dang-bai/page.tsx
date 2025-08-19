@@ -24,21 +24,17 @@ type PostData = {
   content: string;
   thumbnailUrl?: string;
   summary?: string;
-  department?: {
-    _id: string;
-    name: string;
-    contentId?: string;
-  };
 };
+
+type ThumbnailSource = 'file' | 'url';
 
 export default function PostEditor() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const departmentId = searchParams.get("departmentId");
   const postId = searchParams.get("id");
-  
 
-  const [mode, setMode] = useState<"create" | "edit" | "department">("create");
+  const isEditMode = Boolean(postId);
+
   const [postData, setPostData] = useState<PostData>({
     title: "",
     content: "",
@@ -48,62 +44,33 @@ export default function PostEditor() {
   const [currentImages, setCurrentImages] = useState<string[]>([]);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [thumbnailSource, setThumbnailSource] = useState<ThumbnailSource>('file');
+  const [thumbnailUrlInput, setThumbnailUrlInput] = useState('');
 
-  // Determine mode and fetch data if needed
+  // Fetch post data if editing
   useEffect(() => {
-    if(!departmentId) return;
-    const fetchData = async () => {
+    if (!isEditMode) return;
+
+    const fetchPost = async () => {
       try {
-        if (departmentId) {
-          setMode("department");
-          // Fetch department info
-          const res = await api.get(`/department/getById/${departmentId}`);
-          const departmentData = res.data;
-          
-          // If department has contentId, fetch the associated post
-          if (departmentData.contentId) {
-            const postResponse = await api.get(`/posts/getById/${departmentData.contentId}`);
-            setPostData({
-              title: `${departmentData.name} - Giới thiệu`,
-              content: postResponse.data.content,
-              thumbnailUrl: postResponse.data.thumbnailUrl,
-              summary: postResponse.data.summary,
-              department: {
-                _id: departmentData._id,
-                name: departmentData.name,
-                contentId: departmentData.contentId
-              }
-            });
-            setCurrentImages(postResponse.data.contentImages || []);
-            setUploadedImages(postResponse.data.contentImages || []);
-          } else {
-            setPostData({
-              title: `${departmentData.name} - Giới thiệu`,
-              content: "",
-              department: {
-                _id: departmentData._id,
-                name: departmentData.name
-              }
-            });
-          }
-        } else if (postId) {
-          setMode("edit");
-          const response = await api.get(`/posts/getById/${postId}`);
-          setPostData(response.data);
-          setCurrentImages(response.data.contentImages || []);
-          setUploadedImages(response.data.contentImages || []);
-        } else {
-          setMode("create");
+        console.log("📌 postId:", postId);
+        const response = await api.get(`/posts/getById/${postId}`);
+        setPostData(response.data);
+        setCurrentImages(response.data.contentImages || []);
+        setUploadedImages(response.data.contentImages || []);
+        // Nếu thumbnail là URL từ bên ngoài, chọn chế độ URL
+        if (response.data.thumbnailUrl && !response.data.thumbnailUrl.startsWith('http')) {
+          setThumbnailSource('url');
+          setThumbnailUrlInput(response.data.thumbnailUrl);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
-        Swal.fire("Lỗi", "Không thể tải dữ liệu", "error");
-        // router.back();
+        console.error("❌ Error fetching post:", error);
+        Swal.fire("Lỗi", "Không thể tải dữ liệu bài viết", "error");
       }
     };
 
-    fetchData();
-  }, [departmentId, postId, router]);
+    fetchPost();
+  }, [isEditMode, postId]);
 
   const handleEditorChange = useCallback((content: string) => {
     setPostData((prev) => ({ ...prev, content }));
@@ -125,6 +92,27 @@ export default function PostEditor() {
     }
   };
 
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    setThumbnailUrlInput(url);
+    // Chỉ cập nhật thumbnailUrl khi URL hợp lệ
+    if (url && isValidUrl(url)) {
+      setPostData((prev) => ({
+        ...prev,
+        thumbnailUrl: url,
+      }));
+    }
+  };
+
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
@@ -132,9 +120,14 @@ export default function PostEditor() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // For regular posts, require thumbnail and summary
-    if (mode !== "department" && !postData.thumbnailUrl) {
+    if (!postData.thumbnailUrl) {
       Swal.fire("Lỗi", "Vui lòng chọn ảnh thumbnail!", "error");
+      return;
+    }
+
+    // Nếu chọn URL nhưng URL không hợp lệ
+    if (thumbnailSource === 'url' && !isValidUrl(thumbnailUrlInput)) {
+      Swal.fire("Lỗi", "Vui lòng nhập URL hợp lệ cho ảnh thumbnail", "error");
       return;
     }
 
@@ -149,100 +142,57 @@ export default function PostEditor() {
 
     try {
       let finalThumbnailUrl = postData.thumbnailUrl;
-      if (
-        postData.thumbnailUrl?.startsWith("data:image/") &&
-        fileInputRef.current?.files?.[0]
-      ) {
+      
+      // Chỉ upload lên Cloudinary nếu là ảnh từ máy tính
+      if (thumbnailSource === 'file' && 
+          postData.thumbnailUrl?.startsWith("data:image/") && 
+          fileInputRef.current?.files?.[0]) {
         const { url } = await uploadImageToCloudinary(
           fileInputRef.current.files[0]
         );
         finalThumbnailUrl = url;
       }
 
-      // Delete images that were removed from content
+      // Delete removed images
       const imagesToDelete = uploadedImages.filter(
         (publicId) => !currentImages.includes(publicId)
       );
-
       await Promise.all(
-        imagesToDelete.map((publicId) => deleteImageFromCloudinary(publicId))
+        imagesToDelete.map((publicId) =>
+          deleteImageFromCloudinary(publicId)
+        )
       );
 
+      const payload = {
+        ...postData,
+        thumbnailUrl: finalThumbnailUrl,
+        contentImages: currentImages,
+      };
+
       let response;
-      let createdPostId;
-
-      if (mode === "department") {
-        // For department, first create/update the post
-        const postPayload = {
-          title: postData.title,
-          content: postData.content,
-          thumbnailUrl: finalThumbnailUrl,
-          summary: postData.summary || `Giới thiệu về khoa ${postData.department?.name}`,
-          contentImages: currentImages,
-          isDepartmentContent: true
-        };
-
-        if (postData.department?.contentId) {
-          // Update existing post
-          response = await api.put(`/posts/update/${postData.department.contentId}`, postPayload);
-          createdPostId = postData.department.contentId;
-        } else {
-          // Create new post
-          response = await api.post("/posts/post", postPayload);
-          createdPostId = response.data._id;
-        }
-
-        // Then update department with contentId
-        await api.put(`/department/updateDepartment/${departmentId}`, {
-          contentId: createdPostId
-        });
-      } else if (mode === "edit") {
-        // Update existing post
-        response = await api.put(`/posts/${postId}`, {
-          ...postData,
-          thumbnailUrl: finalThumbnailUrl,
-          contentImages: currentImages,
-        });
+      if (isEditMode) {
+        response = await api.put(`/posts/${postId}`, payload);
       } else {
-        // Create new post
-        response = await api.post("/posts", {
-          ...postData,
-          thumbnailUrl: finalThumbnailUrl,
-          contentImages: currentImages,
-        });
+        response = await api.post("/posts/post", payload);
       }
 
       if (response.status === 200 || response.status === 201) {
         Swal.fire({
           title: "Thành công!",
-          text:
-            mode === "department"
-              ? "Thông tin khoa đã được cập nhật"
-              : mode === "edit"
-              ? "Bài viết đã được cập nhật"
-              : "Bài viết đã được đăng thành công",
+          text: isEditMode
+            ? "Bài viết đã được cập nhật"
+            : "Bài viết đã được đăng thành công",
           icon: "success",
           confirmButtonText: "OK",
         }).then(() => {
-          if (mode === "department") {
-            router.back();
-          } else if (mode === "edit") {
-            // router.push(`/posts/${postId}`);
-          } else {
-            // router.push("/posts");
-          }
+          router.back();
         });
       } else {
         throw new Error("Lỗi từ phía server");
       }
     } catch (error) {
-      console.error("Lỗi khi lưu dữ liệu:", error);
-      Swal.fire({
-        title: "Lỗi!",
-        text: "Đã có lỗi xảy ra khi lưu dữ liệu",
-        icon: "error",
-        confirmButtonText: "OK",
-      });
+      console.error("❌ Lỗi khi lưu dữ liệu:", error);
+      Swal.fire("Lỗi!", "Đã có lỗi xảy ra khi lưu dữ liệu", "error");
     }
   };
 
@@ -250,21 +200,13 @@ export default function PostEditor() {
     <>
       <Head>
         <title>
-          {mode === "department"
-            ? "Giới thiệu khoa"
-            : mode === "edit"
-            ? "Chỉnh sửa bài viết"
-            : "Tạo bài viết mới"}
+          {isEditMode ? "Chỉnh sửa bài viết" : "Tạo bài viết mới"}
         </title>
       </Head>
 
       <form onSubmit={handleSubmit} className="max-w-6xl mx-auto p-4">
         <h1 className="text-2xl font-bold mb-6">
-          {mode === "department"
-            ? `Giới thiệu khoa ${postData.department?.name || ""}`
-            : mode === "edit"
-            ? "Chỉnh sửa bài viết"
-            : "Tạo bài viết mới"}
+          {isEditMode ? "Chỉnh sửa bài viết" : "Tạo bài viết mới"}
         </h1>
 
         <div className="mb-6">
@@ -275,12 +217,9 @@ export default function PostEditor() {
             onChange={(e) =>
               setPostData((prev) => ({ ...prev, title: e.target.value }))
             }
-            placeholder={
-              mode === "department" ? "Tiêu đề giới thiệu" : "Tiêu đề bài viết"
-            }
+            placeholder="Tiêu đề bài viết"
             className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             required
-            disabled={mode === "department"}
           />
         </div>
 
@@ -291,7 +230,6 @@ export default function PostEditor() {
             onChange={handleEditorChange}
             onImagesChange={(images) => {
               setCurrentImages(images);
-              // Track all images that have ever been uploaded
               setUploadedImages((prev) => [
                 ...prev,
                 ...images.filter((img) => !prev.includes(img)),
@@ -300,55 +238,101 @@ export default function PostEditor() {
           />
         </div>
 
-        {mode !== "department" && (
-          <div className="mb-6 p-6 border rounded-lg bg-gray-50">
-            <h3 className="font-bold mb-4 text-lg">Thiết lập bài viết</h3>
+        <div className="mb-6 p-6 border rounded-lg bg-gray-50">
+          <h3 className="font-bold mb-4 text-lg">Thiết lập bài viết</h3>
 
-            <div className="mb-4">
-              <label className="block mb-2 font-medium">Ảnh thumbnail:</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                ref={fileInputRef}
-                className="hidden"
-                required={mode === "create"}
-              />
-
-              <button
-                type="button"
-                onClick={triggerFileInput}
-                className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg mb-3 transition-colors"
-              >
-                {postData.thumbnailUrl ? "Thay đổi ảnh" : "Chọn ảnh từ máy tính"}
-              </button>
-
-              {postData.thumbnailUrl && (
-                <div className="mt-3">
-                  <img
-                    src={postData.thumbnailUrl}
-                    className="w-48 h-48 object-cover border rounded-lg shadow-sm"
-                    alt="Thumbnail preview"
-                  />
-                </div>
-              )}
+          <div className="mb-4">
+            <label className="block mb-2 font-medium">Ảnh thumbnail:</label>
+            
+            <div className="flex gap-4 mb-4">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="thumbnailSource"
+                  value="file"
+                  checked={thumbnailSource === 'file'}
+                  onChange={() => setThumbnailSource('file')}
+                  className="mr-2"
+                />
+                Tải lên từ máy tính
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="thumbnailSource"
+                  value="url"
+                  checked={thumbnailSource === 'url'}
+                  onChange={() => setThumbnailSource('url')}
+                  className="mr-2"
+                />
+                Nhập URL hình ảnh
+              </label>
             </div>
 
-            <div className="mb-3">
-              <label className="block mb-2 font-medium">Tóm tắt bài viết:</label>
-              <textarea
-                value={postData.summary || ""}
-                onChange={(e) =>
-                  setPostData((prev) => ({ ...prev, summary: e.target.value }))
-                }
-                placeholder="Nhập tóm tắt ngắn gọn..."
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                rows={3}
-                required={(mode as string) !== "department"}
-              />
-            </div>
+            {thumbnailSource === 'file' ? (
+              <>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  ref={fileInputRef}
+                  className="hidden"
+                  required={!isEditMode && thumbnailSource === 'file'}
+                />
+                <button
+                  type="button"
+                  onClick={triggerFileInput}
+                  className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg mb-3 transition-colors"
+                >
+                  {postData.thumbnailUrl ? "Thay đổi ảnh" : "Chọn ảnh từ máy tính"}
+                </button>
+              </>
+            ) : (
+              <div className="mb-3">
+                <input
+                  type="url"
+                  value={thumbnailUrlInput}
+                  onChange={handleUrlChange}
+                  placeholder="Nhập URL hình ảnh"
+                  className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required={!isEditMode && thumbnailSource === 'url'}
+                />
+                {thumbnailUrlInput && !isValidUrl(thumbnailUrlInput) && (
+                  <p className="text-red-500 text-sm mt-1">URL không hợp lệ</p>
+                )}
+              </div>
+            )}
+
+            {postData.thumbnailUrl && (
+              <div className="mt-3">
+                <img
+                  src={postData.thumbnailUrl}
+                  className="w-48 h-48 object-cover border rounded-lg shadow-sm"
+                  alt="Thumbnail preview"
+                  onError={(e) => {
+                    // Nếu hình ảnh không tải được, hiển thị placeholder
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/placeholder-image.jpg';
+                  }}
+                />
+              </div>
+            )}
           </div>
-        )}
+
+          <div>
+            <label className="block mb-2 font-medium">Tóm tắt bài viết:</label>
+            <textarea
+              value={postData.summary || ""}
+              onChange={(e) =>
+                setPostData((prev) => ({ ...prev, summary: e.target.value }))
+              }
+              placeholder="Nhập tóm tắt ngắn gọn..."
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              rows={3}
+              required
+            />
+          </div>
+        </div>
 
         <div className="flex justify-end gap-3">
           <button
@@ -362,11 +346,7 @@ export default function PostEditor() {
             type="submit"
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
           >
-            {mode === "department"
-              ? "Lưu thông tin"
-              : mode === "edit"
-              ? "Cập nhật bài viết"
-              : "Đăng bài"}
+            {isEditMode ? "Cập nhật bài viết" : "Đăng bài"}
           </button>
         </div>
       </form>

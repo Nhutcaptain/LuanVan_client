@@ -16,58 +16,42 @@ const DoctorAppointmentsList = () => {
   const [showType, setShowType] = useState<"all" | "regular" | "overtime">("all");
   const [isStopModalOpen, setIsStopModalOpen] = useState(false);
   const [stopType, setStopType] = useState<"day" | "session" | "overtime">("session");
-  const [selectedAppointments, setSelectedAppointments] = useState<string[]>([]);
-  const [isBulkActionModalOpen, setIsBulkActionModalOpen] = useState(false);
-  const [bulkActionType, setBulkActionType] = useState<"confirm" | "reject">("confirm");
-  const [rejectReason, setRejectReason] = useState("");
+  const [selectedAppointmentsByDate, setSelectedAppointmentsByDate] = useState<Record<string, string[]>>({});
+  const [viewMode, setViewMode] = useState<"day" | "week" | "month">("day");
+  const [currentWeek, setCurrentWeek] = useState(getWeekRange(new Date()));
+  const [currentMonth, setCurrentMonth] = useState<string>(new Date().toISOString().split("T")[0].substring(0, 7));
 
-  useEffect(() => {
-    const fetchAppointments = async () => {
-      const doctorId = localStorage.getItem("doctorId");
-      if (!doctorId) return;
-
-      try {
-        const res = await api.get(
-          `/appointment/getAppointmentsByDoctor/${doctorId}`,
-          {
-            params: {
-              date: selectedDate,
-              type: showType === "all" ? undefined : showType,
-            },
-          }
-        );
-
-        if (res.status === 200) {
-          const sortedAppointments = res.data.sort(
-            (a: Appointment, b: Appointment) => {
-              const dateA = new Date(
-                `${a.appointmentDate}T${getStartTime(a.session)}`
-              );
-              const dateB = new Date(
-                `${b.appointmentDate}T${getStartTime(b.session)}`
-              );
-              return dateA.getTime() - dateB.getTime();
-            }
-          );
-          setAppointments(sortedAppointments);
-          console.log(sortedAppointments);
-          setSelectedAppointments([]); // Reset selected appointments when data changes
-        }
-      } catch (error) {
-        toast.error("Lỗi khi tải danh sách lịch khám");
-      }
+  function getWeekRange(date: Date) {
+    const start = new Date(date);
+    start.setDate(start.getDate() - start.getDay());
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    
+    return {
+      start: start.toISOString().split("T")[0],
+      end: end.toISOString().split("T")[0]
     };
+  }
 
-    fetchAppointments();
-  }, [selectedDate, showType]);
+  function getMonthRange(monthString: string) {
+    const [year, month] = monthString.split("-");
+    const start = new Date(parseInt(year), parseInt(month) - 1, 1);
+    const end = new Date(parseInt(year), parseInt(month), 0);
+    
+    return {
+      start: start.toISOString().split("T")[0],
+      end: end.toISOString().split("T")[0]
+    };
+  }
 
-  const getStartTime = (session: string) => {
-    const timeMatch = session.match(/(\d+)(?:AM|PM)/i);
-    if (timeMatch) {
-      const hour = parseInt(timeMatch[1]);
-      return `${hour.toString().padStart(2, "0")}:00:00`;
-    }
-    return "00:00:00";
+  const formatSession = (session: string) => {
+    return session
+      .replace(/(\d+)(AM|PM)/gi, (match, hour, period) => {
+        const h = parseInt(hour);
+        const time = period.toLowerCase() === "pm" && h !== 12 ? h + 12 : h === 12 && period.toLowerCase() === "am" ? 0 : h;
+        return `${time.toString().padStart(2, "0")}:00`;
+      })
+      .replace("-", " - ");
   };
 
   const formatDate = (dateString: string) => {
@@ -90,18 +74,6 @@ const DoctorAppointmentsList = () => {
     });
   };
 
-  const formatSession = (session: string) => {
-    const formatted = session
-      .replace(/(\d+)(AM|PM)/gi, (match, hour, period) => {
-        const h = parseInt(hour);
-        const time = period.toLowerCase() === "pm" && h !== 12 ? h + 12 : h;
-        return `${time.toString().padStart(2, "0")}:00`;
-      })
-      .replace("-", " - ");
-
-    return formatted;
-  };
-
   const getStatusClass = (status: string) => {
     const statusClasses: Record<string, string> = {
       scheduled: "status-scheduled",
@@ -122,6 +94,89 @@ const DoctorAppointmentsList = () => {
     return confirmStatusClasses[status] || "";
   };
 
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      const doctorId = localStorage.getItem("doctorId");
+      if (!doctorId) return;
+
+      try {
+        let params: any = {
+          type: showType === "all" ? undefined : showType,
+          view: viewMode
+        };
+
+        if (viewMode === "day") {
+          params.date = selectedDate;
+        } else if (viewMode === "week") {
+          params.date = currentWeek.start;
+        } else if (viewMode === "month") {
+          params.date = currentMonth;
+        }
+
+        const res = await api.get(
+          `/appointment/getAppointmentsByDoctor/${doctorId}`,
+          { params }
+        );
+
+        if (res.status === 200) {
+          const sortedAppointments = res.data.sort(
+            (a: Appointment, b: Appointment) => {
+              const dateA = new Date(`${a.appointmentDate}T${a.session.split("-")[0].includes("AM") ? "08" : "14"}:00:00`);
+              const dateB = new Date(`${b.appointmentDate}T${b.session.split("-")[0].includes("AM") ? "08" : "14"}:00:00`);
+              return dateA.getTime() - dateB.getTime();
+            }
+          );
+          setAppointments(sortedAppointments);
+          setSelectedAppointmentsByDate({});
+        }
+      } catch (error) {
+        toast.error("Lỗi khi tải danh sách lịch khám");
+      }
+    };
+
+    fetchAppointments();
+  }, [selectedDate, showType, viewMode, currentWeek, currentMonth]);
+
+  const navigateWeek = (direction: "prev" | "next") => {
+    const currentStart = new Date(currentWeek.start);
+    const newDate = new Date(currentStart);
+    newDate.setDate(newDate.getDate() + (direction === "prev" ? -7 : 7));
+    setCurrentWeek(getWeekRange(newDate));
+  };
+
+  const navigateMonth = (direction: "prev" | "next") => {
+    const [year, month] = currentMonth.split("-");
+    let newYear = parseInt(year);
+    let newMonth = parseInt(month);
+    
+    if (direction === "prev") {
+      newMonth = newMonth === 1 ? 12 : newMonth - 1;
+      newYear = newMonth === 12 ? newYear - 1 : newYear;
+    } else {
+      newMonth = newMonth === 12 ? 1 : newMonth + 1;
+      newYear = newMonth === 1 ? newYear + 1 : newYear;
+    }
+    
+    setCurrentMonth(`${newYear}-${newMonth.toString().padStart(2, "0")}`);
+  };
+
+  const groupAppointmentsByDate = () => {
+    const grouped: Record<string, Appointment[]> = {};
+    
+    appointments.forEach(appointment => {
+      if (!grouped[appointment.appointmentDate]) {
+        grouped[appointment.appointmentDate] = [];
+      }
+      grouped[appointment.appointmentDate].push(appointment);
+    });
+    
+    return grouped;
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedDate(e.target.value);
+  };
+
   const openAppointmentDetail = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
     setShowDetail(true);
@@ -133,73 +188,45 @@ const DoctorAppointmentsList = () => {
     document.body.style.overflow = "auto";
   };
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedDate(e.target.value);
-  };
-
-  const handleStopAppointments = async () => {
-    try {
-      const doctorId = localStorage.getItem("doctorId");
-      if (!doctorId) return;
-      Swal.fire({
-        title: 'Đang cập dừng tất cả lịch khám',
-        icon: 'info',
-        didOpen: () => Swal.showLoading()
-      })
-
-      const payload = {
-        date: selectedDate,
-        type: stopType,
-        cancelReason: "Bác sĩ bận đột xuất",
-      };
-
-      const res = await api.post(`/appointment/stopAppointments/${doctorId}`, payload);
-
-      if (res.status === 200) {
-        setIsStopModalOpen(false);
-        setSelectedDate(selectedDate); // Trigger useEffect
-        Swal.close();
-        Swal.fire({
-          title: 'Đã dừng tất cả lịch khám thành công',
-          icon: 'success',
-          showConfirmButton: true,
-        })
+  const toggleAppointmentSelection = (appointmentId: string, date: string) => {
+    setSelectedAppointmentsByDate(prev => {
+      const newState = { ...prev };
+      if (!newState[date]) {
+        newState[date] = [];
       }
-    } catch (error) {
-      toast.error("Lỗi khi dừng lịch hẹn");
-      Swal.close();
-      Swal.fire({
-          title: 'Lỗi khi dừng lịch hẹn',
-          icon: 'error',
-          showConfirmButton: true,
-        })
-    }
+      
+      if (newState[date].includes(appointmentId)) {
+        newState[date] = newState[date].filter(id => id !== appointmentId);
+      } else {
+        newState[date] = [...newState[date], appointmentId];
+      }
+      
+      if (newState[date].length === 0) {
+        delete newState[date];
+      }
+      
+      return newState;
+    });
   };
 
-  const isRegularHours = (session: string) => {
-    const timeMatch = session.match(/(\d+)(AM|PM)/i);
-    if (timeMatch) {
-      const hour = parseInt(timeMatch[1]);
-      const period = timeMatch[2].toLowerCase();
-      return (hour >= 8 && period === "am") || (hour < 5 && period === "pm");
-    }
-    return false;
-  };
-
-  const toggleAppointmentSelection = (appointmentId: string) => {
-    setSelectedAppointments(prev => 
-      prev.includes(appointmentId)
-        ? prev.filter(id => id !== appointmentId)
-        : [...prev, appointmentId]
-    );
-  };
-
-  const selectAllAppointments = () => {
-    if (selectedAppointments.length === appointments.length) {
-      setSelectedAppointments([]);
-    } else {
-      setSelectedAppointments(appointments.map(app => app._id || ""));
-    }
+  const selectAllAppointmentsForDate = (date: string, appointments: Appointment[]) => {
+    setSelectedAppointmentsByDate(prev => {
+      const currentSelected = prev[date] || [];
+      const allAppointmentIds = appointments
+        .filter(app => app.confirmStatus === "pending")
+        .map(app => app._id || "");
+      
+      if (currentSelected.length === allAppointmentIds.length && allAppointmentIds.length > 0) {
+        const newState = { ...prev };
+        delete newState[date];
+        return newState;
+      } else {
+        return {
+          ...prev,
+          [date]: allAppointmentIds
+        };
+      }
+    });
   };
 
   const confirmAppointment = async (appointmentId: string) => {
@@ -220,19 +247,11 @@ const DoctorAppointmentsList = () => {
         ));
         
         Swal.close();
-        Swal.fire({
-          title: 'Xác nhận lịch hẹn thành công',
-          icon: 'success',
-          showConfirmButton: true,
-        });
+        toast.success("Xác nhận lịch hẹn thành công");
       }
     } catch (error) {
       Swal.close();
-      Swal.fire({
-        title: 'Lỗi khi xác nhận lịch hẹn',
-        icon: 'error',
-        showConfirmButton: true,
-      });
+      toast.error("Lỗi khi xác nhận lịch hẹn");
     }
   };
 
@@ -255,37 +274,27 @@ const DoctorAppointmentsList = () => {
         ));
         
         Swal.close();
-        Swal.fire({
-          title: 'Từ chối lịch hẹn thành công',
-          icon: 'success',
-          showConfirmButton: true,
-        });
+        toast.success("Từ chối lịch hẹn thành công");
       }
     } catch (error) {
       Swal.close();
-      Swal.fire({
-        title: 'Lỗi khi từ chối lịch hẹn',
-        icon: 'error',
-        showConfirmButton: true,
-      });
+      toast.error("Lỗi khi từ chối lịch hẹn");
     }
   };
 
-  const confirmAllSelected = async () => {
-    if (selectedAppointments.length === 0) {
-      toast.warning("Vui lòng chọn ít nhất một lịch hẹn");
-      return;
-    }
+  const confirmAllForDate = async (date: string) => {
+    const appointmentIds = selectedAppointmentsByDate[date] || [];
+    if (appointmentIds.length === 0) return;
 
     try {
       Swal.fire({
-        title: `Đang xác nhận ${selectedAppointments.length} lịch hẹn`,
+        title: `Đang xác nhận ${appointmentIds.length} lịch hẹn`,
         icon: 'info',
         didOpen: () => Swal.showLoading()
       });
 
       const payload = {
-        appointmentIds: selectedAppointments,
+        appointmentIds,
         action: "confirm"
       };
 
@@ -293,34 +302,29 @@ const DoctorAppointmentsList = () => {
 
       if (res.status === 200) {
         setAppointments(prev => prev.map(app => 
-          selectedAppointments.includes(app._id || "") 
+          appointmentIds.includes(app._id || "") 
             ? { ...app, confirmStatus: "confirmed" } 
             : app
         ));
         
-        setSelectedAppointments([]);
-        Swal.close();
-        Swal.fire({
-          title: 'Xác nhận lịch hẹn thành công',
-          icon: 'success',
-          showConfirmButton: true,
+        setSelectedAppointmentsByDate(prev => {
+          const newState = { ...prev };
+          delete newState[date];
+          return newState;
         });
+        
+        Swal.close();
+        toast.success(`Đã xác nhận ${appointmentIds.length} lịch hẹn`);
       }
     } catch (error) {
       Swal.close();
-      Swal.fire({
-        title: 'Lỗi khi xác nhận lịch hẹn',
-        icon: 'error',
-        showConfirmButton: true,
-      });
+      toast.error("Lỗi khi xác nhận lịch hẹn");
     }
   };
 
-  const rejectAllSelected = async () => {
-    if (selectedAppointments.length === 0) {
-      toast.warning("Vui lòng chọn ít nhất một lịch hẹn");
-      return;
-    }
+  const rejectAllForDate = async (date: string) => {
+    const appointmentIds = selectedAppointmentsByDate[date] || [];
+    if (appointmentIds.length === 0) return;
 
     Swal.fire({
       title: 'Lý do từ chối',
@@ -333,13 +337,13 @@ const DoctorAppointmentsList = () => {
       if (result.isConfirmed && result.value) {
         try {
           Swal.fire({
-            title: `Đang từ chối ${selectedAppointments.length} lịch hẹn`,
+            title: `Đang từ chối ${appointmentIds.length} lịch hẹn`,
             icon: 'info',
             didOpen: () => Swal.showLoading()
           });
 
           const payload = {
-            appointmentIds: selectedAppointments,
+            appointmentIds,
             action: "reject",
             reason: result.value
           };
@@ -348,46 +352,338 @@ const DoctorAppointmentsList = () => {
 
           if (res.status === 200) {
             setAppointments(prev => prev.map(app => 
-              selectedAppointments.includes(app._id || "") 
+              appointmentIds.includes(app._id || "") 
                 ? { ...app, confirmStatus: "rejected" } 
                 : app
             ));
             
-            setSelectedAppointments([]);
-            Swal.close();
-            Swal.fire({
-              title: 'Từ chối lịch hẹn thành công',
-              icon: 'success',
-              showConfirmButton: true,
+            setSelectedAppointmentsByDate(prev => {
+              const newState = { ...prev };
+              delete newState[date];
+              return newState;
             });
+            
+            Swal.close();
+            toast.success(`Đã từ chối ${appointmentIds.length} lịch hẹn`);
           }
         } catch (error) {
           Swal.close();
-          Swal.fire({
-            title: 'Lỗi khi từ chối lịch hẹn',
-            icon: 'error',
-            showConfirmButton: true,
-          });
+          toast.error("Lỗi khi từ chối lịch hẹn");
         }
       }
     });
+  };
+
+  const handleStopAppointments = async () => {
+    try {
+      const doctorId = localStorage.getItem("doctorId");
+      if (!doctorId) return;
+      
+      Swal.fire({
+        title: 'Đang dừng tất cả lịch khám',
+        icon: 'info',
+        didOpen: () => Swal.showLoading()
+      });
+
+      const payload = {
+        date: selectedDate,
+        type: stopType,
+        cancelReason: "Bác sĩ bận đột xuất",
+      };
+
+      const res = await api.post(`/appointment/stopAppointments/${doctorId}`, payload);
+
+      if (res.status === 200) {
+        setIsStopModalOpen(false);
+        setSelectedDate(selectedDate);
+        Swal.close();
+        toast.success("Đã dừng tất cả lịch khám thành công");
+      }
+    } catch (error) {
+      Swal.close();
+      toast.error("Lỗi khi dừng lịch hẹn");
+    }
+  };
+
+  const renderAppointmentCard = (appointment: Appointment) => (
+    <li
+      key={appointment._id}
+      className={`appointment-card ${appointment.isOvertime ? "overtime" : ""}`}
+    >
+      {appointment.confirmStatus === "pending" && (
+        <div className="appointment-checkbox">
+          <input
+            type="checkbox"
+            checked={selectedAppointmentsByDate[appointment.appointmentDate]?.includes(appointment._id || "") || false}
+            onChange={() => toggleAppointmentSelection(appointment._id || "", appointment.appointmentDate)}
+          />
+        </div>
+      )}
+      
+      <div className="appointment-content" onClick={() => openAppointmentDetail(appointment)}>
+        <div className="appointment-header">
+          <span className={`appointment-status ${getStatusClass(appointment.status || "scheduled")}`}>
+            {appointment.status === "scheduled" ? "Đã đặt"
+              : appointment.status === "completed" ? "Hoàn thành"
+              : appointment.status === "examining" ? "Đang khám"
+              : appointment.status === "waiting_result" ? "Chờ kết quả"
+              : "Đã hủy"}
+          </span>
+          
+          <span className={`appointment-confirm-status ${getConfirmStatusClass(appointment.confirmStatus || "pending")}`}>
+            {appointment.confirmStatus === "pending" ? "Chờ xác nhận"
+              : appointment.confirmStatus === "confirmed" ? "Đã xác nhận"
+              : "Đã từ chối"}
+          </span>
+          
+          <span className="appointment-time">
+            {formatSession(appointment.session)}
+          </span>
+          {appointment.isOvertime && (
+            <span className="overtime-badge">Ngoài giờ</span>
+          )}
+        </div>
+
+        <div className="appointment-body">
+          <p className="appointment-patient">
+            <strong>Bệnh nhân:</strong>{" "}
+            {(appointment.patientId as any)?.fullName || "Không có thông tin"}
+          </p>
+
+          {appointment.queueNumber && (
+            <p className="appointment-queue">
+              <strong>Số thứ tự:</strong> {appointment.queueNumber}
+            </p>
+          )}
+
+          {appointment.reason && (
+            <p className="appointment-reason">
+              <strong>Lý do:</strong>{" "}
+              {appointment.reason.substring(0, 50)}
+              {appointment.reason.length > 50 ? "..." : ""}
+            </p>
+          )}
+        </div>
+      </div>
+      
+      {appointment.confirmStatus === "pending" && (
+        <div className="appointment-actions">
+          <button
+            className="btn-confirm"
+            onClick={(e) => {
+              e.stopPropagation();
+              confirmAppointment(appointment._id || "");
+            }}
+          >
+            Xác nhận
+          </button>
+          <button
+            className="btn-reject"
+            onClick={(e) => {
+              e.stopPropagation();
+              Swal.fire({
+                title: 'Lý do từ chối',
+                input: 'text',
+                inputPlaceholder: 'Nhập lý do từ chối...',
+                showCancelButton: true,
+                confirmButtonText: 'Xác nhận',
+                cancelButtonText: 'Hủy',
+              }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                  rejectAppointment(appointment._id || "", result.value);
+                }
+              });
+            }}
+          >
+            Từ chối
+          </button>
+        </div>
+      )}
+    </li>
+  );
+
+  const renderGroupedAppointments = () => {
+    const grouped = groupAppointmentsByDate();
+    
+    return (
+      <div className="grouped-appointments-container">
+        {Object.entries(grouped).map(([date, dailyAppointments]) => {
+          const selectedCount = selectedAppointmentsByDate[date]?.length || 0;
+          const pendingAppointments = dailyAppointments.filter(app => app.confirmStatus === "pending");
+          
+          return (
+            <div key={date} className="daily-appointments-group">
+              <div className="group-header-container">
+                <h3 className="group-date-header">
+                  {formatDate(date)}
+                  <span className="appointment-count">({dailyAppointments.length} lịch)</span>
+                </h3>
+                
+                {pendingAppointments.length > 0 && (
+                  <div className="select-all-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={selectedCount === pendingAppointments.length && pendingAppointments.length > 0}
+                      onChange={() => selectAllAppointmentsForDate(date, dailyAppointments)}
+                    />
+                    <span>Chọn tất cả ({pendingAppointments.length} lịch chờ)</span>
+                  </div>
+                )}
+              </div>
+              
+              {selectedCount > 0 && (
+                <div className="bulk-actions-container">
+                  <div className="bulk-actions-info">
+                    Đã chọn {selectedCount} lịch hẹn
+                  </div>
+                  <div className="bulk-actions-buttons">
+                    <button
+                      className="btn-confirm-all"
+                      onClick={() => confirmAllForDate(date)}
+                    >
+                      Xác nhận tất cả
+                    </button>
+                    <button
+                      className="btn-reject-all"
+                      onClick={() => rejectAllForDate(date)}
+                    >
+                      Từ chối tất cả
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              <ul className="appointments-list">
+                {dailyAppointments.map(renderAppointmentCard)}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderDayViewAppointments = () => {
+    const pendingAppointments = appointments.filter(app => app.confirmStatus === "pending");
+    const selectedCount = selectedAppointmentsByDate[selectedDate]?.length || 0;
+    
+    return (
+      <div className="appointments-list-container">
+        <div className="appointments-list-header">
+          <h3 className="appointments-date-header">
+            {formatDate(selectedDate)}
+          </h3>
+          
+          {pendingAppointments.length > 0 && (
+            <div className="select-all-checkbox">
+              <input
+                type="checkbox"
+                checked={selectedCount === pendingAppointments.length && pendingAppointments.length > 0}
+                onChange={() => selectAllAppointmentsForDate(selectedDate, appointments)}
+              />
+              <span>Chọn tất cả ({pendingAppointments.length} lịch chờ)</span>
+            </div>
+          )}
+        </div>
+
+        {selectedCount > 0 && (
+          <div className="bulk-actions-container">
+            <div className="bulk-actions-info">
+              Đã chọn {selectedCount} lịch hẹn
+            </div>
+            <div className="bulk-actions-buttons">
+              <button
+                className="btn-confirm-all"
+                onClick={() => confirmAllForDate(selectedDate)}
+              >
+                Xác nhận tất cả
+              </button>
+              <button
+                className="btn-reject-all"
+                onClick={() => rejectAllForDate(selectedDate)}
+              >
+                Từ chối tất cả
+              </button>
+            </div>
+          </div>
+        )}
+
+        <ul className="appointments-list">
+          {appointments.map(renderAppointmentCard)}
+        </ul>
+      </div>
+    );
   };
 
   return (
     <div className="appointments-container">
       <h2 className="appointments-title">Danh sách lịch hẹn</h2>
 
-      {/* Controls */}
       <div className="appointments-controls">
         <div className="control-group">
-          <label htmlFor="appointment-date">Ngày:</label>
-          <input
-            type="date"
-            id="appointment-date"
-            value={selectedDate}
-            onChange={handleDateChange}
-          />
+          <label>Chế độ xem:</label>
+          <div className="radio-group">
+            <label>
+              <input
+                type="radio"
+                name="viewMode"
+                checked={viewMode === "day"}
+                onChange={() => setViewMode("day")}
+              />
+              Theo ngày
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="viewMode"
+                checked={viewMode === "week"}
+                onChange={() => setViewMode("week")}
+              />
+              Theo tuần
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="viewMode"
+                checked={viewMode === "month"}
+                onChange={() => setViewMode("month")}
+              />
+              Theo tháng
+            </label>
+          </div>
         </div>
+
+        {viewMode === "day" && (
+          <div className="control-group">
+            <label htmlFor="appointment-date">Ngày:</label>
+            <input
+              type="date"
+              id="appointment-date"
+              value={selectedDate}
+              onChange={handleDateChange}
+            />
+          </div>
+        )}
+
+        {viewMode === "week" && (
+          <div className="control-group week-navigation">
+            <button onClick={() => navigateWeek("prev")}>&lt; Tuần trước</button>
+            <span>
+              {formatDate(currentWeek.start)} - {formatDate(currentWeek.end)}
+            </span>
+            <button onClick={() => navigateWeek("next")}>Tuần sau &gt;</button>
+          </div>
+        )}
+
+        {viewMode === "month" && (
+          <div className="control-group month-navigation">
+            <button onClick={() => navigateMonth("prev")}>&lt; Tháng trước</button>
+            <span>
+              Tháng {currentMonth.split("-")[1]}/{currentMonth.split("-")[0]}
+            </span>
+            <button onClick={() => navigateMonth("next")}>Tháng sau &gt;</button>
+          </div>
+        )}
 
         <div className="control-group">
           <label>Loại lịch:</label>
@@ -422,176 +718,24 @@ const DoctorAppointmentsList = () => {
           </div>
         </div>
 
-        <div className="control-group">
-          {/* <button
-            className="stop-appointments-btn"
+        {/* <div className="control-group">
+          <button 
+            className="btn-stop-appointments"
             onClick={() => setIsStopModalOpen(true)}
           >
-            Dừng lịch hẹn
-          </button> */}
-        </div>
+            Dừng lịch khám
+          </button>
+        </div> */}
       </div>
 
-      {/* Bulk Actions */}
-      {selectedAppointments.length > 0 && (
-        <div className="bulk-actions-container">
-          <div className="bulk-actions-info">
-            Đã chọn {selectedAppointments.length} lịch hẹn
-          </div>
-          <div className="bulk-actions-buttons">
-            <button
-              className="btn-confirm-all"
-              onClick={confirmAllSelected}
-            >
-              Xác nhận tất cả
-            </button>
-            <button
-              className="btn-reject-all"
-              onClick={rejectAllSelected}
-            >
-              Từ chối tất cả
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Appointments List */}
       {appointments.length === 0 ? (
-        <p className="no-appointments">Không có lịch hẹn nào trong ngày này</p>
+        <p className="no-appointments">Không có lịch hẹn nào trong khoảng thời gian này</p>
+      ) : viewMode === "day" ? (
+        renderDayViewAppointments()
       ) : (
-        <div className="appointments-list-container">
-          <div className="appointments-list-header">
-            <h3 className="appointments-date-header">
-              {formatDate(selectedDate)}
-            </h3>
-            
-            <div className="select-all-checkbox">
-              <input
-                type="checkbox"
-                checked={selectedAppointments.length === appointments.length && appointments.length > 0}
-                onChange={selectAllAppointments}
-              />
-              <span>Chọn tất cả</span>
-            </div>
-          </div>
-
-          <ul className="appointments-list">
-            {appointments.map((appointment) => (
-              <li
-                key={appointment._id}
-                className={`appointment-card ${
-                  appointment.isOvertime ? "overtime" : ""
-                }`}
-              >
-                <div className="appointment-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={selectedAppointments.includes(appointment._id || "")}
-                    onChange={() => toggleAppointmentSelection(appointment._id || "")}
-                  />
-                </div>
-                
-                <div className="appointment-content" onClick={() => openAppointmentDetail(appointment)}>
-                  <div className="appointment-header">
-                    <span
-                      className={`appointment-status ${getStatusClass(
-                        appointment.status || "scheduled"
-                      )}`}
-                    >
-                      {appointment.status === "scheduled"
-                        ? "Đã đặt"
-                        : appointment.status === "completed"
-                        ? "Hoàn thành"
-                        : appointment.status === "examining"
-                        ? "Đang khám"
-                        : appointment.status === "waiting_result"
-                        ? "Chờ kết quả"
-                        : "Đã hủy"}
-                    </span>
-                    
-                    <span
-                      className={`appointment-confirm-status ${getConfirmStatusClass(
-                        appointment.confirmStatus || "pending"
-                      )}`}
-                    >
-                      {appointment.confirmStatus === "pending"
-                        ? "Chờ xác nhận"
-                        : appointment.confirmStatus === "confirmed"
-                        ? "Đã xác nhận"
-                        : "Đã từ chối"}
-                    </span>
-                    
-                    <span className="appointment-time">
-                      {formatSession(appointment.session)}
-                    </span>
-                    {appointment.isOvertime && (
-                      <span className="overtime-badge">Ngoài giờ</span>
-                    )}
-                  </div>
-
-                  <div className="appointment-body">
-                    <p className="appointment-patient">
-                      <strong>Bệnh nhân:</strong>{" "}
-                      {(appointment.patientId as any)?.fullName ||
-                        "Không có thông tin"}
-                    </p>
-
-                    {appointment.queueNumber && (
-                      <p className="appointment-queue">
-                        <strong>Số thứ tự:</strong> {appointment.queueNumber}
-                      </p>
-                    )}
-
-                    {appointment.reason && (
-                      <p className="appointment-reason">
-                        <strong>Lý do:</strong>{" "}
-                        {appointment.reason.substring(0, 50)}
-                        {appointment.reason.length > 50 ? "..." : ""}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                
-                {appointment.confirmStatus === "pending" && (
-                  <div className="appointment-actions">
-                    <button
-                      className="btn-confirm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        confirmAppointment(appointment._id || "");
-                      }}
-                    >
-                      Xác nhận
-                    </button>
-                    <button
-                      className="btn-reject"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        Swal.fire({
-                          title: 'Lý do từ chối',
-                          input: 'text',
-                          inputPlaceholder: 'Nhập lý do từ chối...',
-                          showCancelButton: true,
-                          confirmButtonText: 'Xác nhận',
-                          cancelButtonText: 'Hủy',
-                        }).then((result) => {
-                          if (result.isConfirmed && result.value) {
-                            rejectAppointment(appointment._id || "", result.value);
-                          }
-                        });
-                      }}
-                    >
-                      Từ chối
-                    </button>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
+        renderGroupedAppointments()
       )}
 
-      {/* Appointment Detail Modal */}
       {showDetail && selectedAppointment && (
         <div className="appointment-modal">
           <div className="modal-overlay" onClick={closeAppointmentDetail}></div>
@@ -603,31 +747,17 @@ const DoctorAppointmentsList = () => {
             <div className="modal-header">
               <h2 className="modal-title">Chi tiết lịch hẹn</h2>
               <div className="appointment-meta">
-                <span
-                  className={`appointment-status ${getStatusClass(
-                    selectedAppointment.status || "scheduled"
-                  )}`}
-                >
-                  {selectedAppointment.status === "scheduled"
-                    ? "Đã đặt"
-                    : selectedAppointment.status === "completed"
-                    ? "Hoàn thành"
-                    : selectedAppointment.status === "examining"
-                    ? "Đang khám"
-                    : selectedAppointment.status === "waiting_result"
-                    ? "Chờ kết quả"
+                <span className={`appointment-status ${getStatusClass(selectedAppointment.status || "scheduled")}`}>
+                  {selectedAppointment.status === "scheduled" ? "Đã đặt"
+                    : selectedAppointment.status === "completed" ? "Hoàn thành"
+                    : selectedAppointment.status === "examining" ? "Đang khám"
+                    : selectedAppointment.status === "waiting_result" ? "Chờ kết quả"
                     : "Đã hủy"}
                 </span>
                 
-                <span
-                  className={`appointment-confirm-status ${getConfirmStatusClass(
-                    selectedAppointment.confirmStatus || "pending"
-                  )}`}
-                >
-                  {selectedAppointment.confirmStatus === "pending"
-                    ? "Chờ xác nhận"
-                    : selectedAppointment.confirmStatus === "confirmed"
-                    ? "Đã xác nhận"
+                <span className={`appointment-confirm-status ${getConfirmStatusClass(selectedAppointment.confirmStatus || "pending")}`}>
+                  {selectedAppointment.confirmStatus === "pending" ? "Chờ xác nhận"
+                    : selectedAppointment.confirmStatus === "confirmed" ? "Đã xác nhận"
                     : "Đã từ chối"}
                 </span>
                 
@@ -638,7 +768,6 @@ const DoctorAppointmentsList = () => {
             </div>
 
             <div className="modal-body">
-              {/* Thông tin chính */}
               <div className="info-card">
                 <div className="info-row">
                   <div className="info-item">
@@ -678,7 +807,6 @@ const DoctorAppointmentsList = () => {
                 )}
               </div>
 
-              {/* Thông tin bệnh nhân */}
               <div className="info-section">
                 <h3 className="section-title">
                   <i className="icon-user"></i> Thông tin bệnh nhân
@@ -688,8 +816,7 @@ const DoctorAppointmentsList = () => {
                     <div className="info-item">
                       <span className="info-label">Họ và tên:</span>
                       <span className="info-value highlight">
-                        {(selectedAppointment.patientId as any)?.fullName ||
-                          "Không có thông tin"}
+                        {(selectedAppointment.patientId as any)?.fullName || "Không có thông tin"}
                       </span>
                     </div>
                   </div>
@@ -698,17 +825,15 @@ const DoctorAppointmentsList = () => {
                     <div className="info-item">
                       <span className="info-label">Số điện thoại:</span>
                       <span className="info-value">
-                        {(selectedAppointment.patientId as any)?.phone ||
-                          "Không có thông tin"}
+                        {(selectedAppointment.patientId as any)?.phone || "Không có thông tin"}
                       </span>
                     </div>
                     <div className="info-item">
                       <span className="info-label">Ngày sinh:</span>
                       <span className="info-value">
                         {(selectedAppointment.patientId as any)?.dateOfBirth
-                          ? new Date(
-                              (selectedAppointment.patientId as any).dateOfBirth
-                            ).toLocaleDateString("vi-VN")
+                          ? new Date((selectedAppointment.patientId as any).dateOfBirth)
+                              .toLocaleDateString("vi-VN")
                           : "Không có thông tin"}
                       </span>
                     </div>
@@ -718,27 +843,21 @@ const DoctorAppointmentsList = () => {
                     <div className="info-item">
                       <span className="info-label">Giới tính:</span>
                       <span className="info-value">
-                        {(selectedAppointment.patientId as any)?.gender ===
-                        "male"
-                          ? "Nam"
-                          : (selectedAppointment.patientId as any)?.gender ===
-                            "female"
-                          ? "Nữ"
+                        {(selectedAppointment.patientId as any)?.gender === "male" ? "Nam"
+                          : (selectedAppointment.patientId as any)?.gender === "female" ? "Nữ"
                           : "Khác/Không có thông tin"}
                       </span>
                     </div>
                     <div className="info-item">
                       <span className="info-label">Email:</span>
                       <span className="info-value">
-                        {(selectedAppointment.patientId as any)?.email ||
-                          "Không có thông tin"}
+                        {(selectedAppointment.patientId as any)?.email || "Không có thông tin"}
                       </span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Thông tin khám bệnh */}
               <div className="info-section">
                 <h3 className="section-title">
                   <i className="icon-medical"></i> Thông tin khám bệnh
@@ -758,10 +877,7 @@ const DoctorAppointmentsList = () => {
                       <div className="info-item full-width">
                         <span className="info-label">Tiền sử bệnh:</span>
                         <span className="info-value">
-                          {
-                            (selectedAppointment.patientId as any)
-                              ?.medicalHistory
-                          }
+                          {(selectedAppointment.patientId as any)?.medicalHistory}
                         </span>
                       </div>
                     </div>
@@ -791,7 +907,6 @@ const DoctorAppointmentsList = () => {
                 </div>
               </div>
 
-              {/* Actions */}
               <div className="modal-actions">
                 <button
                   className="btn btn-secondary"
@@ -839,7 +954,6 @@ const DoctorAppointmentsList = () => {
         </div>
       )}
 
-      {/* Stop Appointments Modal */}
       {isStopModalOpen && (
         <div className="appointment-modal">
           <div

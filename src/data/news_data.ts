@@ -6,6 +6,16 @@ export interface NewsData {
     date: string;
 }
 
+export interface News{
+    _id: string;
+    title: string;
+    thumbnailUrl: string;
+    slug: string;
+    summary: string;
+    content: string;
+    createdAt: string;
+}
+
 export const newsData: NewsData[] = [
     {
         id: 1,

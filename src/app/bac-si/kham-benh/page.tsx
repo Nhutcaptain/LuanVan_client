@@ -37,7 +37,7 @@ const ExaminationPage = () => {
     {
       eventHandlers: {
         "examination-update": (data) => {
-          console.log(data);
+
           if (tempExamRef.current?._id === data.examinationId) {
             setTempExamination((prev) => {
               if (!prev) return prev;
@@ -116,7 +116,7 @@ const ExaminationPage = () => {
   }, [selectedPatient]);
 
   useEffect(() => {
-    if (!doctorInfo?.specialtyId) return;
+    if (!doctorInfo?.departmentId) return;
     const fetchServices = async () => {
       try {
         const res = await api.get(`/service/getAll/`);
@@ -126,7 +126,7 @@ const ExaminationPage = () => {
       } catch (error: any) {}
     };
     fetchServices();
-  }, [doctorInfo?.specialtyId]);
+  }, [doctorInfo?.departmentId]);
 
   useEffect(() => {
     setSelectedServices([]);
@@ -151,7 +151,9 @@ const ExaminationPage = () => {
         payload
       );
       if (res.status === 200) {
-        setTempExamination(res.data);
+        // setTempExamination(res.data);
+        setSelectedPatient("");
+        setTempExamination(undefined);
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
       const response = await api.put(
@@ -166,7 +168,8 @@ const ExaminationPage = () => {
       try {
         const res = await api.post("/patient/postExamination", payload);
         if (res.status === 200) {
-          setTempExamination(res.data);
+          // setTempExamination(res.data);
+          setSelectedPatient("");
           window.scrollTo({ top: 0, behavior: "smooth" });
         }
         const response = await api.put(

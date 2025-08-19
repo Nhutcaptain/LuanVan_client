@@ -247,7 +247,7 @@ const Chatbot = () => {
           </div>
 
           {showDoctorModal && (
-            <Modal onClose={() => setShowDoctorModal(false)} title="Bác sĩ gợi ý">
+            <Modal isOpen={showDoctorModal} onClose={() => setShowDoctorModal(false)} title="Bác sĩ gợi ý">
               <div className="doctors-list">
                 {isLoadingDoctors ? (
                   <div className="loading-doctors">

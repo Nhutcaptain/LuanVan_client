@@ -1,12 +1,22 @@
 'use client'
 import React from 'react'
 import Link from 'next/link'
-import { MdAccountCircle } from "react-icons/md";
 import { RiHeartPulseLine, RiLogoutBoxLine } from "react-icons/ri";
 import { FaRegRectangleList } from "react-icons/fa6";
 import { LiaHistorySolid } from "react-icons/lia";
 import { FaRegCalendarPlus } from "react-icons/fa";
 import { usePathname } from 'next/navigation';
+import { 
+    MdAccountCircle, 
+    MdPostAdd, 
+    MdMedicalServices,
+    MdSchedule,
+    MdGroups,
+    MdAttachMoney,
+    MdLocalHospital,
+    MdLogout
+} from "react-icons/md";
+import { FaPills, FaFileInvoiceDollar } from "react-icons/fa";
 import Cookies from 'js-cookie';
 
 const AdminSidebarMenu = () => {
@@ -18,42 +28,36 @@ const AdminSidebarMenu = () => {
             link: '/admin/account'
         },
         {
-            icon: <RiHeartPulseLine className='text-2xl' />,
+            icon: <MdPostAdd className='text-2xl' />,
             label: 'Đăng bài viết',
-            link: '/admin/dang-bai'
+            link: '/admin/posts'
         },
         {
-            icon: <FaRegRectangleList className='text-2xl' />,
+            icon: <FaPills className='text-2xl' />,
             label: 'Quản lý kho thuốc',
             link: '/admin/medicine-management'
         },
         {
-            icon: <FaRegRectangleList className='text-2xl' />,
+            icon: <MdSchedule className='text-2xl' />,
             label: 'Phân công / xếp lịch',
             link: '/admin/schedules'
         },
         {
-            icon: <LiaHistorySolid className='text-2xl' />,
-            label: 'Quản lý bệnh nhân',
-            link: '/bac-si/lich-su-kham-chua-benh'
-        },
-        {
-            icon: <FaRegCalendarPlus className='text-2xl' />,
+            icon: <MdLocalHospital className='text-2xl' />,
             label: 'Quản lý khoa, phòng ban',
             link: '/admin/department'
         },
         {
-            icon: <FaRegCalendarPlus className='text-2xl' />,
-            label: 'Quản lý viện phí và thanh toán',
+            icon: <FaFileInvoiceDollar className='text-2xl' />,
+            label: 'Thống kê khám bệnh',
             link: '/admin/stats'
         },
         {
-            icon: <FaRegCalendarPlus className='text-2xl' />,
+            icon: <MdMedicalServices className='text-2xl' />,
             label: 'Quản lý dịch vụ',
             link: '/admin/service'
         },
     ];
-
     const handleLogout = () => {
         // Add your logout logic here
         console.log('Logging out...');

@@ -17,24 +17,84 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useInView } from "react-intersection-observer";
 import TitleComponent from "@/components/TitleComponent";
-import CardComponent from "@/components/CardComponent/CardComponent";
-import { newSplitter } from "@/utils/newsSpliiter";
-import { newsData } from "@/data/news_data";
 import NewsCardComponent from "@/components/NewsCardComponent/NewsCardComponent";
 import Footer from "@/components/FooterComponent/Footer";
+import api from "@/lib/axios";
+import { MdAccountCircle } from "react-icons/md";
+import { RiHeartPulseLine } from "react-icons/ri";
+import { FaRegRectangleList, FaRegCalendarPlus } from "react-icons/fa6";
+import { LiaHistorySolid } from "react-icons/lia";
+
 const HomePage = () => {
   const [isScrolledPastFirst, setIsScrolledPastFirst] = useState(false);
   const [currentSection, setCurrentSection] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [sideNews, setSideNews] = useState<any[]>([]);
+  const [mainNews, setMainNews] = useState<any[]>([]);
+  const [otherNews, setOtherNews] = useState<any[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [role, setRole] = useState("");
   const { ref, inView } = useInView({
-    threshold: 0.1, // hợp lệ ở đây
+    threshold: 0.1,
     triggerOnce: false,
   });
   const showMoreRef = useRef<HTMLDivElement | null>(null);
 
-  const { sideNews, mainNews, otherNews } = newSplitter(newsData);
+  const patientFeatures = [
+    {
+      icon: <RiHeartPulseLine className="text-4xl" />,
+      label: "Quản lý sức khoẻ",
+      link: "/quan-ly/quan-ly-suc-khoe",
+    },
+    {
+      icon: <FaUserDoctor className="text-4xl" />,
+      label: "Tìm bác sĩ",
+      link: "/tim-bac-si",
+    },
+    {
+      icon: <FaRegCalendarPlus className="text-4xl" />,
+      label: "Đặt lịch khám",
+      link: "/quan-ly/dat-lich-kham",
+    },
+    {
+      icon: <FaRobot className="text-4xl" />,
+      label: "Chat với AI",
+      link: "/chat",
+    },
+    {
+      icon: <LiaHistorySolid className="text-4xl" />,
+      label: "Lịch sử khám",
+      link: "/quan-ly/xem-benh-an",
+    },
+    {
+      icon: <MdAccountCircle className="text-4xl" />,
+      label: "Thông tin cá nhân",
+      link: "/quan-ly/thong-tin",
+    },
+  ];
+
+  const doctorFeatures = [
+    {
+      icon: <FaCalendarAlt className="text-4xl" />,
+      label: "Lịch làm việc",
+      link: "/bac-si/lich-lam-viec",
+    },
+    {
+      icon: <FaUserDoctor className="text-4xl" />,
+      label: "Khám bệnh",
+      link: "/bac-si/kham-benh",
+    },
+    {
+      icon: <FaHistory className="text-4xl" />,
+      label: "Lịch sử khám",
+      link: "/quan-ly/dat-lich-kham",
+    },
+    {
+      icon: <FaBook className="text-4xl" />,
+      label: "Bài báo khoa học",
+      link: "/quan-ly/chat",
+    },
+  ];
 
   useEffect(() => {
     const role = localStorage.getItem("role");
@@ -42,7 +102,6 @@ const HomePage = () => {
     const onScroll = () => {
       const scrollPos = window.scrollY;
       const vh = window.innerHeight;
-
       setIsScrolledPastFirst(scrollPos >= vh);
     };
     window.addEventListener("scroll", onScroll);
@@ -50,8 +109,20 @@ const HomePage = () => {
   }, []);
 
   useEffect(() => {
+    const fetchNews = async () => {
+      const res = await api.get("/posts/getHomePagePosts");
+      if (res.status === 200) {
+        setSideNews(res.data.slice(0, 2));
+        setMainNews(res.data.slice(2, 3));
+        setOtherNews(res.data.slice(3, 6));
+      }
+    };
+    fetchNews();
+  }, []);
+
+  useEffect(() => {
     const handleScroll = () => {
-      const scrollY = window.scrollY; // lấy scroll từ window
+      const scrollY = window.scrollY;
       const vh = window.innerHeight;
 
       let activeIndex = 0;
@@ -74,7 +145,7 @@ const HomePage = () => {
     };
 
     window.addEventListener("scroll", handleScroll);
-    handleScroll(); // init
+    handleScroll();
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -89,269 +160,202 @@ const HomePage = () => {
       });
     }
   }, [showAll]);
+
   const displayedItems = showAll ? centre : centre.slice(0, 8);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <div className="relative flex flex-col min-h-screen">
-        {/* Header */}
-
-        <div className="section_container mb-20" ref={containerRef}>
-          <section
-            id="section1"
-            className="relative h-screen flex items-center justify-center text-white"
-          >
-            {/* Main Content */}
-            <main
-              className={`flex w-full z-10
-                        ${currentSection === 0 ? "fade-in" : "fade-in-hidden"}
-                    `}
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* Hero Section */}
+      <div className="relative h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-blue-800 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-black opacity-30 z-0">
+          <img 
+            src="/bg/bg3.jpg" 
+            alt="Hospital Background" 
+            className="w-full h-full object-cover"
+          />
+        </div>
+        
+        <div className={`z-10 px-6 text-center transition-all duration-500 ${currentSection === 0 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}>
+          <h1 className="text-5xl md:text-6xl font-bold mb-8">
+            Chào mừng đến với <span className="text-blue-300">Bệnh viện Lục Lâm</span>
+          </h1>
+          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+            Chúng tôi cam kết mang đến dịch vụ chăm sóc sức khỏe chất lượng cao 
+            với đội ngũ bác sĩ chuyên nghiệp và trang thiết bị hiện đại.
+          </p>
+          
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link 
+              href="/tim-bac-si" 
+              className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors shadow-lg"
             >
-              <div className="w-1/2 center text-center text-black">
-                <h2 className="text-7xl font-bold mb-6">
-                  Chào mừng bạn đến với bệnh viện Lục Lâm 2
-                </h2>
-                <div className="intro">
-                  <p className="text-2xl mb-4 font-bold">
-                    Chúng tôi cung cấp dịch vụ chăm sóc sức khỏe chất lượng cao.
-                  </p>
-                  <p className="text-2xl mb-4 font-bold">
-                    Đội ngũ bác sĩ và nhân viên y tế chuyên nghiệp, tận tâm.
-                  </p>
-                  <p className="text-2xl mb-4 font-bold">
-                    <span>Hỗ trợ tư vấn trực tuyến </span>
-                    <span className="text-[#3D90D7]">24/24 với AI</span>
-                  </p>
-                  <p className="text-2xl mb-4 font-bold">
-                    Liên hệ với chúng tôi để biết thêm thông tin.
-                  </p>
-                </div>
-              </div>
-            </main>
-            <div className="background_image">
-              <img src={"/bg/bg3.jpg"}></img>
-            </div>
-            <div className="hotline z-20 text-black w-70 absolute bottom-10 right-0">
-              <a href="tel:1900-1234" className="flex items-center">
-                <FaPhoneAlt className="text-3xl mr-2" />
-                <span className="text-3xl font-bold">028 351 3333</span>
-              </a>
-            </div>
-          </section>
-          {/* Section 2 */}
-          <section
-            id="section2"
-            className="flex items-center justify-center text-white flex-col"
-          >
-            <div
-              className={`top_features flex-1 mt-20 ${
-                currentSection === 1
-                  ? "animate-fadeScaleIn"
-                  : "animate-fadeScaleOut"
-              } mb-10`}
+              Tìm bác sĩ
+            </Link>
+            <Link 
+              href="/quan-ly/dat-lich-kham" 
+              className="bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors shadow-lg"
             >
-              <h2 className="text-4xl font-bold mb-6 text-center text-[#3D90D7]">
-                {role === "doctor"
-                  ? "Các chức năng"
-                  : "Chăm sóc sức khoẻ cực đơn giản"}
-              </h2>
-              {role === "doctor" ? (
-                <div className="features">
-                  <Link href={"/bac-si/lich-lam-viec"}>
-                    <ButtonCardComponent>
-                      <FaCalendarAlt size={80} color="#0065F8"></FaCalendarAlt>
-                      <p className="text-[#0065F8] font-bold">
-                        Xem lịch làm việc
-                      </p>
-                    </ButtonCardComponent>
-                  </Link>
-                  <Link href={"/bac-si/kham-benh"}>
-                    <ButtonCardComponent>
-                      <FaUserDoctor size={80} color="#0065F8"></FaUserDoctor>
-                      <p className="text-[#0065F8] font-bold">Khám bệnh</p>
-                    </ButtonCardComponent>
-                  </Link>
-                  <Link href={"/quan-ly/dat-lich-kham"}>
-                    <ButtonCardComponent>
-                      <FaHistory size={80} color="#0065F8"></FaHistory>
-                      <p className="text-[#0065F8] font-bold">
-                        Xem lịch sử khám
-                      </p>
-                    </ButtonCardComponent>
-                  </Link>
-                  <Link href={"/quan-ly/chat"}>
-                    <ButtonCardComponent>
-                      <FaBook size={80} color="#0065F8"></FaBook>
-                      <p className="text-[#0065F8] font-bold">
-                        Đăng bài báo khoa học
-                      </p>
-                    </ButtonCardComponent>
-                  </Link>
-                </div>
-              ) : (
-                <div className="features ">
-                  <Link href={"/quan-ly/quan-ly-suc-khoe"}>
-                    <ButtonCardComponent>
-                      <FaHeartPulse size={80} color="#0065F8"></FaHeartPulse>
-                      <p className="text-[#0065F8] font-bold">
-                        Quản lý sức khoẻ
-                      </p>
-                    </ButtonCardComponent>
-                  </Link>
-                  <Link href={"/tim-bac-si2"}>
-                  <ButtonCardComponent>
-                    <FaUserDoctor size={80} color="#0065F8"></FaUserDoctor>
-                    <p className="text-[#0065F8] font-bold">Tìm bác sĩ</p>
-                  </ButtonCardComponent>
-                  </Link>
-                  <Link href={"/quan-ly/dat-lich-kham"}>
-                    <ButtonCardComponent>
-                      <FaCalendarDays
-                        size={80}
-                        color="#0065F8"
-                      ></FaCalendarDays>
-                      <p className="text-[#0065F8] font-bold">Đặt lịch khám</p>
-                    </ButtonCardComponent>
-                  </Link>
-                  <Link href={"/quan-ly/chat"}>
-                    <ButtonCardComponent>
-                      <FaRobot size={80} color="#0065F8"></FaRobot>
-                      <p className="text-[#0065F8] font-bold">Tư vấn AI</p>
-                    </ButtonCardComponent>
-                  </Link>
-                </div>
-              )}
-            </div>
-            <div
-              className="bottom_features flex-[2]"
-              ref={(node) => {
-                ref(node);
-                showMoreRef.current = node;
-              }}
-            >
-              <h2 className="text-4xl font-bold mb-6 text-center text-[#3D90D7]">
-                Các chuyên khoa tại bệnh viện
-              </h2>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={inView && { opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, ease: "easeInOut" }}
-              >
-                <div className={`grid md:grid-cols-4 grid-cols-2 gap-6`}>
-                  {displayedItems.map((item, index) => {
-                    const Icon = item.icon;
-                    return (
-                      <Link href={item.link || "#"} key={index}>
-                        <ButtonCardComponent
-                          key={index}
-                          propStyle={{ width: 300 }}
-                        >
-                          <Icon size={80} color="#0065F8" />
-                          <p className="text-[#0065F8] font-bold">
-                            {item.name}
-                          </p>
-                        </ButtonCardComponent>
-                      </Link>
-                    );
-                  })}
-                </div>
-                <div className="showMore text-center mt-10 mb-10 items-center justify-center flex">
-                  <div
-                    className="flex items-center justify-center gap-2 button_group w-50"
-                    onClick={() => setShowAll(!showAll)}
-                  >
-                    <p className="text-[#0065F8] font-bold cursor-pointer text-2xl">
-                      {showAll ? "Ẩn bớt" : "Xem thêm"}
-                    </p>
-                    <FaArrowDown
-                      className={`arrow-icon text-[#0065F8] text-2xl cursor-pointer ${
-                        showAll ? "arrow-up" : "arrow-down"
-                      }`}
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </section>
-          {/* Section 3 */}
-          <section
-            id="section3"
-            className="flex items-center justify-center text-gray-900 w-full mt-20"
-          >
-            <div className="px-4 text-center">
-              <TitleComponent title="Các trưởng khoa dày dặn kinh nghiệm" />
-              <div className="head_group grid grid-cols-2 md:grid-cols-4 gap-6">
-                <CardComponent
-                  imgUri="https://www.fvhospital.com/wp-content/uploads/2016/09/dr-le-dinh-phuong.jpg"
-                  title="Bác sĩnh Lê Đình Phương"
-                  description="Khoa Nhi"
-                  index={0}
-                ></CardComponent>
-                <CardComponent
-                  imgUri="https://www.fvhospital.com/wp-content/uploads/2016/09/dr-le-dinh-phuong.jpg"
-                  title="Bác sĩnh Lê Đình Phương"
-                  description="Khoa Nhi"
-                  index={1}
-                ></CardComponent>
-                <CardComponent
-                  imgUri="https://www.fvhospital.com/wp-content/uploads/2016/09/dr-le-dinh-phuong.jpg"
-                  title="Bác sĩnh Lê Đình Phương"
-                  description="Khoa Nhi"
-                  index={2}
-                ></CardComponent>
-                <CardComponent
-                  imgUri="https://www.fvhospital.com/wp-content/uploads/2016/09/dr-le-dinh-phuong.jpg"
-                  title="Bác sĩnh Lê Đình Phương"
-                  description="Khoa Nhi"
-                  index={3}
-                ></CardComponent>
-              </div>
-            </div>
-          </section>
-          <section
-            id="section4"
-            className="items-center justify-center text-gray-900 mt-20 section4"
-          >
-            <TitleComponent title="Bài viết" />
-            <div className="news-group">
-              <div className="top-news">
-                <div className="side-news">
-                  {sideNews.map((news, index) => (
-                    <NewsCardComponent
-                      articles={news}
-                      key={index}
-                    ></NewsCardComponent>
-                  ))}
-                </div>
-                <div className="main-news">
-                  {mainNews.map((news, index) => (
-                    <NewsCardComponent
-                      key={index}
-                      isMainNews
-                      articles={news}
-                    ></NewsCardComponent>
-                  ))}
-                </div>
-              </div>
-              <div className="bottom-news grid grid-cols-1 md:grid-cols-3 gap-6">
-                {otherNews.map((news, index) => (
-                  <NewsCardComponent
-                    key={index}
-                    isOtherNews
-                    articles={news}
-                  ></NewsCardComponent>
-                ))}
-              </div>
-            </div>
-          </section>
+              Đặt lịch khám
+            </Link>
+          </div>
         </div>
 
-        {/* Footer */}
-        <footer className="w-full bg-[#d7d7d7ef] py-6 mt-auto h-[500px] flex justify-center">
-          <Footer />
-        </footer>
+        <div className="absolute bottom-10 right-10 z-20 bg-white p-4 rounded-full shadow-xl">
+          <a href="tel:028-351-3333" className="flex items-center text-blue-600">
+            <FaPhoneAlt className="text-2xl mr-2" />
+            <span className="text-xl font-bold">028 351 3333</span>
+          </a>
+        </div>
       </div>
+
+      {/* Features Section */}
+      <section id="section2" className="py-20 bg-white">
+        <div className="container mx-auto px-6">
+          <h2 className="text-4xl font-bold text-center text-blue-600 mb-16">
+            {role === "doctor" ? "Các chức năng chính" : "Dịch vụ của chúng tôi"}
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {(role === "doctor" ? doctorFeatures : patientFeatures).map((feature, index) => (
+              <Link href={feature.link} key={index}>
+                <motion.div
+                  whileHover={{ y: -5 }}
+                  className="bg-gradient-to-br from-blue-50 to-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all border border-blue-100"
+                >
+                  <div className="text-blue-600 mb-4">{feature.icon}</div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">{feature.label}</h3>
+                  <p className="text-gray-600">Truy cập ngay để sử dụng dịch vụ</p>
+                </motion.div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Departments Section */}
+      <section ref={showMoreRef} className="py-20 bg-gray-50">
+        <div className="container mx-auto px-6">
+          <h2 className="text-4xl font-bold text-center text-blue-600 mb-16">
+            Các chuyên khoa tại bệnh viện
+          </h2>
+          
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {displayedItems.map((item, index) => {
+                const Icon = item.icon;
+                return (
+                  <Link href={item.link || "#"} key={index}>
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all flex flex-col items-center text-center"
+                    >
+                      <div className="bg-blue-100 p-4 rounded-full mb-4">
+                        <Icon size={40} className="text-blue-600" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
+                    </motion.div>
+                  </Link>
+                );
+              })}
+            </div>
+            
+            <div className="text-center mt-10">
+              <button
+                onClick={() => setShowAll(!showAll)}
+                className="flex items-center justify-center gap-2 mx-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <span className="font-medium">
+                  {showAll ? "Ẩn bớt" : "Xem thêm chuyên khoa"}
+                </span>
+                <FaArrowDown className={`transition-transform ${showAll ? "rotate-180" : ""}`} />
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* News Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-6">
+          <div className="flex justify-between items-center mb-12">
+            <h2 className="text-4xl font-bold text-blue-600">Tin tức & Sự kiện</h2>
+            <Link 
+              href="/tin-tuc" 
+              className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-2"
+            >
+              Xem tất cả
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              </svg>
+            </Link>
+          </div>
+          
+          {/* Featured News */}
+          {mainNews.length > 0 && (
+            <div className="mb-16">
+              <Link href={`/tin-tuc/${mainNews[0]?.slug}`}>
+                <div className="grid md:grid-cols-2 gap-8 bg-gray-50 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="h-64 md:h-full">
+                    <img 
+                      src={mainNews[0]?.thumbnailUrl || "/placeholder-news.jpg"} 
+                      alt={mainNews[0]?.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-8">
+                    <span className="inline-block bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-medium mb-4">
+                      Tin nổi bật
+                    </span>
+                    <h3 className="text-2xl font-bold text-gray-800 mb-4">{mainNews[0]?.title}</h3>
+                    <p className="text-gray-600 mb-6 line-clamp-3">{mainNews[0]?.summary}</p>
+                    <div className="text-blue-600 font-medium flex items-center gap-2">
+                      Đọc tiếp
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          )}
+          
+          {/* News Grid */}
+          <div className="grid md:grid-cols-3 gap-8">
+            {sideNews.concat(otherNews).map((news, index) => (
+              <Link href={`/tin-tuc/${news.slug}`} key={index}>
+                <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow h-full flex flex-col">
+                  <div className="h-48">
+                    <img 
+                      src={news.thumbnailUrl || "/placeholder-news.jpg"} 
+                      alt={news.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-6 flex-grow">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-3">{news.title}</h3>
+                    <p className="text-gray-600 mb-4 line-clamp-2">{news.summary}</p>
+                    <div className="text-blue-600 text-sm font-medium mt-auto">
+                      Đọc tiếp
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gradient-to-b from-blue-600 to-blue-800 text-white pt-16 pb-8">
+        <div className="container mx-auto px-6">
+          <Footer />
+        </div>
+      </footer>
     </div>
   );
 };

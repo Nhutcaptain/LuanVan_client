@@ -22,21 +22,21 @@ const SideBarMenuComponent = () => {
             label: 'Quản lý sức khoẻ',
             link: '/quan-ly/quan-ly-suc-khoe'
         },
-        {
-            icon: <FaRegRectangleList className='text-2xl' />,
-            label: 'Quản lý đơn thuốc',
-            link: '/quan-ly/xem-benh-an'
-        },
+        // {
+        //     icon: <FaRegRectangleList className='text-2xl' />,
+        //     label: 'Quản lý đơn thuốc',
+        //     link: '/quan-ly/xem-benh-an'
+        // },
         {
             icon: <LiaHistorySolid className='text-2xl' />,
             label: 'Lịch sử khám chữa bệnh',
-            link: '/quan-ly/lich-su-kham-chua-benh'
+            link: '/quan-ly/xem-benh-an'
         },
-        {
-            icon: <LiaHistorySolid className='text-2xl' />,
-            label: 'AI hỗ trợ',
-            link: '/quan-ly/chat'
-        },
+        // {
+        //     icon: <LiaHistorySolid className='text-2xl' />,
+        //     label: 'AI hỗ trợ',
+        //     link: '/quan-ly/chat'
+        // },
         
         {
             icon: <FaRegCalendarPlus className='text-2xl' />,

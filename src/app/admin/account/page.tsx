@@ -75,7 +75,7 @@ const AccountManagementPage: React.FC = () => {
 
   const [doctorForm, setDoctorForm] = useState<
     Omit<DoctorInterface, "_id" | "userId"> & {
-      userId: Omit<IUser, "_id" | "createdAt" | "updatedAt" | "password">;
+      userId: Omit<IUser, "_id" | "createdAt" | "updatedAt">;
     }
   >({
     userId: {
@@ -83,6 +83,7 @@ const AccountManagementPage: React.FC = () => {
       fullName: "",
       role: "doctor",
       phone: "",
+      password: '',
       address: {
         province: {
           name: "",
@@ -110,8 +111,11 @@ const AccountManagementPage: React.FC = () => {
     description: '',
     specialtyId: "",
     specialization: "",
+    degree: "Doctor",
+    academicTitles: undefined,
     certificate: [],
     experience: [],
+    
     schedule: {
       date: "",
       time: "",
@@ -187,13 +191,16 @@ const AccountManagementPage: React.FC = () => {
     { label: "Khác", value: "other" },
   ];
 
-  const specializationOptions = [
-    { label: "Tim mạch", value: "Cardiology" },
-    { label: "Thần kinh", value: "Neurology" },
-    { label: "Nhi khoa", value: "Pediatrics" },
-    { label: "Da liễu", value: "Dermatology" },
+  const degreeOptions = [
+    { label: "Bác sĩ", value: "Doctor" },
+    { label: "Thạc sĩ", value: "Master" },
+    { label: "Tiến sĩ", value: "PhD" },
   ];
 
+  const academicTitlesOptions = [
+    { label: "Phó giáo sư", value: "Associate Professor" },
+    { label: "Giáo sư", value: "Professor" },
+  ]
   const handleUserInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -239,6 +246,7 @@ const AccountManagementPage: React.FC = () => {
         fullName: "",
         role: "doctor",
         phone: "",
+        password: '',
         address: {
           province: {
             name: "",
@@ -292,6 +300,7 @@ const AccountManagementPage: React.FC = () => {
             role: "doctor",
             phone: doctor.userId.phone,
             address: doctor.userId.address,
+            password: doctor.userId.password,
             dateOfBirth: doctor.userId.dateOfBirth
               ? doctor.userId.dateOfBirth.toString().split("T")[0]
               : "",
@@ -299,12 +308,14 @@ const AccountManagementPage: React.FC = () => {
             isActive: doctor.userId.isActive,
             avatar: doctor.userId.avatar,
           },
-          departmentId: doctor.departmentId,
+          departmentId: (doctor.departmentId as any)._id,
           specialtyId: doctor.specialtyId,
           specialization: doctor.specialization,
           certificate: doctor.certificate,
           experience: doctor.experience,
           schedule: doctor.schedule,
+          degree: doctor.degree,
+          academicTitles: doctor.academicTitles,
           examinationPrice: doctor.examinationPrice,
           overtimeExaminationPrice: doctor.overtimeExaminationPrice,
           officeExaminationPrice: doctor.officeExaminationPrice,
@@ -345,7 +356,7 @@ const AccountManagementPage: React.FC = () => {
       }
 
       if (isCreating) {
-        console.log(doctorForm);
+        console.log(uploadData);
 
         const res = await api.post("/doctors/create", uploadData);
         if (res.status === 201) {
@@ -473,12 +484,12 @@ const AccountManagementPage: React.FC = () => {
         >
           Quản lý bác sĩ
         </button>
-        <button
+        {/* <button
           className={`tab-button ${activeTab === "patient" ? "active" : ""}`}
           onClick={() => setActiveTab("patient")}
         >
           Quản lý bệnh nhân
-        </button>
+        </button> */}
       </div>
 
       <div className="search-and-create">
@@ -520,11 +531,12 @@ const AccountManagementPage: React.FC = () => {
 
             <InputComponent
               label="Mật khẩu"
-              value={"Mật khẩu"}
+              value={doctorForm.userId.password ?? ""}
               onChange={handleUserInputChange}
               name="user.password"
               type="password"
               required={isCreating}
+              disabled={!isCreating}
             />
 
             <InputComponent
@@ -583,6 +595,21 @@ const AccountManagementPage: React.FC = () => {
               name="specialtyId"
               required
             />
+            <SelectComponent
+              label="Học vị"
+              value={doctorForm.degree ?? ""}
+              onChange={handleUserInputChange}
+              options={degreeOptions}
+              name="degree"
+              
+            />
+            <SelectComponent
+              label="Chức danh học thuật"
+              value={doctorForm.academicTitles ?? ""}
+              onChange={handleUserInputChange}
+              options={academicTitlesOptions}
+              name="academicTitles"
+              ></SelectComponent>
 
             {/* <SelectComponent
               label="Trạng thái"
@@ -596,14 +623,14 @@ const AccountManagementPage: React.FC = () => {
               label="Giá tiền khám ngoài giờ *VNĐ*"
               value={doctorForm.overtimeExaminationPrice ?? 0}
               onChange={handleUserInputChange}
-              name="examinationPrice"
+              name="overtimeExaminationPrice"
               required
             />
             <InputComponent
               label="Giá tiền khám trong giờ hành chính *VNĐ*"
               value={doctorForm.officeExaminationPrice ?? 0}
               onChange={handleUserInputChange}
-              name="examinationPrice"
+              name="officeExaminationPrice"
               required
             />
           </div>
@@ -752,7 +779,7 @@ const AccountManagementPage: React.FC = () => {
                     <td>{doctor.userId.fullName}</td>
                     <td>{doctor.userId.email}</td>
                     <td>{doctor.userId.phone}</td>
-                    <td>{doctor.specialization}</td>
+                    <td>{(doctor.departmentId as any).name}</td>
                     <td>
                       <span
                         className={`status-badge ${

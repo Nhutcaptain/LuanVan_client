@@ -131,8 +131,8 @@ export default function Home() {
       />
 
       {showModal && (
-        <Modal onClose={() => setShowModal(false)} title="Bác sĩ gợi ý">
-          <div className="doctors-list">
+        <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Bác sĩ gợi ý">
+          <div className="recommend-doctors-list">
             {isLoadingDoctors ? (
               <div className="loading-doctors">
                 <div className="thinking-dots">

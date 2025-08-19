@@ -294,7 +294,7 @@ export const ExaminationPDF = ({
           </View>
           <View style={styles.patientInfoRow}>
             <Text style={styles.patientInfoLabel}>Chuyên khoa:</Text>
-            <Text>{doctorInfo?.specialtyId ? (doctorInfo.specialtyId as any).name : 'N/A'}</Text>
+            <Text>{doctorInfo?.departmentId ? (doctorInfo.departmentId as any).name : 'N/A'}</Text>
           </View>
         </View>
 

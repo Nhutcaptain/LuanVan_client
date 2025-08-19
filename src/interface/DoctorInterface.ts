@@ -11,6 +11,8 @@ import { IUser } from "./usermodel";
   specialization: string;
   certificate: string[];
   experience: string[];
+  degree?: string;
+  academicTitles?: "Associate Professor" | "Professor";
   examinationPrice?: number;
   overtimeExaminationPrice?: number;
   officeExaminationPrice?: number;

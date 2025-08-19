@@ -108,7 +108,9 @@ export default function HealthStatusPage() {
       title: "Đang cập nhật",
       text: "Vui lòng chờ trong giây lát",
       icon: "info",
-      showLoaderOnDeny: true,
+      didOpen: () => {
+        Swal.showLoading();
+      }
     });
     try {
       const userId = localStorage.getItem("userId");

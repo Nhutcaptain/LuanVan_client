@@ -1,4 +1,4 @@
-// components/DailyView.tsx;
+// components/DailyView.tsx
 import './DailyView.css';
 import { Shift } from '@/interface/Shifts';
 
@@ -27,16 +27,21 @@ export default function DailyView({ dailySchedule, doctorShifts }: DailyViewProp
         ) : dailySchedule.shifts && dailySchedule.shifts.length > 0 ? (
           <div className="shifts-container">
             <h4>Các ca làm việc:</h4>
-            {dailySchedule.shifts.map((shift: Shift, index: number) => (
-              <div key={index} className="shift-item">
-                <div className="shift-time">
-                  {shift.name}: {shift.startTime} - {shift.endTime}
+            {dailySchedule.shifts.map((shift: any, index: number) => {
+              // Get the full shift details from doctorShifts if available
+              const fullShift = shift._id ? doctorShifts[shift._id] : shift;
+              
+              return (
+                <div key={index} className="shift-item">
+                  <div className="shift-time">
+                    {fullShift.name}: {fullShift.startTime} - {fullShift.endTime}
+                  </div>
+                  {fullShift.locationId && (
+                    <div className="shift-location">Địa điểm: {fullShift.locationId.name || fullShift.locationId}</div>
+                  )}
                 </div>
-                {shift.locationId && (
-                  <div className="shift-location">Địa điểm: {shift.locationId}</div>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="no-shift">Không có lịch làm việc</div>

@@ -150,6 +150,7 @@ html {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 30px;
+  margin-bottom: 10px;
 }
 
 .side-news{
@@ -161,4 +162,14 @@ html {
 
 .main-news{
   height: 100%;
+}
+
+.show-more {
+  color: #539ff1;
+  font-weight: bold;
+  font-size: 20px;
+  margin-top: 10px;
+  text-align: center;
+  align-items: center;
+  margin-bottom: 10px;
 }

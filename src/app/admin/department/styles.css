@@ -16,16 +16,16 @@ body {
 }
 
 /* Header */
-.header {
+.department-header {
     margin-bottom: 30px;
     border-bottom: 1px solid #e8e8e8;
     padding-bottom: 20px;
 }
 
-.header h1 {
-    color: #1890ff;
+.department-header h1 {
+    color: #1a5276;
     margin-bottom: 20px;
-    font-size: 24px;
+    font-size: 2rem;
     font-weight: 600;
 }
 

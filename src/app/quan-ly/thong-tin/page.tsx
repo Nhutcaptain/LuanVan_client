@@ -148,8 +148,13 @@ const ProfilePage = () => {
       }
       setProfile(res.data.user || res.data);
       setIsEditing(false);
-    } catch (error) {
-      console.error("Error updating profile:", error);
+    } catch (error: any) {
+      Swal.fire({
+        title: 'Lỗi cập nhật',
+        text: `${error.response.data.message} `,
+        icon: 'error',
+        confirmButtonText: 'OK',
+      })
     }
   };
 

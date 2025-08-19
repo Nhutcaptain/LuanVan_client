@@ -242,9 +242,9 @@ const ScheduleManagementTab = ({
   const handleLocationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const locationId = e.target.value;
     setSelectedLocationId(locationId);
-    setSelectedShifts(selectedShifts.filter(day => 
-      !day.shiftIds.some(shift => shift.locationId === locationId)
-    ));
+    // setSelectedShifts(selectedShifts.filter(day => 
+    //   !day.shiftIds.some(shift => shift.locationId === locationId)
+    // ));
   };
 
   const handleShiftSelection = (dayIndex: number, shift: Shift, isChecked: boolean) => {
@@ -294,6 +294,8 @@ const ScheduleManagementTab = ({
       return;
     }
 
+    console.log(selectedShifts);
+
     try {
       Swal.fire({
         title: 'Đang xử lý...',
@@ -311,7 +313,10 @@ const ScheduleManagementTab = ({
             toDate: multiSelectMode ? toDate : undefined
           })
         )
+
+       
       );
+       
 
       const newSchedules = results.map(res => res.data);
       const updatedSchedules: WeeklySchedule[] = (() => {
@@ -335,8 +340,8 @@ const ScheduleManagementTab = ({
       );
       
       resetAfterSubmit();
-    } catch (error) {
-      Swal.fire('Lỗi', 'Đã xảy ra lỗi khi xử lý', 'error');
+    } catch (error: any) {
+      Swal.fire('Lỗi', `${error.response.data.message}`, 'error');
     }
   };
 
@@ -538,18 +543,18 @@ const ScheduleManagementTab = ({
           // New props for the moved functionality
           selectedDoctors={selectedDoctors}
           multiSelectMode={multiSelectMode}
-          fromDate={fromDate}
-          toDate={toDate}
-          showSpecialDates={showSpecialDates}
-          specialSchedules={specialSchedules}
+         
+         
+          
+         
           onToggleMultiSelectMode={toggleMultiSelectMode}
           onDoctorSelection={handleDoctorSelection}
-          onSetShowSpecialDates={setShowSpecialDates}
-          onAddSpecialSchedule={handleAddSpecialSchedule}
-          onDeleteSpecialSchedule={handleDeleteSpecialSchedule}
-          onFromDateChange={setFromDate}
-          onToDateChange={setToDate}
-          getDoctorName={getDoctorName}
+          
+         
+         
+          
+         
+          
           getDepartmentName={getDepartmentName}
         />
       </div>

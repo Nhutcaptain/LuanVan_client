@@ -185,10 +185,10 @@ const MedicineManagement = () => {
       
       <div className="medicine-content">
         {/* Form */}
-        <div className="form-section">
+        <div className="form-section-medicine">
           <h2>{editingId ? 'Cập nhật Thuốc' : 'Thêm Thuốc Mới'}</h2>
           <form onSubmit={handleSubmit} className="medicine-form">
-            <div className="form-group">
+            <div className="form-group-medicine">
               <label>Tên thuốc:</label>
               <input
                 type="text"
@@ -199,8 +199,8 @@ const MedicineManagement = () => {
               />
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
+            <div className="form-row-medicine">
+              <div className="form-group-medicine">
                 <label>Số lượng nhập thêm:</label>
                 <input
                   type="number"
@@ -212,7 +212,7 @@ const MedicineManagement = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="form-group-medicine">
                 <label>Đơn vị:</label>
                 <select
                   name="unit"
@@ -226,8 +226,8 @@ const MedicineManagement = () => {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
+            <div className="form-row-medicine">
+              <div className="form-group-medicine">
                 <label>Ngày nhập kho:</label>
                 <input
                   type="date"
@@ -238,7 +238,7 @@ const MedicineManagement = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="form-group-medicine">
                 <label>Ngày hết hạn:</label>
                 <input
                   type="date"
@@ -249,8 +249,8 @@ const MedicineManagement = () => {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
+            <div className="form-row-medicine">
+              <div className="form-group-medicine">
                 <label>Ngưỡng cảnh báo:</label>
                 <input
                   type="number"
@@ -261,7 +261,7 @@ const MedicineManagement = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="form-group-medicine">
                 <label>Giá (VNĐ):</label>
                 <input
                   type="number"
@@ -274,7 +274,7 @@ const MedicineManagement = () => {
               </div>
             </div>
 
-            <div className="form-group">
+            <div className="form-group-medicine">
               <label>Mô tả:</label>
               <textarea
                 name="description"
@@ -284,7 +284,7 @@ const MedicineManagement = () => {
               />
             </div>
 
-            <div className="form-actions">
+            <div className="form-actions-medicine">
               <button type="submit" className="btn btn-primary">
                 {editingId ? 'Cập nhật' : 'Thêm'}
               </button>
@@ -298,24 +298,24 @@ const MedicineManagement = () => {
         </div>
 
         {/* List */}
-        <div className="list-section">
+        <div className="list-section-medicine">
           <div className="list-header">
             <div className="tabs">
               <button 
-                className={`tab ${activeTab === 'all' ? 'active' : ''}`}
+                className={`tab-medicine ${activeTab === 'all' ? 'active' : ''}`}
                 onClick={() => setActiveTab('all')}
               >
                 Tất cả
               </button>
               <button 
-                className={`tab ${activeTab === 'lowStock' ? 'active' : ''}`}
+                className={`tab-medicine ${activeTab === 'lowStock' ? 'active' : ''}`}
                 onClick={() => setActiveTab('lowStock')}
               >
                 Sắp hết
                 {lowStockCount > 0 && <span className="count-badge">{lowStockCount}</span>}
               </button>
               <button 
-                className={`tab ${activeTab === 'expiring' ? 'active' : ''}`}
+                className={`tab-medicine ${activeTab === 'expiring' ? 'active' : ''}`}
                 onClick={() => setActiveTab('expiring')}
               >
                 Sắp hết hạn

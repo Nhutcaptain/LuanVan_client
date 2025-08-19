@@ -190,7 +190,7 @@ export default function ServiceManagement() {
           <button className="search-button">🔍</button>
         </div>
 
-        <div className="filters">
+        <div className="filters-service">
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
@@ -214,7 +214,7 @@ export default function ServiceManagement() {
 
         <button 
           onClick={() => setShowAddForm(!showAddForm)} 
-          className="add-button"
+          className="add-button-service"
         >
           {showAddForm ? 'Hủy Thêm' : 'Thêm Dịch vụ Mới'}
         </button>
