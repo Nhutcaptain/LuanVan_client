@@ -228,7 +228,7 @@ const ProfilePage = () => {
   if (loading)
     return (
       <div className="loading-container">
-        <div className="loading-spinner"></div>
+        <div className="loading-spinner">Đang tải dữ liệu....</div>
       </div>
     );
 

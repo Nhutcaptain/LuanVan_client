@@ -183,8 +183,8 @@ const AppointmentsPage = () => {
 
   if (loading) {
     return (
-      <div className="appointments-container">
-        <div className="loading-spinner">Loading...</div>
+      <div className="loading-overplay">
+        <div className="loading-spinner">Đang tải dữ liệu....</div>
       </div>
     );
   }

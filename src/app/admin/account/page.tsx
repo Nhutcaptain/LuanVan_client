@@ -367,7 +367,7 @@ const AccountManagementPage: React.FC = () => {
             timer: 1000,
           });
 
-          setDoctors([...doctors, res.data]);
+          setDoctors([...doctors, uploadData]);
           setIsCreating(false);
         }
       } else if (editingId) {

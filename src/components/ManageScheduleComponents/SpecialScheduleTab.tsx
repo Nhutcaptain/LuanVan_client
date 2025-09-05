@@ -282,9 +282,7 @@ const SpecialScheduleTab = ({
 
   return (
     <div className="special-schedule-container p-4">
-      <div className="filters mb-6 bg-white p-4 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">Bộ lọc</h2>
-        
+      <div className="filters mb-6 bg-white p-4 rounded-lg shadow">        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>
             <label className="block mb-1">Loại lọc</label>

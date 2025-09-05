@@ -89,12 +89,12 @@ const DoctorProfile = () => {
             const overtimeRes = await api.get(`/schedule/getOvertimeSchedule/${res.data._id}`);
             setOvertimeSchedule(overtimeRes.data);
           } catch (error) {
-            console.error("Error fetching overtime schedule:", error);
+            // console.error("Error fetching overtime schedule:", error);
             setOvertimeSchedule(null);
           }
         }
       } catch (error) {
-        console.error(error);
+        // console.error(error);
       } finally {
         setLoading(false);
       }

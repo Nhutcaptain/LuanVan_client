@@ -36,8 +36,10 @@ export default function RootLayout({
       >
          <HeaderWrapper />
          <div id="modal-root"></div>
-        {children}
-        <Chatbot></Chatbot>
+        <main>
+          {children}
+        </main>
+        {/* <Chatbot></Chatbot> */}
       </body>
     </html>
   );

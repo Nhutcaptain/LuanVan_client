@@ -7,7 +7,7 @@ interface Props {
 const AccountLayout = (prop: Props) => {
     const { children } = prop;
   return (
-    <div className='flex min-h-screen mt-20'>
+    <div className='flex min-h-screen'>
         <SideBarMenuComponent />
         <main className='flex-1 p-6'>{children}</main>
     </div>

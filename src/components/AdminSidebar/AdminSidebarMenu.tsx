@@ -44,7 +44,7 @@ const AdminSidebarMenu = () => {
         },
         {
             icon: <MdLocalHospital className='text-2xl' />,
-            label: 'Quản lý khoa, phòng ban',
+            label: 'Quản lý chuyên khoa',
             link: '/admin/department'
         },
         {
@@ -69,7 +69,7 @@ const AdminSidebarMenu = () => {
             <aside className='w-72 bg-gradient-to-b from-blue-600 to-blue-800 text-white h-full p-4 shadow-xl'>
                 {/* Logo/Header Section */}
                 <div className="mb-10 pt-4 px-2">
-                    <h2 className="text-2xl font-bold text-white">Hệ thống bác sĩ</h2>
+                    <h2 className="text-2xl font-bold text-white">Hệ thống quản trị</h2>
                     <p className="text-blue-100 text-sm mt-1">Trung tâm y tế</p>
                 </div>
 

@@ -543,7 +543,9 @@ const AppointmentPage = () => {
   if (loading.patient || loading.departments) {
     return (
       <div className="container">
-        <div className="loading-spinner">Loading...</div>
+        <div className="loading-overlay">
+          <div className="loading-spinner">Đang tải dữ liệu...</div>
+        </div>
       </div>
     );
   }

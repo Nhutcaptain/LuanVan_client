@@ -560,7 +560,7 @@ const ScheduleManagementTab = ({
       </div>
 
       {/* Schedule List */}
-      <div className="list-section">
+      {/* <div className="list-section">
         <ScheduleList
           schedules={filteredSchedules}
           doctors={doctors}
@@ -576,7 +576,7 @@ const ScheduleManagementTab = ({
           getLocationName={getLocationName}
           getShiftName={getShiftName}
         />
-      </div>
+      </div> */}
     </div>
   );
 };
